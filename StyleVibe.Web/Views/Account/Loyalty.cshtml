@@ -1,0 +1,65 @@
+@model StyleVibe.Domain.Entities.Customer
+@{
+    ViewData["Title"] = "Lịch sử điểm Loyalty";
+    var transactions = ViewBag.Transactions as List<StyleVibe.Domain.Entities.LoyaltyTransaction> ?? new();
+}
+
+<div class="page-container" style="padding:48px 0 80px">
+    <div class="row g-4">
+        <div class="col-lg-3">
+            <div class="card p-4 border-0 shadow-sm rounded-0">
+                <div class="list-group list-group-flush">
+                    <a href="/Account/Index" class="list-group-item list-group-item-action border-0">Tổng quan</a>
+                    <a href="/Account/Orders" class="list-group-item list-group-item-action border-0">Đơn hàng của tôi</a>
+                    <a href="/Account/Loyalty" class="list-group-item list-group-item-action active border-0">Điểm thưởng</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            <div class="card p-4 border-0 shadow-sm rounded-0 bg-dark text-white mb-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h6 class="text-white-50 small fw-bold text-uppercase mb-2">Điểm tích lũy hiện tại</h6>
+                        <div class="h1 fw-bold mb-0">@Model.LoyaltyPoints.ToString("N0")</div>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <div class="small text-white-50">Hạng thành viên</div>
+                        <div class="fw-bold">@Model.Tier</div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="fw-bold mb-3">Lịch sử giao dịch điểm</h5>
+            <div class="card border-0 shadow-sm rounded-0">
+                <div class="table-responsive">
+                    <table class="table mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Ngày</th>
+                                <th class="text-center">Số điểm</th>
+                                <th>Nội dung</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in transactions)
+                            {
+                                <tr>
+                                    <td>@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                    <td class="text-center fw-bold @(t.Points >= 0 ? "text-success" : "text-danger")">
+                                        @(t.Points >= 0 ? "+" : "")@t.Points.ToString("N0")
+                                    </td>
+                                    <td>@t.Description</td>
+                                </tr>
+                            }
+                            @if (!transactions.Any())
+                            {
+                                <tr><td colspan="3" class="text-center py-4 text-muted">Chưa có giao dịch điểm nào.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

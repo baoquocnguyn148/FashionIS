@@ -1,0 +1,55 @@
+@model StyleVibe.Web.ViewModels.Admin.ProductViewModel
+@{
+    ViewData["Title"] = "Sửa sản phẩm";
+}
+
+<div class="card border-0 shadow-sm rounded-0">
+    <div class="card-body p-4">
+        <form method="post" action="/AdminProducts/Edit">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Tên sản phẩm</label>
+                    <input asp-for="Name" class="form-control" />
+                    <span asp-validation-for="Name" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Danh mục</label>
+                    <select asp-for="CategoryId" class="form-select" asp-items="ViewBag.Categories"></select>
+                    <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Nhà cung cấp</label>
+                    <select asp-for="SupplierId" class="form-select" asp-items="ViewBag.Suppliers"></select>
+                    <span asp-validation-for="SupplierId" class="text-danger small"></span>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Ảnh (URL)</label>
+                    <input asp-for="ImageUrl" class="form-control" />
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Mô tả</label>
+                    <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Trạng thái</label>
+                    <select asp-for="IsActive" class="form-select">
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-4">
+                <a href="/AdminProducts/Index" class="btn btn-outline-dark">Hủy</a>
+                <button class="btn btn-danger" type="submit">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+

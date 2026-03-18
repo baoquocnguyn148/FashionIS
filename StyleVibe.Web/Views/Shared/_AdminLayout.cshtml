@@ -1,0 +1,114 @@
+@using Microsoft.AspNetCore.Identity
+@{
+    var controller = (ViewContext.RouteData.Values["controller"]?.ToString() ?? "").ToLowerInvariant();
+    bool IsActive(string c) => controller == c.ToLowerInvariant();
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Admin</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="admin-body">
+    <div class="d-flex admin-shell">
+        <aside class="admin-sidebar d-none d-lg-flex">
+            <div class="admin-brand px-3 py-3">
+                <a href="/Admin/Dashboard" class="admin-brand-link">
+                    <span class="brand-dot"></span>
+                    <span class="brand-text">STYLEVIBE ADMIN</span>
+                </a>
+            </div>
+            <nav class="admin-nav flex-grow-1 px-2">
+                <a class="nav-item @(IsActive("Admin") ? "active" : "")" href="/Admin/Dashboard">📊 Dashboard</a>
+                <a class="nav-item @(IsActive("AdminProducts") ? "active" : "")" href="/AdminProducts/Index">📦 Sản phẩm</a>
+                <a class="nav-item @(IsActive("AdminOrders") ? "active" : "")" href="/AdminOrders/Index">🛒 Đơn hàng</a>
+                <a class="nav-item @(IsActive("AdminInventory") ? "active" : "")" href="/AdminInventory/Index">🏪 Tồn kho</a>
+                <a class="nav-item @(IsActive("AdminCustomers") ? "active" : "")" href="/AdminCustomers/Index">👥 Khách hàng</a>
+                <a class="nav-item @(IsActive("AdminEmployees") ? "active" : "")" href="/AdminEmployees/Index">👔 Nhân viên</a>
+                <a class="nav-item @(IsActive("AdminInventory") ? "active" : "")" href="/AdminInventory/PurchaseOrders">📋 Nhập hàng (PO)</a>
+                <a class="nav-item @(IsActive("Admin") ? "active" : "")" href="/Admin/Reports">📈 Báo cáo</a>
+                <a class="nav-item @(IsActive("AdminSettings") ? "active" : "")" href="/AdminSettings/Index">⚙️ Cài đặt</a>
+            </nav>
+            <div class="admin-sidebar-footer px-3 py-3">
+                <div class="small text-white-50">© @DateTime.UtcNow.Year</div>
+            </div>
+        </aside>
+
+        <div class="flex-grow-1 d-flex flex-column min-vh-100">
+            <header class="admin-topbar">
+                <div class="container-fluid">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <button class="btn btn-outline-danger d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminOffcanvas" aria-controls="adminOffcanvas">
+                            ☰
+                        </button>
+                        <div class="admin-topbar-title">
+                            @ViewData["Title"]
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="text-white-50 small d-none d-md-block">@User?.Identity?.Name</div>
+                            <form asp-area="Identity" asp-page="/Account/Logout" method="post" class="m-0">
+                                <button type="submit" class="btn btn-danger btn-sm">Logout</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="offcanvas offcanvas-start admin-offcanvas" tabindex="-1" id="adminOffcanvas" aria-labelledby="adminOffcanvasLabel">
+                <div class="offcanvas-header">
+                    <h5 class="offcanvas-title" id="adminOffcanvasLabel">Admin</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body">
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-outline-dark text-start" href="/Admin/Dashboard">📊 Dashboard</a>
+                        <a class="btn btn-outline-dark text-start" href="/AdminProducts/Index">📦 Sản phẩm</a>
+                        <a class="btn btn-outline-dark text-start" href="/AdminOrders/Index">🛒 Đơn hàng</a>
+                        <a class="btn btn-outline-dark text-start" href="/AdminInventory/Index">🏪 Tồn kho</a>
+                        <a class="btn btn-outline-dark text-start" href="/AdminCustomers/Index">👥 Khách hàng</a>
+                        <a class="btn btn-outline-dark text-start" href="/AdminEmployees/Index">👔 Nhân viên</a>
+                        <a class="btn btn-outline-dark text-start" href="/AdminInventory/PurchaseOrders">📋 Nhập hàng (PO)</a>
+                        <a class="btn btn-outline-dark text-start" href="/Admin/Reports">📈 Báo cáo</a>
+                        <a class="btn btn-outline-dark text-start" href="/AdminSettings/Index">⚙️ Cài đặt</a>
+                    </div>
+                </div>
+            </div>
+
+            <main class="admin-content flex-grow-1">
+                <div class="container-fluid py-4">
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success border-0 rounded-0">@TempData["SuccessMessage"]</div>
+                    }
+                    @if (TempData["ErrorMessage"] != null)
+                    {
+                        <div class="alert alert-danger border-0 rounded-0">@TempData["ErrorMessage"]</div>
+                    }
+                    @RenderBody()
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @RenderSection("Scripts", required: false)
+
+    <style>
+        .admin-body { background: #0b0b0b; }
+        .admin-shell { min-height: 100vh; }
+        .admin-sidebar { width: 280px; background: #000; flex-direction: column; border-right: 1px solid rgba(255,255,255,0.08); }
+        .admin-brand-link { display: flex; align-items: center; gap: 10px; color: #fff; text-decoration: none; font-weight: 800; letter-spacing: 0.08em; font-size: 12px; }
+        .brand-dot { width: 10px; height: 10px; background: #e53935; display: inline-block; border-radius: 2px; }
+        .admin-nav .nav-item { display:block; padding: 12px 12px; margin: 2px 0; color: rgba(255,255,255,0.8); text-decoration:none; border-radius: 8px; font-weight: 600; }
+        .admin-nav .nav-item:hover { background: rgba(229,57,53,0.12); color:#fff; }
+        .admin-nav .nav-item.active { background: rgba(229,57,53,0.22); color: #fff; }
+        .admin-topbar { background: #000; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 14px 0; }
+        .admin-topbar-title { color:#fff; font-weight: 800; letter-spacing: 0.06em; font-size: 12px; text-transform: uppercase; }
+        .admin-content { background: #fff; }
+        .admin-offcanvas .offcanvas-header { border-bottom: 1px solid #eee; }
+    </style>
+</body>
+</html>

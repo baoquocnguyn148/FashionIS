@@ -1,0 +1,100 @@
+@model StyleVibe.Domain.Entities.Customer
+@using StyleVibe.Domain.Enums
+@{
+    ViewData["Title"] = "Tài khoản của tôi";
+    var recentOrders = ViewBag.RecentOrders as List<StyleVibe.Domain.Entities.Order> ?? new();
+    
+    string TierBadge(CustomerTier t) => t switch
+    {
+        CustomerTier.Bronze => "badge bg-secondary",
+        CustomerTier.Silver => "badge bg-info text-dark",
+        CustomerTier.Gold => "badge bg-warning text-dark",
+        CustomerTier.VIP => "badge bg-danger",
+        _ => "badge bg-dark"
+    };
+}
+
+<div class="page-container" style="padding:48px 0 80px">
+    <div class="row g-4">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="card p-4 border-0 shadow-sm rounded-0">
+                <div class="text-center mb-4">
+                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                        👤
+                    </div>
+                    <h5 class="fw-bold mb-1">@Model.FullName</h5>
+                    <span class="@TierBadge(Model.Tier)">@Model.Tier</span>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="/Account/Index" class="list-group-item list-group-item-action active border-0">Tổng quan</a>
+                    <a href="/Account/Orders" class="list-group-item list-group-item-action border-0">Đơn hàng của tôi</a>
+                    <a href="/Account/Loyalty" class="list-group-item list-group-item-action border-0">Điểm thưởng</a>
+                    <form asp-area="Identity" asp-page="/Account/Logout" method="post">
+                        <button type="submit" class="list-group-item list-group-item-action border-0 text-danger">Đăng xuất</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-lg-9">
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card p-4 border-0 shadow-sm rounded-0 bg-dark text-white h-100">
+                        <h6 class="text-white-50 small fw-bold text-uppercase mb-3">Điểm Loyalty hiện tại</h6>
+                        <div class="h2 fw-bold mb-0">@Model.LoyaltyPoints.ToString("N0")</div>
+                        <a href="/Account/Loyalty" class="text-white-50 small mt-2">Xem lịch sử tích điểm →</a>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card p-4 border-0 shadow-sm rounded-0 h-100">
+                        <h6 class="text-muted small fw-bold text-uppercase mb-3">Thông tin liên hệ</h6>
+                        <p class="mb-1"><strong>SĐT:</strong> @Model.Phone</p>
+                        <p class="mb-1"><strong>Địa chỉ:</strong> @(Model.Address ?? "Chưa cập nhật")</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-0">
+                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold">Đơn hàng gần đây</h6>
+                    <a href="/Account/Orders" class="btn btn-sm btn-outline-dark">Xem tất cả</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã đơn</th>
+                                <th>Ngày đặt</th>
+                                <th class="text-end">Tổng tiền</th>
+                                <th>Trạng thái</th>
+                                <th class="text-end"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var o in recentOrders)
+                            {
+                                <tr>
+                                    <td class="fw-bold">@o.OrderCode</td>
+                                    <td>@o.OrderDate.ToString("dd/MM/yyyy")</td>
+                                    <td class="text-end fw-bold">@o.TotalAmount.ToString("N0")₫</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">@o.Status</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <a href="/Account/OrderDetail/@o.Id" class="btn btn-sm btn-outline-dark">Chi tiết</a>
+                                    </td>
+                                </tr>
+                            }
+                            @if (!recentOrders.Any())
+                            {
+                                <tr><td colspan="5" class="text-center py-4 text-muted">Bạn chưa có đơn hàng nào.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

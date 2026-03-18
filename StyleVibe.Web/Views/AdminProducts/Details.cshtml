@@ -1,0 +1,157 @@
+@model StyleVibe.Domain.Entities.Product
+@{
+    ViewData["Title"] = "Chi tiết sản phẩm";
+    var skuModel = ViewBag.CreateSku as StyleVibe.Web.ViewModels.Admin.ProductSkuViewModel ?? new StyleVibe.Web.ViewModels.Admin.ProductSkuViewModel { ProductId = Model.Id };
+}
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm rounded-0">
+            <div class="card-body p-4">
+                <div class="d-flex gap-3">
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <img src="@Model.ImageUrl" style="width:120px;height:160px;object-fit:cover;border-radius:10px;" />
+                    }
+                    <div class="flex-grow-1">
+                        <div class="h5 fw-bold mb-1">@Model.Name</div>
+                        <div class="text-muted small mb-2">#@Model.Id</div>
+                        <div class="small"><span class="fw-semibold">Danh mục:</span> @Model.Category?.Name</div>
+                        <div class="small"><span class="fw-semibold">Nhà cung cấp:</span> @Model.Supplier?.Name</div>
+                        <div class="small"><span class="fw-semibold">Trạng thái:</span> @(Model.IsActive ? "Active" : "Inactive")</div>
+                    </div>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <hr />
+                    <div class="small text-muted">@Model.Description</div>
+                }
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="/AdminProducts/Edit/@Model.Id" class="btn btn-outline-dark">Edit</a>
+                    <a href="/AdminProducts/Index" class="btn btn-dark">Back</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm rounded-0">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="h6 fw-bold mb-0">SKU</div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>SkuCode</th>
+                                <th>Size</th>
+                                <th>Color</th>
+                                <th class="text-end">Giá vốn</th>
+                                <th class="text-end">Giá bán</th>
+                                <th class="text-end">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var sku in Model.Skus.Where(s => !s.IsDeleted))
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@sku.SkuCode</td>
+                                    <td>@sku.Size</td>
+                                    <td>@sku.Color</td>
+                                    <td class="text-end">@sku.CostPrice.ToString("N0")</td>
+                                    <td class="text-end">@sku.SellingPrice.ToString("N0")</td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-outline-dark btn-sm" data-bs-toggle="collapse" data-bs-target="#editSku-@sku.Id">Edit</button>
+                                        <form method="post" action="/AdminProducts/DeleteSku/@sku.Id" class="d-inline">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                <tr class="collapse" id="editSku-@sku.Id">
+                                    <td colspan="6">
+                                        <form method="post" action="/AdminProducts/EditSku/@sku.Id" class="row g-2 align-items-end">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="ProductId" value="@Model.Id" />
+                                            <div class="col-md-3">
+                                                <label class="form-label small fw-semibold">SkuCode</label>
+                                                <input name="SkuCode" class="form-control" value="@sku.SkuCode" required />
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small fw-semibold">Size</label>
+                                                <input name="Size" class="form-control" value="@sku.Size" required />
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small fw-semibold">Color</label>
+                                                <input name="Color" class="form-control" value="@sku.Color" required />
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small fw-semibold">Giá vốn</label>
+                                                <input name="CostPrice" type="number" min="0" class="form-control" value="@sku.CostPrice" />
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small fw-semibold">Giá bán</label>
+                                                <input name="SellingPrice" type="number" min="0" class="form-control" value="@sku.SellingPrice" />
+                                            </div>
+                                            <div class="col-md-1">
+                                                <label class="form-label small fw-semibold">Active</label>
+                                                <select name="IsActive" class="form-select">
+                                                    <option value="true" selected="@(sku.IsActive ? "selected" : null)">Yes</option>
+                                                    <option value="false" selected="@(!sku.IsActive ? "selected" : null)">No</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-12 d-flex justify-content-end">
+                                                <button type="submit" class="btn btn-danger btn-sm">Lưu</button>
+                                            </div>
+                                        </form>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <hr class="my-4" />
+
+                <div class="h6 fw-bold mb-3">Thêm SKU</div>
+                <form method="post" action="/AdminProducts/CreateSku">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ProductId" value="@skuModel.ProductId" />
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">SkuCode</label>
+                            <input name="SkuCode" class="form-control" value="@skuModel.SkuCode" required />
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold">Size</label>
+                            <input name="Size" class="form-control" value="@skuModel.Size" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Color</label>
+                            <input name="Color" class="form-control" value="@skuModel.Color" required />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Giá vốn</label>
+                            <input name="CostPrice" class="form-control" type="number" min="0" value="@skuModel.CostPrice" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Giá bán</label>
+                            <input name="SellingPrice" class="form-control" type="number" min="0" value="@skuModel.SellingPrice" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Active</label>
+                            <select name="IsActive" class="form-select">
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                        <div class="col-12 d-flex justify-content-end">
+                            <button type="submit" class="btn btn-danger">Thêm SKU</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

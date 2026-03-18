@@ -12,7 +12,7 @@ public class OrderDetail : BaseEntity
     public int OrderId { get; set; }
     public Order Order { get; set; } = null!;
 
-    public int ProductSkuId { get; set; }
-    public ProductSku ProductSku { get; set; } = null!;
+    public int? ProductSkuId { get; set; }
+    public ProductSku? ProductSku { get; set; }
 }
 

@@ -9,7 +9,10 @@ public interface IPosService
         int? customerId,
         IEnumerable<(int productSkuId, int quantity, decimal discountPercent)> items,
         byte paymentMethod,
-        string? note,
+        string? note = null,
+        string? customerName = null,
+        string? phone = null,
+        string? address = null,
         CancellationToken cancellationToken = default);
 }
 

@@ -14,6 +14,9 @@ public class Order : BaseEntity
     public decimal DiscountAmount { get; set; }
     public decimal TotalAmount { get; set; }
     public int PointsEarned { get; set; }
+    public string? CustomerName { get; set; }
+    public string? Phone { get; set; }
+    public string? Address { get; set; }
     public string? Note { get; set; }
 
     public int StoreId { get; set; }

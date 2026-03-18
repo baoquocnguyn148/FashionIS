@@ -1,0 +1,115 @@
+@model List<StyleVibe.Domain.Entities.Order>
+@using StyleVibe.Domain.Enums
+@{
+    ViewData["Title"] = "Đơn hàng";
+    var stores = ViewBag.Stores as List<StyleVibe.Domain.Entities.Store> ?? new();
+    var filter = ViewBag.Filter as StyleVibe.Web.ViewModels.Admin.OrderFilterViewModel ?? new();
+    int totalPages = ViewBag.TotalPages ?? 1;
+    string StatusBadge(OrderStatus s) => s switch
+    {
+        OrderStatus.Pending => "badge bg-warning text-dark",
+        OrderStatus.Confirmed => "badge bg-info",
+        OrderStatus.Processing => "badge bg-primary",
+        OrderStatus.Completed => "badge bg-success",
+        OrderStatus.Cancelled => "badge bg-danger",
+        _ => "badge bg-secondary"
+    };
+    string PaymentBadge(PaymentStatus s) => s switch
+    {
+        PaymentStatus.Unpaid => "badge bg-secondary",
+        PaymentStatus.Paid => "badge bg-success",
+        PaymentStatus.Refunded => "badge bg-danger",
+        _ => "badge bg-secondary"
+    };
+}
+
+<form method="get" class="card border-0 shadow-sm rounded-0 mb-3">
+    <div class="card-body p-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Status</label>
+                <select class="form-select" name="Status">
+                    <option value="">Tất cả</option>
+                    @foreach (var s in Enum.GetValues<OrderStatus>())
+                    {
+                        <option value="@s" selected="@(filter.Status == s ? "selected" : null)">@s</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Cửa hàng</label>
+                <select class="form-select" name="StoreId">
+                    <option value="">Tất cả</option>
+                    @foreach (var st in stores)
+                    {
+                        <option value="@st.Id" selected="@(filter.StoreId == st.Id ? "selected" : null)">@st.Name</option>
+                    }
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Từ ngày</label>
+                <input type="date" class="form-control" name="DateFrom" value="@(filter.DateFrom?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold">Đến ngày</label>
+                <input type="date" class="form-control" name="DateTo" value="@(filter.DateTo?.ToString("yyyy-MM-dd"))" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold">Tìm kiếm</label>
+                <input class="form-control" name="Search" value="@filter.Search" placeholder="OrderCode / Tên khách hàng" />
+            </div>
+            <div class="col-12 d-flex justify-content-end gap-2">
+                <a class="btn btn-outline-dark" href="/AdminOrders/Index">Reset</a>
+                <button class="btn btn-danger" type="submit">Lọc</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="card border-0 shadow-sm rounded-0">
+    <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>OrderCode</th>
+                    <th>Ngày</th>
+                    <th>Khách hàng</th>
+                    <th>Cửa hàng</th>
+                    <th class="text-end">Tổng tiền</th>
+                    <th>Status</th>
+                    <th>Payment</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach (var o in Model)
+            {
+                <tr>
+                    <td class="fw-semibold">@o.OrderCode</td>
+                    <td>@o.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@(o.Customer?.FullName ?? "-")</td>
+                    <td>@o.Store?.Name</td>
+                    <td class="text-end fw-semibold">@o.TotalAmount.ToString("N0")</td>
+                    <td><span class="@StatusBadge(o.Status)">@o.Status</span></td>
+                    <td><span class="@PaymentBadge(o.PaymentStatus)">@o.PaymentStatus</span></td>
+                    <td class="text-end">
+                        <a class="btn btn-outline-dark btn-sm" href="/AdminOrders/Details/@o.Id">Details</a>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<nav class="mt-3">
+    <ul class="pagination mb-0">
+        @for (int i = 1; i <= totalPages; i++)
+        {
+            <li class="page-item @(i == filter.Page ? "active" : "")">
+                <a class="page-link" href="@Url.Action("Index", new { filter.Status, filter.StoreId, filter.DateFrom, filter.DateTo, filter.Search, Page = i })">@i</a>
+            </li>
+        }
+    </ul>
+</nav>
+

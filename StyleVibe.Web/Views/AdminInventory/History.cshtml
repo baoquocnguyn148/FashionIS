@@ -1,0 +1,49 @@
+@model List<StyleVibe.Domain.Entities.StockAdjustment>
+@{
+    ViewData["Title"] = "Lịch sử điều chỉnh tồn kho";
+    var inventory = ViewBag.Inventory as StyleVibe.Domain.Entities.Inventory;
+}
+
+<div class="mb-3">
+    <a href="/AdminInventory/Index" class="btn btn-outline-dark btn-sm">← Quay lại</a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-0 mb-4">
+    <div class="card-header bg-white py-3 border-0">
+        <h6 class="mb-0 fw-bold">Thông tin kho: @inventory?.ProductSku?.Product?.Name (@inventory?.ProductSku?.SkuCode)</h6>
+        <div class="small text-muted">Cửa hàng: @inventory?.Store?.Name</div>
+    </div>
+    <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Ngày giờ</th>
+                    <th class="text-center">Trước</th>
+                    <th class="text-center">Thay đổi</th>
+                    <th class="text-center">Sau</th>
+                    <th>Lý do</th>
+                    <th>Ghi chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var a in Model)
+                {
+                    <tr>
+                        <td>@a.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td class="text-center">@a.QuantityBefore</td>
+                        <td class="text-center fw-bold @(a.QuantityChange >= 0 ? "text-success" : "text-danger")">
+                            @(a.QuantityChange >= 0 ? "+" : "")@a.QuantityChange
+                        </td>
+                        <td class="text-center fw-bold">@a.QuantityAfter</td>
+                        <td><span class="badge bg-light text-dark border">@a.Reason</span></td>
+                        <td class="small">@a.Note</td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="6" class="text-center py-4 text-muted">Chưa có lịch sử điều chỉnh</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

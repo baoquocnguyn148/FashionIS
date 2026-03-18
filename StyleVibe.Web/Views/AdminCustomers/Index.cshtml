@@ -1,0 +1,93 @@
+@model List<StyleVibe.Domain.Entities.Customer>
+@using StyleVibe.Domain.Enums
+@{
+    ViewData["Title"] = "Quản lý khách hàng";
+    var tier = ViewBag.Tier as CustomerTier?;
+    var search = ViewBag.Search as string;
+    int page = ViewBag.Page ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+
+    string TierBadge(CustomerTier t) => t switch
+    {
+        CustomerTier.Bronze => "badge bg-secondary",
+        CustomerTier.Silver => "badge",
+        CustomerTier.Gold => "badge",
+        CustomerTier.VIP => "badge bg-danger",
+        _ => "badge bg-dark"
+    };
+
+    string TierStyle(CustomerTier t) => t switch
+    {
+        CustomerTier.Silver => "background:#C0C0C0;color:#333",
+        CustomerTier.Gold => "background:#FFD700;color:#333",
+        _ => ""
+    };
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <form method="get" class="d-flex gap-2">
+        <select name="tier" class="form-select" style="width: 150px;">
+            <option value="">Tất cả hạng</option>
+            @foreach (var t in Enum.GetValues<CustomerTier>())
+            {
+                <option value="@t" selected="@(tier == t ? "selected" : null)">@t</option>
+            }
+        </select>
+        <input name="search" value="@search" class="form-control" placeholder="Tên hoặc SĐT..." style="width: 250px;" />
+        <button class="btn btn-dark" type="submit">Tìm</button>
+    </form>
+    <a href="/AdminCustomers/Create" class="btn btn-danger">+ Thêm khách hàng</a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-0">
+    <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Họ tên</th>
+                    <th>Liên hệ</th>
+                    <th>Hạng</th>
+                    <th class="text-center">Điểm</th>
+                    <th class="text-center">Đơn hàng</th>
+                    <th>Ngày tham gia</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model)
+                {
+                    <tr>
+                        <td class="fw-bold">@c.FullName</td>
+                        <td>
+                            <div class="small">📞 @c.Phone</div>
+                            <div class="small text-muted">📧 @c.Email</div>
+                        </td>
+                        <td>
+                            <span class="@TierBadge(c.Tier)" style="@TierStyle(c.Tier)">@c.Tier</span>
+                        </td>
+                        <td class="text-center fw-bold">@c.LoyaltyPoints.ToString("N0")</td>
+                        <td class="text-center">@c.Orders.Count</td>
+                        <td>@c.JoinDate.ToString("dd/MM/yyyy")</td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-2">
+                                <a href="/AdminCustomers/Details/@c.Id" class="btn btn-outline-dark btn-sm">Details</a>
+                                <a href="/AdminCustomers/Edit/@c.Id" class="btn btn-outline-dark btn-sm">Edit</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<nav class="mt-3">
+    <ul class="pagination">
+        @for (int i = 1; i <= totalPages; i++)
+        {
+            <li class="page-item @(i == page ? "active" : "")">
+                <a class="page-link" href="@Url.Action("Index", new { tier, search, page = i })">@i</a>
+            </li>
+        }
+    </ul>
+</nav>

@@ -1,0 +1,80 @@
+@model List<StyleVibe.Domain.Entities.PurchaseOrder>
+@using StyleVibe.Domain.Enums
+@{
+    ViewData["Title"] = "Quản lý đơn nhập hàng (PO)";
+    var suppliers = ViewBag.Suppliers as List<StyleVibe.Domain.Entities.Supplier> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <form method="get" class="d-flex gap-2">
+        <select name="status" class="form-select" style="width: 150px;">
+            <option value="">Tất cả trạng thái</option>
+            @foreach (var s in Enum.GetValues<OrderStatus>())
+            {
+                <option value="@s" selected="@(ViewBag.Status == s ? "selected" : null)">@s</option>
+            }
+        </select>
+        <select name="supplierId" class="form-select" style="width: 200px;">
+            <option value="">Tất cả nhà cung cấp</option>
+            @foreach (var s in suppliers)
+            {
+                <option value="@s.Id" selected="@(ViewBag.SupplierId == s.Id ? "selected" : null)">@s.Name</option>
+            }
+        </select>
+        <button class="btn btn-dark" type="submit">Lọc</button>
+    </form>
+    <a href="/AdminInventory/CreatePO" class="btn btn-danger">+ Tạo đơn nhập mới (PO)</a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-0">
+    <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Mã PO</th>
+                    <th>Ngày đặt</th>
+                    <th>Nhà cung cấp</th>
+                    <th>Cửa hàng nhập</th>
+                    <th class="text-end">Tổng giá</th>
+                    <th>Trạng thái</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var po in Model)
+                {
+                    <tr>
+                        <td class="fw-bold">@po.PoCode</td>
+                        <td>@po.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@po.Supplier?.Name</td>
+                        <td>@po.Store?.Name</td>
+                        <td class="text-end fw-bold">@po.TotalCost.ToString("N0") đ</td>
+                        <td>
+                            <span class="badge @(po.Status == OrderStatus.Completed ? "bg-success" : (po.Status == OrderStatus.Pending ? "bg-warning text-dark" : "bg-info"))">
+                                @po.Status
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            @if (po.Status != OrderStatus.Completed && po.Status != OrderStatus.Cancelled)
+                            {
+                                <form method="post" action="/AdminInventory/ReceivePO/@po.Id" class="d-inline-flex gap-2">
+                                    @Html.AntiForgeryToken()
+                                    @foreach (var d in po.PurchaseOrderDetails)
+                                    {
+                                        <input type="hidden" name="skuIds" value="@d.ProductSkuId" />
+                                        <input type="hidden" name="receivedQty" value="@d.QuantityOrdered" />
+                                    }
+                                    <button type="submit" class="btn btn-outline-success btn-sm">Nhận hàng</button>
+                                </form>
+                            }
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="7" class="text-center py-4 text-muted">Chưa có đơn nhập hàng nào</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

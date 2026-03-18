@@ -25,24 +25,29 @@
         </div>
         <div class="category-banners">
             @{
-                var bannerData = new[]
-                {
-                    new { Label = "ÁO", Bg = "linear-gradient(135deg,#1a1a2e,#16213e)", CatId = 1 },
-                    new { Label = "QUẦN", Bg = "linear-gradient(135deg,#2d1b69,#11998e)", CatId = 2 },
-                    new { Label = "PHỤ KIỆN", Bg = "linear-gradient(135deg,#373b44,#4286f4)", CatId = 5 },
+                var bannerCategories = categories.Take(3).ToList();
+                var bannerGradients = new[] {
+                    "linear-gradient(135deg,#1a1a2e,#16213e)",
+                    "linear-gradient(135deg,#2d1b69,#11998e)",
+                    "linear-gradient(135deg,#373b44,#4286f4)"
                 };
             }
-            @foreach (var b in bannerData)
+            @for (int i = 0; i < bannerCategories.Count; i++)
             {
-                <a asp-controller="Products" asp-action="Index" asp-route-categoryId="@b.CatId" class="category-banner" style="text-decoration:none">
-                    <div class="category-banner-placeholder" style="background:@b.Bg">
-                        <svg width="56" height="56" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" viewBox="0 0 24 24">
-                            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-                            <polyline points="9 22 9 12 15 12 15 22"/>
+                var cat = bannerCategories[i];
+                <a asp-controller="Products" asp-action="Index"
+                   asp-route-categoryId="@cat.Id"
+                   class="category-banner" style="text-decoration:none">
+                    <div class="category-banner-placeholder"
+                         style="background:@bannerGradients[i % bannerGradients.Length]">
+                        <svg width="56" height="56" fill="none" stroke="rgba(255,255,255,0.3)"
+                             stroke-width="1.5" viewBox="0 0 24 24">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                            <polyline points="9 22 9 12 15 12 15 22" />
                         </svg>
                     </div>
                     <div class="category-banner-overlay">
-                        <span class="category-banner-label">@b.Label</span>
+                        <span class="category-banner-label">@cat.Name.ToUpper()</span>
                     </div>
                 </a>
             }

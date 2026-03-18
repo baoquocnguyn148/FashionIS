@@ -1,0 +1,89 @@
+@model StyleVibe.Domain.Entities.Order
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng #" + Model.OrderCode;
+}
+
+<div class="page-container" style="padding:48px 0 80px">
+    <div class="mb-4">
+        <a href="/Account/Orders" class="btn btn-outline-dark btn-sm">← Quay lại danh sách</a>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-0 mb-4">
+                <div class="card-header bg-white py-3 border-0">
+                    <h6 class="mb-0 fw-bold">Sản phẩm trong đơn</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th class="text-center">Số lượng</th>
+                                <th class="text-end">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var d in Model.OrderDetails)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@d.ProductSku?.Product?.Name</div>
+                                        <div class="small text-muted">@d.ProductSku?.Size / @d.ProductSku?.Color</div>
+                                    </td>
+                                    <td class="text-center">@d.Quantity</td>
+                                    <td class="text-end fw-bold">@d.Subtotal.ToString("N0")₫</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="2" class="text-end fw-bold">Tổng cộng:</td>
+                                <td class="text-end fw-bold text-danger h5 mb-0">@Model.TotalAmount.ToString("N0")₫</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-0 mb-4">
+                <div class="card-header bg-white py-3 border-0">
+                    <h6 class="mb-0 fw-bold">Thông tin đơn hàng</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="text-muted small text-uppercase fw-bold d-block">Mã đơn hàng</label>
+                        <div class="fw-bold">@Model.OrderCode</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted small text-uppercase fw-bold d-block">Ngày đặt</label>
+                        <div>@Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="text-muted small text-uppercase fw-bold d-block">Trạng thái</label>
+                        <span class="badge bg-dark">@Model.Status</span>
+                    </div>
+                    <div class="mb-0">
+                        <label class="text-muted small text-uppercase fw-bold d-block">Cửa hàng nhận hàng</label>
+                        <div class="fw-semibold">@Model.Store?.Name</div>
+                        <div class="small text-muted">@Model.Store?.Address</div>
+                    </div>
+                </div>
+            </div>
+
+            @if (Model.PointsEarned > 0)
+            {
+                <div class="card border-0 shadow-sm rounded-0 bg-light">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center gap-2 text-success fw-bold">
+                            <span>✦</span>
+                            <span>Bạn đã tích được @Model.PointsEarned.ToString("N0") điểm loyalty!</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

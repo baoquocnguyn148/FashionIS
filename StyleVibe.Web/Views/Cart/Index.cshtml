@@ -39,7 +39,7 @@
                     <span>Tổng cộng</span>
                     <span id="summaryTotal">0₫</span>
                 </div>
-                <a href="#" class="btn-checkout">TIẾN HÀNH THANH TOÁN</a>
+                <button class="btn-checkout" onclick="proceedToCheckout()">TIẾN HÀNH THANH TOÁN</button>
                 <a asp-controller="Products" asp-action="Index"
                    style="display:block;text-align:center;margin-top:16px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--sv-gray-text);">
                     ← Tiếp tục mua sắm
@@ -56,7 +56,7 @@
     }
 
     function renderCart() {
-        const cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
         const listEl    = document.getElementById('cartItemsList');
         const emptyEl   = document.getElementById('cartEmpty');
         const summaryEl = document.getElementById('cartSummaryBox');
@@ -124,18 +124,29 @@
     }
 
     function changeQty(idx, delta) {
-        let cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
         cart[idx].quantity += delta;
         if (cart[idx].quantity <= 0) cart.splice(idx, 1);
-        sessionStorage.setItem('cart', JSON.stringify(cart));
+        localStorage.setItem('cart', JSON.stringify(cart));
         renderCart();
     }
 
     function removeItem(idx) {
-        let cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
         cart.splice(idx, 1);
-        sessionStorage.setItem('cart', JSON.stringify(cart));
+        localStorage.setItem('cart', JSON.stringify(cart));
         renderCart();
+    }
+
+    function proceedToCheckout() {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        if (!cart.length) {
+            alert('Giỏ hàng đang trống!');
+            return;
+        }
+        // Lưu cart vào sessionStorage để Checkout page đọc 
+        sessionStorage.setItem('checkoutCart', JSON.stringify(cart));
+        window.location.href = '/Checkout/Index';
     }
 
     document.addEventListener('DOMContentLoaded', renderCart);

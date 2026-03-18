@@ -12,7 +12,10 @@ public class PosService(IAppDbContext context) : IPosService
         int? customerId,
         IEnumerable<(int productSkuId, int quantity, decimal discountPercent)> items,
         byte paymentMethod,
-        string? note,
+        string? note = null,
+        string? customerName = null,
+        string? phone = null,
+        string? address = null,
         CancellationToken cancellationToken = default)
     {
         var itemList = items.ToList();
@@ -65,7 +68,7 @@ public class PosService(IAppDbContext context) : IPosService
                 QuantityBefore = inventory.QuantityOnHand + item.quantity,
                 QuantityChange = -item.quantity,
                 QuantityAfter = inventory.QuantityOnHand,
-                Reason = StockAdjustmentReason.PurchaseOrder, // simplified; POS sale
+                Reason = StockAdjustmentReason.Manual,
                 InventoryId = inventory.Id,
                 CreatedAt = now
             };
@@ -90,6 +93,9 @@ public class PosService(IAppDbContext context) : IPosService
             OrderDate = now,
             StoreId = storeId,
             CustomerId = customerId,
+            CustomerName = customerName,
+            Phone = phone,
+            Address = address,
             SubTotal = subTotal,
             DiscountAmount = 0,
             TotalAmount = subTotal,

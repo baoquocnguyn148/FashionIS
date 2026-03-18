@@ -1,145 +1,190 @@
+@using StyleVibe.Domain.Enums
+@using System.Text.Json
 @{
     ViewData["Title"] = "Admin Dashboard";
+    var revenueByDay = ViewBag.RevenueByDay as List<object> ?? new();
+    var revenueJson = JsonSerializer.Serialize(revenueByDay.Select(x => ((dynamic)x).revenue));
+    var datesJson = JsonSerializer.Serialize(revenueByDay.Select(x => ((dynamic)x).date));
+    var recentOrders = ViewBag.RecentOrders as List<StyleVibe.Domain.Entities.Order> ?? new();
+
+    string StatusBadge(OrderStatus s) => s switch
+    {
+        OrderStatus.Pending => "badge bg-warning text-dark",
+        OrderStatus.Confirmed => "badge bg-info",
+        OrderStatus.Processing => "badge bg-primary",
+        OrderStatus.Completed => "badge bg-success",
+        OrderStatus.Cancelled => "badge bg-danger",
+        _ => "badge bg-secondary"
+    };
 }
 
-<div class="container-fluid mt-4">
-    <h1 class="mb-4">Dashboard</h1>
-
-    <div class="row g-4 mb-4">
-        <div class="col-md-3">
-            <div class="card dashboard-card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="dashboard-label mb-1">Tổng sản phẩm</p>
-                            <h2 class="dashboard-stat mb-0">@ViewBag.TotalProducts</h2>
-                        </div>
-                        <div class="text-primary" style="font-size: 2.5rem;">📦</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card dashboard-card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="dashboard-label mb-1">Tổng đơn hàng</p>
-                            <h2 class="dashboard-stat mb-0">@ViewBag.TotalOrders</h2>
-                        </div>
-                        <div class="text-success" style="font-size: 2.5rem;">🛒</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card dashboard-card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="dashboard-label mb-1">Tổng khách hàng</p>
-                            <h2 class="dashboard-stat mb-0">@ViewBag.TotalCustomers</h2>
-                        </div>
-                        <div class="text-info" style="font-size: 2.5rem;">👥</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card dashboard-card">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <p class="dashboard-label mb-1">Doanh thu hôm nay</p>
-                            <h2 class="dashboard-stat mb-0">@(((decimal)ViewBag.TodayRevenue).ToString("N0")) đ</h2>
-                        </div>
-                        <div class="text-danger" style="font-size: 2.5rem;">💰</div>
-                    </div>
-                </div>
+<div class="row g-3 mb-4">
+    <div class="col-md-3 col-lg">
+        <div class="card border-0 shadow-sm rounded-0 h-100">
+            <div class="card-body">
+                <div class="text-muted small fw-bold text-uppercase mb-1">Sản phẩm</div>
+                <div class="h3 mb-0">@ViewBag.TotalProducts</div>
             </div>
         </div>
     </div>
-
-    <div class="row g-4 mb-4">
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Doanh thu tháng này</h5>
-                </div>
-                <div class="card-body">
-                    <h3 class="text-primary">@(((decimal)ViewBag.ThisMonthRevenue).ToString("N0")) đ</h3>
-                    @if ((decimal)ViewBag.RevenueGrowth > 0)
-                    {
-                        <p class="text-success mb-0">
-                            <span class="badge bg-success">+@(((decimal)ViewBag.RevenueGrowth).ToString("F1"))%</span>
-                            so với tháng trước
-                        </p>
-                    }
-                    else if ((decimal)ViewBag.RevenueGrowth < 0)
-                    {
-                        <p class="text-danger mb-0">
-                            <span class="badge bg-danger">@(((decimal)ViewBag.RevenueGrowth).ToString("F1"))%</span>
-                            so với tháng trước
-                        </p>
-                    }
-                </div>
+    <div class="col-md-3 col-lg">
+        <div class="card border-0 shadow-sm rounded-0 h-100">
+            <div class="card-body">
+                <div class="text-muted small fw-bold text-uppercase mb-1">Đơn hàng</div>
+                <div class="h3 mb-0">@ViewBag.TotalOrders</div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Sản phẩm bán chạy</h5>
-                </div>
-                <div class="card-body">
-                    @if (ViewBag.TopProducts != null && ((IEnumerable<dynamic>)ViewBag.TopProducts).Any())
+    </div>
+    <div class="col-md-3 col-lg">
+        <div class="card border-0 shadow-sm rounded-0 h-100">
+            <div class="card-body">
+                <div class="text-muted small fw-bold text-uppercase mb-1">Khách hàng</div>
+                <div class="h3 mb-0">@ViewBag.TotalCustomers</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-lg">
+        <div class="card border-0 shadow-sm rounded-0 h-100">
+            <div class="card-body">
+                <div class="text-muted small fw-bold text-uppercase mb-1">Doanh thu tháng</div>
+                <div class="h3 mb-0 text-danger">@(((decimal)ViewBag.ThisMonthRevenue).ToString("N0"))</div>
+                <div class="small mt-1">
+                    @if ((decimal)ViewBag.RevenueGrowth >= 0)
                     {
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Sản phẩm</th>
-                                        <th>Số lượng bán</th>
-                                        <th>Doanh thu</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var product in ViewBag.TopProducts)
-                                    {
-                                        <tr>
-                                            <td>@product.ProductName</td>
-                                            <td>@product.TotalSold</td>
-                                            <td>@(((decimal)product.Revenue).ToString("N0")) đ</td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
+                        <span class="text-success">↑ @(((decimal)ViewBag.RevenueGrowth).ToString("F1"))%</span>
                     }
                     else
                     {
-                        <p class="text-muted">Chưa có dữ liệu</p>
+                        <span class="text-danger">↓ @(((decimal)ViewBag.RevenueGrowth).ToString("F1"))%</span>
                     }
+                    <span class="text-muted ms-1">vs tháng trước</span>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="row">
-        <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Quick Actions</h5>
-                </div>
+    <div class="col-md-3 col-lg">
+        <a href="/AdminInventory/Index?LowStock=true" class="text-decoration-none h-100">
+            <div class="card border-0 shadow-sm rounded-0 h-100 @(ViewBag.LowStockCount > 0 ? "bg-danger text-white" : "")">
                 <div class="card-body">
-                    <div class="d-flex gap-2 flex-wrap">
-                        <a asp-action="Products" class="btn btn-primary">Quản lý sản phẩm</a>
-                        <a asp-action="Orders" class="btn btn-primary">Quản lý đơn hàng</a>
-                        <a asp-action="Inventory" class="btn btn-primary">Quản lý tồn kho</a>
-                        <a asp-action="Customers" class="btn btn-primary">Quản lý khách hàng</a>
-                        <a asp-action="Reports" class="btn btn-outline-primary">Báo cáo</a>
-                    </div>
+                    <div class="@(ViewBag.LowStockCount > 0 ? "text-white-50" : "text-muted") small fw-bold text-uppercase mb-1">Tồn kho thấp</div>
+                    <div class="h3 mb-0">@ViewBag.LowStockCount</div>
+                </div>
+            </div>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm rounded-0 mb-4">
+            <div class="card-header bg-white py-3 border-0">
+                <h6 class="mb-0 fw-bold">Doanh thu 7 ngày gần nhất</h6>
+            </div>
+            <div class="card-body">
+                <div id="revenueChart"></div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-0">
+            <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold">Đơn hàng gần đây</h6>
+                <a href="/AdminOrders/Index" class="btn btn-sm btn-outline-dark">Xem tất cả</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table mb-0 align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Cửa hàng</th>
+                            <th class="text-end">Tổng tiền</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var o in recentOrders)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@o.OrderCode</td>
+                                <td>@(o.Customer?.FullName ?? "-")</td>
+                                <td>@o.Store?.Name</td>
+                                <td class="text-end fw-bold">@o.TotalAmount.ToString("N0")</td>
+                                <td><span class="@StatusBadge(o.Status)">@o.Status</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm rounded-0 mb-4">
+            <div class="card-header bg-white py-3 border-0">
+                <h6 class="mb-0 fw-bold">Sản phẩm bán chạy</h6>
+            </div>
+            <div class="card-body p-0">
+                <ul class="list-group list-group-flush">
+                    @if (ViewBag.TopProducts != null)
+                    {
+                        foreach (var p in ViewBag.TopProducts)
+                        {
+                            <li class="list-group-item border-0 py-3">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="fw-semibold text-truncate me-2" style="max-width: 200px;">@p.ProductName</div>
+                                    <div class="badge bg-light text-dark">@p.TotalSold bán</div>
+                                </div>
+                                <div class="small text-muted mt-1">@(((decimal)p.Revenue).ToString("N0")) đ</div>
+                            </li>
+                        }
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-0 bg-dark text-white">
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">Phím tắt</h6>
+                <div class="d-grid gap-2">
+                    <a href="/AdminProducts/Create" class="btn btn-danger btn-sm text-start">+ Thêm sản viên</a>
+                    <a href="/AdminInventory/CreatePO" class="btn btn-outline-light btn-sm text-start">+ Tạo đơn nhập hàng</a>
+                    <a href="/AdminSettings/Index" class="btn btn-outline-light btn-sm text-start">⚙️ Cài đặt hệ thống</a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            var options = {
+                chart: { type: 'area', height: 350, toolbar: { show: false }, fontFamily: 'inherit' },
+                series: [{ name: 'Doanh thu', data: @Html.Raw(revenueJson) }],
+                xaxis: { categories: @Html.Raw(datesJson) },
+                colors: ['#e53935'],
+                stroke: { curve: 'smooth', width: 3 },
+                fill: { 
+                    type: 'gradient', 
+                    gradient: { 
+                        shadeIntensity: 1, 
+                        opacityFrom: 0.45, 
+                        opacityTo: 0.05, 
+                        stops: [20, 100, 100, 100] 
+                    } 
+                },
+                dataLabels: { enabled: false },
+                yaxis: {
+                    labels: {
+                        formatter: function (val) {
+                            return val.toLocaleString() + " đ";
+                        }
+                    }
+                }
+            };
+            var chart = new ApexCharts(document.querySelector("#revenueChart"), options);
+            chart.render();
+        });
+    </script>
+}

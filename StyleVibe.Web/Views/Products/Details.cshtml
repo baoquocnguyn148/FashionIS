@@ -87,6 +87,7 @@
                 <button id="addToCartBtn" class="btn-add-to-cart" onclick="addToCart()">
                     THÊM VÀO GIỎ HÀNG
                 </button>
+                <p id="stockInfo" style="font-size:12px;margin-top:6px;letter-spacing:0.04em;"></p>
 
                 <p id="cartFeedback" style="display:none;font-size:13px;text-align:center;color:var(--sv-success);margin-top:8px;font-weight:600;">
                     ✓ Đã thêm vào giỏ hàng!
@@ -122,6 +123,7 @@
         el.classList.add('selected');
         selectedSize = el.dataset.size;
         updatePrice();
+        checkStock();
     }
 
     function selectColor(el) {
@@ -129,16 +131,41 @@
         el.classList.add('selected');
         selectedColor = el.dataset.color;
         updatePrice();
+        checkStock();
     }
 
     function updatePrice() {
         const sku = skuData.find(s =>
-            (selectedSize  ? s.Size  === selectedSize  : true) &&
+            (selectedSize ? s.Size === selectedSize : true) &&
             (selectedColor ? s.Color === selectedColor : true)
         );
         if (sku) {
             const priceEl = document.querySelector('.product-detail-price');
             if (priceEl) priceEl.textContent = sku.price.toLocaleString('vi-VN') + '₫';
+        }
+    }
+
+    async function checkStock() {
+        if (!selectedSize || !selectedColor) return;
+        const sku = skuData.find(s => s.Size === selectedSize && s.Color === selectedColor);
+        if (!sku) return;
+
+        // Dùng store mặc định (storeId=1) hoặc cho user chọn store 
+        const res = await fetch(`/Products/GetSkuStock?skuId=${sku.Id}&storeId=1`);
+        const data = await res.json();
+
+        const btn = document.getElementById('addToCartBtn');
+        const stockInfo = document.getElementById('stockInfo');
+        if (!stockInfo) return;
+
+        if (data.inStock) {
+            stockInfo.textContent = `Còn hàng (${data.quantityOnHand} sản phẩm)`;
+            stockInfo.style.color = 'var(--sv-success, #2e7d32)';
+            btn.disabled = false;
+        } else {
+            stockInfo.textContent = 'Hết hàng';
+            stockInfo.style.color = '#e53935';
+            btn.disabled = true;
         }
     }
 
@@ -159,11 +186,11 @@
         );
         if (!sku) { alert('Không tìm thấy phiên bản phù hợp!'); return; }
 
-        let cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
         const existing = cart.find(i => i.skuId === sku.Id);
         if (existing) { existing.quantity += 1; }
         else { cart.push({ skuId: sku.Id, skuCode: sku.SkuCode, size: sku.Size, color: sku.Color, price: sku.price, quantity: 1, name: document.querySelector('.product-detail-name')?.textContent || '' }); }
-        sessionStorage.setItem('cart', JSON.stringify(cart));
+        localStorage.setItem('cart', JSON.stringify(cart));
 
         // Update badge
         const badge = document.getElementById('cartBadge');
@@ -177,7 +204,7 @@
 
     // Init cart badge
     document.addEventListener('DOMContentLoaded', () => {
-        const cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
         const total = cart.reduce((a,b) => a + b.quantity, 0);
         const badge = document.getElementById('cartBadge');
         if (badge && total > 0) { badge.textContent = total; badge.style.display = 'flex'; }

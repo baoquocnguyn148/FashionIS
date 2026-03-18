@@ -1,0 +1,71 @@
+@model List<StyleVibe.Domain.Entities.Employee>
+@{
+    ViewData["Title"] = "Quản lý nhân viên";
+    var stores = ViewBag.Stores as List<StyleVibe.Domain.Entities.Store> ?? new();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <form method="get" class="d-flex gap-2">
+        <select name="storeId" class="form-select" style="width: 200px;">
+            <option value="">Tất cả cửa hàng</option>
+            @foreach (var s in stores)
+            {
+                <option value="@s.Id" selected="@(ViewBag.StoreId == s.Id ? "selected" : null)">@s.Name</option>
+            }
+        </select>
+        <button class="btn btn-dark" type="submit">Lọc</button>
+    </form>
+    <a href="/AdminEmployees/Create" class="btn btn-danger">+ Thêm nhân viên</a>
+</div>
+
+<div class="card border-0 shadow-sm rounded-0">
+    <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Họ tên</th>
+                    <th>Chức vụ</th>
+                    <th>Cửa hàng</th>
+                    <th>Liên hệ</th>
+                    <th>Ngày vào làm</th>
+                    <th>Trạng thái</th>
+                    <th class="text-end">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var e in Model)
+                {
+                    <tr>
+                        <td class="fw-bold">@e.FullName</td>
+                        <td>@e.Position</td>
+                        <td>@e.Store?.Name</td>
+                        <td>
+                            <div class="small">📞 @e.Phone</div>
+                            <div class="small text-muted">📧 @e.Email</div>
+                        </td>
+                        <td>@e.HireDate.ToString("dd/MM/yyyy")</td>
+                        <td>
+                            @if (e.IsActive)
+                            {
+                                <span class="badge bg-success">Đang làm việc</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">Nghỉ việc</span>
+                            }
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-2">
+                                <a href="/AdminEmployees/Edit/@e.Id" class="btn btn-outline-dark btn-sm">Edit</a>
+                                <form method="post" action="/AdminEmployees/Delete/@e.Id" onsubmit="return confirm('Bạn có chắc muốn xóa nhân viên này?')">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">Delete</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

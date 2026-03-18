@@ -1,0 +1,137 @@
+@model StyleVibe.Web.ViewModels.Admin.PurchaseOrderViewModel
+@{
+    ViewData["Title"] = "Tạo đơn nhập hàng mới (PO)";
+    var suppliers = ViewBag.Suppliers as List<StyleVibe.Domain.Entities.Supplier> ?? new();
+    var stores = ViewBag.Stores as List<StyleVibe.Domain.Entities.Store> ?? new();
+    var skus = ViewBag.Skus as List<StyleVibe.Domain.Entities.ProductSku> ?? new();
+}
+
+<div class="mb-3">
+    <a href="/AdminInventory/PurchaseOrders" class="btn btn-outline-dark btn-sm">← Quay lại danh sách PO</a>
+</div>
+
+<form method="post" id="poForm">
+    @Html.AntiForgeryToken()
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-0 h-100">
+                <div class="card-header bg-white py-3 border-0">
+                    <h6 class="mb-0 fw-bold">Thông tin chung</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nhà cung cấp</label>
+                        <select asp-for="SupplierId" class="form-select" required>
+                            <option value="">-- Chọn nhà cung cấp --</option>
+                            @foreach (var s in suppliers)
+                            {
+                                <option value="@s.Id">@s.Name</option>
+                            }
+                        </select>
+                        <span asp-validation-for="SupplierId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Cửa hàng nhập hàng</label>
+                        <select asp-for="StoreId" class="form-select" required>
+                            <option value="">-- Chọn cửa hàng --</option>
+                            @foreach (var s in stores)
+                            {
+                                <option value="@s.Id">@s.Name</option>
+                            }
+                        </select>
+                        <span asp-validation-for="StoreId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-0">
+                        <label class="form-label fw-bold">Ghi chú</label>
+                        <textarea asp-for="Note" class="form-control" rows="3" placeholder="Ghi chú đơn nhập..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-0">
+                <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold">Danh sách sản phẩm nhập</h6>
+                    <button type="button" class="btn btn-dark btn-sm" onclick="addRow()">+ Thêm dòng</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table mb-0 align-middle" id="itemsTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="min-width: 250px;">Sản phẩm / SKU</th>
+                                <th style="width: 120px;">Số lượng</th>
+                                <th style="width: 150px;">Đơn giá nhập</th>
+                                <th style="width: 50px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < (Model.Items.Count > 0 ? Model.Items.Count : 1); i++)
+                            {
+                                <tr>
+                                    <td>
+                                        <select name="Items[@i].ProductSkuId" class="form-select" required>
+                                            <option value="">-- Chọn SKU --</option>
+                                            @foreach (var s in skus)
+                                            {
+                                                <option value="@s.Id">@s.SkuCode - @s.Product?.Name (@s.Size/@s.Color)</option>
+                                            }
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" name="Items[@i].Quantity" class="form-control" value="1" min="1" required />
+                                    </td>
+                                    <td>
+                                        <input type="number" name="Items[@i].UnitCost" class="form-control" value="0" min="0" required />
+                                    </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeRow(this)">✕</button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-white py-3 border-0">
+                    <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold">XÁC NHẬN TẠO ĐƠN NHẬP HÀNG (PO)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        function addRow() {
+            const tbody = document.querySelector('#itemsTable tbody');
+            const rowCount = tbody.rows.length;
+            const newRow = tbody.rows[0].cloneNode(true);
+            
+            // Cập nhật index cho các name attribute
+            newRow.querySelectorAll('[name]').forEach(el => {
+                const name = el.getAttribute('name');
+                el.setAttribute('name', name.replace('[0]', `[${rowCount}]`));
+                if (el.tagName === 'INPUT') el.value = el.getAttribute('name').includes('Quantity') ? '1' : '0';
+                if (el.tagName === 'SELECT') el.value = '';
+            });
+            
+            tbody.appendChild(newRow);
+        }
+
+        function removeRow(btn) {
+            const tbody = document.querySelector('#itemsTable tbody');
+            if (tbody.rows.length > 1) {
+                btn.closest('tr').remove();
+                // Cập nhật lại toàn bộ index để tránh lỗi model binding
+                Array.from(tbody.rows).forEach((row, idx) => {
+                    row.querySelectorAll('[name]').forEach(el => {
+                        const name = el.getAttribute('name');
+                        el.setAttribute('name', name.replace(/\[\d+\]/, `[${idx}]`));
+                    });
+                });
+            }
+        }
+    </script>
+}
