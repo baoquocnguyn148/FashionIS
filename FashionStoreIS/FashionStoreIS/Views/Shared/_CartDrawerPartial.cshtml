@@ -1,0 +1,49 @@
+@model List<FashionStoreIS.Models.CartItemViewModel>
+
+@if (Model != null && Model.Any())
+{
+    @foreach (var item in Model)
+    {
+        <div class="cart-item">
+            <div class="cart-item-image">
+                <img src="@item.ImageUrl" alt="@item.Name" />
+            </div>
+            <div class="cart-item-details">
+                <div class="cart-item-name">@item.Name</div>
+                <div class="cart-item-price">@item.Price.ToString("N0") VND</div>
+                <div class="cart-item-meta">
+                    Size: @(string.IsNullOrEmpty(item.Size) ? "N/A" : item.Size) | 
+                    Color: @(string.IsNullOrEmpty(item.Color) ? "Default" : item.Color)
+                </div>
+                <div class="quantity-control">
+                    <button type="button" class="qty-btn" data-delta="-1" data-product-id="@item.ProductId" data-color="@item.Color" data-size="@item.Size">−</button>
+                    <span class="qty-value">@item.Quantity</span>
+                    <button type="button" class="qty-btn" data-delta="1" data-product-id="@item.ProductId" data-color="@item.Color" data-size="@item.Size">+</button>
+                </div>
+                <button type="button" class="remove-btn" data-product-id="@item.ProductId" data-color="@item.Color" data-size="@item.Size">Xóa</button>
+            </div>
+        </div>
+    }
+    
+    <div class="cart-footer">
+        <div class="cart-total">
+            <span class="cart-total-label">Tổng cộng:</span>
+            <span class="cart-total-value">@Model.Sum(i => i.TotalPrice).ToString("N0") VND</span>
+        </div>
+        <button type="button" class="checkout-btn" onclick="window.location.href='/Checkout'">Thanh toán</button>
+    </div>
+}
+else
+{
+    <div class="cart-empty">
+        <div class="cart-empty-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <path d="M16 10a4 4 0 0 1-8 0"></path>
+            </svg>
+        </div>
+        <div class="cart-empty-text">Giỏ hàng của bạn đang trống</div>
+        <a href="/Product/List" class="continue-shopping">Tiếp tục mua sắm</a>
+    </div>
+}

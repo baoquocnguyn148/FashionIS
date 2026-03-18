@@ -1,0 +1,176 @@
+@model List<FashionStoreIS.Models.Order>
+@{
+    ViewData["Title"] = "Quản lý Đơn hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="search-bar" style="display:flex; justify-content:space-between; align-items:center;">
+    <form method="get" style="display:flex; gap:10px; align-items:center;">
+        <input type="text" name="search" class="form-control" style="width:250px;" placeholder="Tên khách hàng, SĐT..." value="@ViewBag.Search" />
+        <select name="status" class="form-control" style="width:180px;">
+            <option value="">Tất cả trạng thái</option>
+            <option value="Pending" selected="@(ViewBag.Status == "Pending" ? "selected" : null)">Chờ xử lý</option>
+            <option value="Processing" selected="@(ViewBag.Status == "Processing" ? "selected" : null)">Đang xử lý</option>
+            <option value="Shipped" selected="@(ViewBag.Status == "Shipped" ? "selected" : null)">Đã giao hàng</option>
+            <option value="Completed" selected="@(ViewBag.Status == "Completed" ? "selected" : null)">Đã nhận hàng</option>
+            <option value="Cancelled" selected="@(ViewBag.Status == "Cancelled" ? "selected" : null)">Đã hủy</option>
+        </select>
+        <button type="submit" class="btn-admin btn-secondary">
+            <i class="fas fa-search"></i> Lọc
+        </button>
+    </form>
+    <a href="/Admin/Order/ExportCsv" class="btn-admin btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border:none;">
+        <i class="fas fa-file-export"></i> Xuất CSV
+    </a>
+</div>
+
+<div class="admin-card">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Mã đơn</th>
+                <th>Khách hàng</th>
+                <th>Thông tin liên hệ</th>
+                <th>Tổng tiền</th>
+                <th>Trạng thái</th>
+                <th>Thời gian</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in Model)
+            {
+                <tr>
+                    <td><span class="order-id">#@order.Id</span></td>
+                    <td><div class="customer-name">@order.CustomerName</div></td>
+                    <td><div class="contact-info"><i class="fas fa-phone-alt"></i> @order.Phone</div></td>
+                    <td><div class="price-text">@order.TotalAmount.ToString("N0") VND</div></td>
+                    <td>
+                        @{
+                            var statusClass = order.Status.ToString().ToLower();
+                            var statusName = order.Status switch
+                            {
+                                FashionStoreIS.Models.OrderStatus.Pending => "Chờ xử lý",
+                                FashionStoreIS.Models.OrderStatus.Processing => "Đang xử lý",
+                                FashionStoreIS.Models.OrderStatus.Shipped => "Đã giao hàng",
+                                FashionStoreIS.Models.OrderStatus.Completed => "Hoàn thành",
+                                FashionStoreIS.Models.OrderStatus.Cancelled => "Đã hủy",
+                                _ => order.Status.ToString()
+                            };
+                        }
+                        <span class="status-badge status-@statusClass">@statusName</span>
+                    </td>
+                    <td><div class="date-text">@order.CreatedAt.ToString("dd/MM/yyyy")<br/><small>@order.CreatedAt.ToString("HH:mm")</small></div></td>
+                    <td>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            <a href="/Admin/Order/Details/@order.Id" class="btn-action btn-view">
+                                <i class="fas fa-eye"></i> Xem chi tiết
+                            </a>
+                            <form method="post" action="/Admin/Order/UpdateStatus/@order.Id" style="display:flex; gap:5px;">
+                                @Html.AntiForgeryToken()
+                                <select name="status" class="form-control select-compact">
+                                    <option value="Pending" selected="@(order.Status == FashionStoreIS.Models.OrderStatus.Pending ? "selected" : null)">Đợi</option>
+                                    <option value="Processing" selected="@(order.Status == FashionStoreIS.Models.OrderStatus.Processing ? "selected" : null)">Xử lý</option>
+                                    <option value="Shipped" selected="@(order.Status == FashionStoreIS.Models.OrderStatus.Shipped ? "selected" : null)">Giao</option>
+                                    <option value="Completed" selected="@(order.Status == FashionStoreIS.Models.OrderStatus.Completed ? "selected" : null)">Xong</option>
+                                    <option value="Cancelled" selected="@(order.Status == FashionStoreIS.Models.OrderStatus.Cancelled ? "selected" : null)">Hủy</option>
+                                </select>
+                                <button type="submit" class="btn-inline-save"><i class="fas fa-check"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+    @if (!Model.Any())
+    {
+        <div class="empty-state">
+            <i class="fas fa-box-open"></i>
+            <p>Không tìm thấy đơn hàng nào khớp với điều kiện lọc.</p>
+        </div>
+    }
+</div>
+
+<style>
+/* Reset search bar for Phase 3 */
+.search-bar {
+    margin-bottom: 25px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 20px;
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.order-id {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    color: #a78bfa;
+    background: rgba(167, 139, 250, 0.1);
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.customer-name { font-weight: 600; color: #f3f4f6; }
+.contact-info { font-size: 13px; color: #9ca3af; }
+.price-text { font-weight: 700; color: #10b981; font-size: 15px; }
+.date-text { font-size: 13px; color: #9ca3af; line-height: 1.2; }
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.status-pending { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #451a03; }
+.status-processing { background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); color: #eff6ff; }
+.status-shipped { background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%); color: #faf5ff; }
+.status-delivered { background: linear-gradient(135deg, #34d399 0%, #10b981 100%); color: #ecfdf5; }
+.status-cancelled { background: linear-gradient(135deg, #f87171 0%, #ef4444 100%); color: #fef2f2; }
+
+.btn-view {
+    background: rgba(255, 255, 255, 0.05);
+    color: #e5e7eb;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 6px 12px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 12px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+.btn-view:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+
+.select-compact {
+    height: 32px !important;
+    padding: 0 8px !important;
+    font-size: 12px !important;
+    background: #1f2937 !important;
+    border-color: #374151 !important;
+    color: #fff !important;
+}
+
+.btn-inline-save {
+    background: #4f46e5;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px;
+    color: #6b7280;
+}
+.empty-state i { font-size: 48px; margin-bottom: 20px; opacity: 0.3; }
+</style>

@@ -1,0 +1,190 @@
+@model FashionStoreIS.Models.Order
+@{
+    ViewData["Title"] = "Chi tiết Đơn hàng #" + Model.Id;
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<div class="admin-actions-top" style="margin-bottom: 20px; display: flex; justify-content: space-between;">
+    <a href="/Admin/Order" class="btn-admin btn-secondary"><i class="fas fa-arrow-left"></i> Quay lại</a>
+    <button onclick="window.print()" class="btn-admin btn-primary" style="background: #3b82f6;"><i class="fas fa-print"></i> In hóa đơn</button>
+</div>
+
+<div class="admin-card invoice-box" id="invoice">
+    <div class="invoice-header">
+        <div class="brand">
+            <h1 style="color: #a78bfa; margin: 0; font-size: 28px;">BN STORE</h1>
+            <p style="margin: 5px 0 0; color: #9ca3af; font-size: 13px;">Hóa đơn bán hàng điện tử</p>
+        </div>
+        <div class="order-meta" style="text-align: right;">
+            <h2 style="margin: 0; font-size: 18px;">ĐƠN HÀNG #@Model.Id</h2>
+            <p style="margin: 5px 0 0; color: #9ca3af;">Ngày: @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+            <div style="margin-top: 10px;">
+                @{
+                    var statusClass = Model.Status.ToString().ToLower();
+                    var statusName = Model.Status switch
+                    {
+                        FashionStoreIS.Models.OrderStatus.Pending => "Chờ xử lý",
+                        FashionStoreIS.Models.OrderStatus.Processing => "Đang xử lý",
+                        FashionStoreIS.Models.OrderStatus.Shipped => "Đã giao hàng",
+                        FashionStoreIS.Models.OrderStatus.Completed => "Hoàn thành",
+                        FashionStoreIS.Models.OrderStatus.Cancelled => "Đã hủy",
+                        _ => Model.Status.ToString()
+                    };
+                }
+                <span class="status-badge status-@statusClass">@statusName</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="invoice-details" style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+        <div class="customer-section">
+            <h3 class="section-title">Thông tin giao hàng</h3>
+            <div class="info-group">
+                <label>Khách hàng:</label>
+                <span>@Model.CustomerName</span>
+            </div>
+            <div class="info-group">
+                <label>Số điện thoại:</label>
+                <span>@Model.Phone</span>
+            </div>
+            <div class="info-group" style="display: flex; flex-direction: column;">
+                <label>Địa chỉ</label>
+                <span style="margin-top: 4px; line-height: 1.5;">@Model.Address</span>
+            </div>
+        </div>
+        <div class="admin-section no-print">
+            <h3 class="section-title">Quản lý trạng thái</h3>
+            <form method="post" action="/Admin/Order/UpdateStatus/@Model.Id" class="status-update-form">
+                @Html.AntiForgeryToken()
+                <select name="status" class="form-control" style="background: #1f2937; border-color: #374151; color: #fff;">
+                    <option value="Pending" selected="@(Model.Status == FashionStoreIS.Models.OrderStatus.Pending ? "selected" : null)">Chờ xử lý</option>
+                    <option value="Processing" selected="@(Model.Status == FashionStoreIS.Models.OrderStatus.Processing ? "selected" : null)">Đang xử lý</option>
+                    <option value="Shipped" selected="@(Model.Status == FashionStoreIS.Models.OrderStatus.Shipped ? "selected" : null)">Đã giao hàng</option>
+                    <option value="Completed" selected="@(Model.Status == FashionStoreIS.Models.OrderStatus.Completed ? "selected" : null)">Đã nhận hàng</option>
+                    <option value="Cancelled" selected="@(Model.Status == FashionStoreIS.Models.OrderStatus.Cancelled ? "selected" : null)">Đã hủy</option>
+                </select>
+                <button type="submit" class="btn-admin btn-primary" style="margin-top: 15px; width: 100%;">Cập nhật ngay</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="items-section" style="margin-top: 40px;">
+        <h3 class="section-title">Danh sách sản phẩm</h3>
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>Sản phẩm</th>
+                    <th style="text-align: center;">Số lượng</th>
+                    <th style="text-align: right;">Đơn giá</th>
+                    <th style="text-align: right;">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.OrderDetails)
+                {
+                    var product = item.ProductSku?.Product ?? item.Product;
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                @if (product != null && !string.IsNullOrEmpty(product.ImageUrl))
+                                {
+                                    <img src="@product.ImageUrl" class="prod-thumb no-print" />
+                                }
+                                <div>
+                                    <div style="font-weight: 500;">@(product?.Name ?? "Sản phẩm không xác định")</div>
+                                    @if (item.ProductSku != null)
+                                    {
+                                        <div style="font-size: 11px; color: #9ca3af;">Size: @item.ProductSku.Size | Color: @item.ProductSku.Color</div>
+                                    }
+                                </div>
+                            </div>
+                        </td>
+                        <td style="text-align: center;">@item.Quantity</td>
+                        <td style="text-align: right;">@item.UnitPrice.ToString("N0") VND</td>
+                        <td style="text-align: right; font-weight: 600;">@item.Subtotal.ToString("N0") VND</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" style="text-align: right; padding-top: 30px; font-size: 14px; color: #9ca3af;">Tạm tính:</td>
+                    <td style="text-align: right; padding-top: 30px; font-size: 14px;">@Model.TotalAmount.ToString("N0") VND</td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="text-align: right; font-weight: 700; font-size: 18px; color: #fff;">TỔNG CỘNG:</td>
+                    <td style="text-align: right; font-weight: 700; font-size: 22px; color: #10b981;">@Model.TotalAmount.ToString("N0") VND</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<style>
+.invoice-box {
+    padding: 50px !important;
+    border-radius: 20px;
+    background: #111827;
+    position: relative;
+    overflow: hidden;
+}
+
+.invoice-box::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(167, 139, 250, 0.05) 0%, transparent 70%);
+}
+
+.invoice-header { display: flex; justify-content: space-between; align-items: flex-start; }
+
+.section-title {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #6b7280;
+    margin-bottom: 20px;
+    border-left: 3px solid #6366f1;
+    padding-left: 10px;
+}
+
+.info-group { margin-bottom: 12px; }
+.info-group label { color: #9ca3af; font-size: 13px; margin-right: 8px; }
+.info-group span { color: #f3f4f6; font-weight: 500; }
+
+.invoice-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.invoice-table th { color: #9ca3af; font-size: 11px; text-transform: uppercase; padding: 12px 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+.invoice-table td { padding: 20px 15px; border-bottom: 1px solid rgba(255,255,255,0.03); color: #f3f4f6; }
+
+.prod-thumb { width: 50px; height: 50px; border-radius: 10px; object-fit: cover; }
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.status-pending { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #451a03; }
+.status-processing { background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); color: #eff6ff; }
+.status-shipped { background: linear-gradient(135deg, #c084fc 0%, #a855f7 100%); color: #faf5ff; }
+.status-delivered { background: linear-gradient(135deg, #34d399 0%, #10b981 100%); color: #ecfdf5; }
+.status-cancelled { background: linear-gradient(135deg, #f87171 0%, #ef4444 100%); color: #fef2f2; }
+
+@@media print {
+    body * { visibility: hidden; }
+    .invoice-box, .invoice-box * { visibility: visible; }
+    .invoice-box { background: white !important; color: black !important; position: absolute; left: 0; top: 0; width: 100%; padding: 0 !important; }
+    .no-print { display: none !important; }
+    .invoice-box::before { display: none; }
+    .section-title { color: #333; border-left-color: #333; }
+    .info-group label { color: #666; }
+    .info-group span { color: #000; }
+    .invoice-table th { color: #666; border-bottom-color: #ddd; }
+    .invoice-table td { color: #000; border-bottom-color: #eee; }
+    .status-badge { border: 1px solid #000; background: none !important; color: black !important; padding: 2px 8px; }
+}
+</style>

@@ -1,0 +1,144 @@
+@model FashionStoreIS.Models.Order
+@using FashionStoreIS.Models
+@{
+    ViewData["Title"] = "Thanh toán";
+    var cartItems = ViewBag.Cart as List<CartItemViewModel>;
+    var totalAmount = ViewBag.TotalAmount as decimal? ?? 0;
+}
+
+<div class="checkout-container py-10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h1 class="text-3xl font-bold mb-8 text-slate-900 tracking-tight">THANH TOÁN</h1>
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-8">
+                <p class="text-red-700 font-medium">@TempData["Error"]</p>
+            </div>
+        }
+
+        <form asp-action="PlaceOrder" method="post" class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+            @Html.AntiForgeryToken()
+            
+            <!-- Left Column: Shipping Info -->
+            <div class="space-y-8">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h2 class="text-xl font-semibold mb-6 flex items-center">
+                        <span class="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm mr-3">1</span>
+                        Thông tin giao hàng
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 gap-5">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Họ và tên *</label>
+                            <input type="text" name="customerName" required placeholder="Nhập họ và tên người nhận"
+                                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black outline-none transition-all" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Số điện thoại *</label>
+                            <input type="tel" name="phone" required placeholder="Ví dụ: 0912345678"
+                                   class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black outline-none transition-all" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Địa chỉ nhận hàng *</label>
+                            <textarea name="address" required rows="3" placeholder="Số nhà, tên đường, phường/xã, quận/huyện..."
+                                      class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black outline-none transition-all"></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Ghi chú (Tùy chọn)</label>
+                            <textarea name="note" rows="2" placeholder="Ghi chú thêm về đơn hàng (ví dụ: giao giờ hành chính)"
+                                      class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black outline-none transition-all"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                    <h2 class="text-xl font-semibold mb-6 flex items-center">
+                        <span class="w-8 h-8 bg-black text-white rounded-full flex items-center justify-center text-sm mr-3">2</span>
+                        Phương thức thanh toán
+                    </h2>
+                    
+                    <div class="space-y-3">
+                        <label class="flex items-center p-4 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors">
+                            <input type="radio" name="paymentMethod" value="Cash" checked class="w-4 h-4 text-black focus:ring-black" />
+                            <div class="ml-4">
+                                <span class="block font-medium text-slate-900">Thanh toán khi nhận hàng (COD)</span>
+                                <span class="text-sm text-slate-500 italic block">Thanh toán trực tiếp cho shipper khi nhận được hàng.</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-4 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors opacity-60">
+                            <input type="radio" name="paymentMethod" value="BankTransfer" disabled class="w-4 h-4 text-black focus:ring-black" />
+                            <div class="ml-4">
+                                <span class="block font-medium text-slate-900">Chuyển khoản ngân hàng</span>
+                                <span class="text-xs text-red-500 font-medium">Bảo trì - Vui lòng chọn COD</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Order Summary -->
+            <div class="lg:sticky lg:top-24 h-fit">
+                <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                    <h2 class="text-xl font-semibold mb-6">Đơn hàng của bạn</h2>
+                    
+                    <div class="space-y-4 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+                        @foreach (var item in cartItems!)
+                        {
+                            <div class="flex items-start space-x-4 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                                <img src="@item.ImageUrl" alt="@item.Name" class="w-20 h-24 object-cover rounded-lg" />
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-sm font-semibold text-slate-900 truncate">@item.Name</h3>
+                                    <p class="text-xs text-slate-500 mb-1">Màu: @item.Color | Size: @item.Size</p>
+                                    <div class="flex justify-between items-center mt-2">
+                                        <span class="text-xs font-medium px-2 py-0.5 bg-slate-100 rounded">SL: x@item.Quantity</span>
+                                        <span class="text-sm font-bold text-slate-900">@item.Price.ToString("N0")₫</span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="mt-8 pt-6 border-t border-slate-200 space-y-4">
+                        <div class="flex justify-between text-slate-600">
+                            <span>Tạm tính</span>
+                            <span>@totalAmount.ToString("N0")₫</span>
+                        </div>
+                        <div class="flex justify-between text-slate-600">
+                            <span>Phí vận chuyển</span>
+                            <span class="text-green-600 font-medium">Lấy tại cửa hàng (Miễn phí)</span>
+                        </div>
+                        <div class="flex justify-between items-end pt-4 border-t border-slate-200">
+                            <span class="text-lg font-bold text-slate-900 uppercase">Tổng cộng</span>
+                            <span class="text-2xl font-black text-black">@totalAmount.ToString("N0")₫</span>
+                        </div>
+                    </div>
+
+                    <p class="mt-6 text-xs text-slate-500 text-center px-4">
+                        Bằng cách nhấn "Đặt hàng", bạn đồng ý với Điều khoản và Chính sách của BN STORE.
+                    </p>
+
+                    <button type="submit" class="w-full mt-6 bg-black hover:bg-slate-800 text-white font-bold py-4 rounded-xl shadow-lg transition-all transform hover:scale-[1.01] active:scale-95 flex items-center justify-center space-x-2">
+                        <span>ĐẶT HÀNG NGAY</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    
+                    <div class="mt-4 flex justify-center items-center space-x-4">
+                        <img src="/img/payment/visa.svg" class="h-4 grayscale hover:grayscale-0 transition-all opacity-40 hover:opacity-100" />
+                        <img src="/img/payment/mastercard.svg" class="h-4 grayscale hover:grayscale-0 transition-all opacity-40 hover:opacity-100" />
+                        <img src="/img/payment/momo.svg" class="h-4 grayscale hover:grayscale-0 transition-all opacity-40 hover:opacity-100" />
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+</style>

@@ -1,0 +1,73 @@
+@model List<FashionStoreIS.Models.CartItemViewModel>
+@{
+    ViewData["Title"] = "GIỎ HÀNG";
+    var total = Model?.Sum(i => i.TotalPrice) ?? 0;
+}
+
+<div class="page-container" style="margin-top: 110px; padding-bottom: 80px;">
+    <div class="d-flex align-items-end justify-content-between mb-4">
+        <div>
+            <h2 style="font-weight: 900; letter-spacing: .12em;">GIỎ HÀNG</h2>
+            <div style="color:#777; font-size: 13px;">@(Model?.Count ?? 0) sản phẩm</div>
+        </div>
+        <a href="/Product/List" class="btn btn-outline-dark rounded-0" style="font-weight:800; letter-spacing:.12em;">TIẾP TỤC MUA SẮM</a>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="text-center py-5" style="border:1px solid #eee; padding:60px;">
+            <div style="font-weight:900; letter-spacing:.08em;">GIỎ HÀNG TRỐNG</div>
+            <div class="mt-2" style="color:#777;">Hãy thêm sản phẩm vào giỏ để thanh toán.</div>
+            <a href="/Product/List" class="btn btn-dark rounded-0 mt-4" style="font-weight:900; letter-spacing:.12em; padding:14px 24px;">XEM SẢN PHẨM</a>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div style="border:1px solid #eee;">
+                    @foreach (var item in Model)
+                    {
+                        <div class="d-flex gap-3 p-3 align-items-center" style="border-bottom:1px solid #eee;">
+                            <div style="width:80px; height:100px; background:#f3f3f3;">
+                                <img src="@item.ImageUrl" alt="@item.Name" style="width:100%; height:100%; object-fit:cover;" />
+                            </div>
+                            <div class="flex-grow-1">
+                                <div style="font-weight:800;">@item.Name</div>
+                                <div style="color:#777; font-size: 12px;">@item.Color / @item.Size</div>
+                                <div style="font-weight:800; margin-top:6px;">@item.Price.ToString("N0") VND</div>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <button class="btn btn-outline-dark rounded-0" type="button" onclick="updateCartQty(@item.ProductId, '@item.Color', '@item.Size', -1)">-</button>
+                                <div style="min-width:32px; text-align:center; font-weight:800;">@item.Quantity</div>
+                                <button class="btn btn-outline-dark rounded-0" type="button" onclick="updateCartQty(@item.ProductId, '@item.Color', '@item.Size', 1)">+</button>
+                            </div>
+                            <div style="width:140px; text-align:right; font-weight:900;">
+                                @item.TotalPrice.ToString("N0") VND
+                            </div>
+                            <button class="btn btn-link text-danger" type="button" onclick="removeFromCart(@item.ProductId, '@item.Color', '@item.Size')" style="text-decoration:none; font-weight:800;">Xoá</button>
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div style="border:1px solid #eee; padding:20px;">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span style="color:#777;">Tạm tính</span>
+                        <span style="font-weight:900;">@total.ToString("N0") VND</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span style="color:#777;">Phí vận chuyển</span>
+                        <span style="font-weight:900;">0 VND</span>
+                    </div>
+                    <div class="d-flex justify-content-between" style="border-top:1px solid #eee; padding-top:12px;">
+                        <span style="font-weight:900; letter-spacing:.08em;">TỔNG CỘNG</span>
+                        <span style="font-weight:900;">@total.ToString("N0") VND</span>
+                    </div>
+                    <a href="/Checkout" class="btn btn-dark rounded-0 w-100 mt-3" style="font-weight:900; letter-spacing:.12em; padding:14px 0;">THANH TOÁN</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+

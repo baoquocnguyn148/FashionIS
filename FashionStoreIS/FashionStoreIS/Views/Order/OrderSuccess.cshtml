@@ -1,0 +1,79 @@
+@model FashionStoreIS.Models.Order
+@{
+    ViewData["Title"] = "Đặt hàng thành công";
+}
+
+<div class="order-success-container py-20 bg-white">
+    <div class="max-w-3xl mx-auto px-4 text-center">
+        <!-- Success Animation SVG -->
+        <div class="mb-10 inline-block animate-bounce-slow">
+            <div class="w-24 h-24 bg-green-500 rounded-full flex items-center justify-center shadow-lg shadow-green-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                </svg>
+            </div>
+        </div>
+
+        <h1 class="text-4xl font-black text-slate-900 mb-4 tracking-tight">CẢM ƠN QUÝ KHÁCH!</h1>
+        <p class="text-xl text-slate-600 mb-8 font-medium">Đơn hàng của bạn đang được xử lý.</p>
+
+        <div class="bg-slate-50 rounded-3xl p-8 border border-slate-100 text-left mb-10 shadow-sm">
+            <h2 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-200 pb-2">Thông tin đơn hàng</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Mã đơn hàng</label>
+                    <span class="text-lg font-black text-black">#@Model.OrderCode</span>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Ngày đặt hàng</label>
+                    <span class="text-md font-semibold text-slate-700">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Người nhận</label>
+                    <span class="text-md font-semibold text-slate-700">@Model.CustomerName</span>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Số điện thoại</label>
+                    <span class="text-md font-semibold text-slate-700">@Model.Phone</span>
+                </div>
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Địa chỉ giao hàng</label>
+                    <p class="text-md font-semibold text-slate-700 leading-relaxed">@Model.Address</p>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-8 border-t border-slate-200 flex justify-between items-end">
+                <div>
+                    <span class="block text-xs font-bold text-slate-400 uppercase mb-1">Tổng tiền thanh toán (COD)</span>
+                    <span class="text-3xl font-black text-black">@Model.TotalAmount.ToString("N0")₫</span>
+                </div>
+                <div class="text-right">
+                    <span class="block text-xs font-bold text-green-500 uppercase mb-1">Điểm tích lũy</span>
+                    <span class="text-xl font-bold text-green-600">+@Model.PointsEarned điểm</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4 sm:space-y-0 sm:flex sm:space-x-4 justify-center">
+            <a href="/" class="inline-flex items-center justify-center px-8 py-4 bg-black text-white font-bold rounded-2xl hover:bg-slate-800 transition-all w-full sm:w-auto">
+                TIẾP TỤC MUA SẮM
+            </a>
+            <a href="/Identity/Account/Manage/Orders" class="inline-flex items-center justify-center px-8 py-4 bg-white text-slate-900 border-2 border-slate-200 font-bold rounded-2xl hover:bg-slate-50 transition-all w-full sm:w-auto">
+                THEO DÕI ĐƠN HÀNG
+            </a>
+        </div>
+
+        <p class="mt-12 text-slate-400 text-sm italic">
+            Chúng tôi đã gửi email xác nhận và chi tiết đơn hàng đến địa chỉ email của bạn.
+        </p>
+    </div>
+</div>
+
+<style>
+    @@keyframes bounce-slow {
+        0%, 100% { transform: translateY(-5%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
+        50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
+    }
+    .animate-bounce-slow { animation: bounce-slow 3s infinite; }
+</style>

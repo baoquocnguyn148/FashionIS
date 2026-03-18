@@ -1,0 +1,276 @@
+@model Product
+@{
+    ViewData["Title"] = Model.Name;
+    var gallery = Model.Images?.OrderBy(i => i.DisplayOrder).ToList() ?? new List<ProductImage>();
+    var skus = Model.Skus?.ToList() ?? new List<ProductSku>();
+    var colors = skus.Select(v => v.Color).Distinct().ToList();
+    var sizes = skus.Select(v => v.Size).Distinct().ToList();
+}
+
+<div class="pdp-container">
+    <!-- Breadcrumb -->
+    <div class="pdp-breadcrumb">
+        <a href="/">Home</a> / 
+        <a href="/Product/List?cat=@Model.Category?.Slug">@Model.Category?.Name</a> / 
+        <span>@Model.Name</span>
+    </div>
+
+    <div class="pdp-main-grid">
+        <!-- 1. Left: Thumbnails Column -->
+        <div class="pdp-thumbnails">
+            <div class="thumb-item active" onclick="setMainImage('@Model.ImageUrl', this)">
+                <img src="@Model.ImageUrl" alt="Main image thumb" />
+            </div>
+            @foreach (var img in gallery)
+            {
+                <div class="thumb-item" onclick="setMainImage('@img.ImageUrl', this)">
+                    <img src="@img.ImageUrl" alt="Gallery image thumb" />
+                </div>
+            }
+        </div>
+
+        <!-- 2. Middle: Main Image Column -->
+        <div class="pdp-main-image-wrapper" style="position: relative;">
+            @if (Model.Stock <= 0)
+            {
+                <div class="sold-out-badge">SOLD OUT</div>
+            }
+            <img id="main-product-image" src="@Model.ImageUrl" alt="@Model.Name" />
+        </div>
+
+        <!-- 3. Right: Product Info Column -->
+        <div class="pdp-info-column">
+            <div class="pdp-brand">bn store premium</div>
+            <h1 class="pdp-title">@Model.Name</h1>
+            <div class="pdp-price">@Model.Price.ToString("N0") <span class="currency">₫</span></div>
+
+            <!-- Voucher Banner -->
+            <div class="pdp-voucher-banner">
+                <div class="voucher-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 5l-1.761 1.761a2 2 0 000 2.828L15 11.35M9 5l1.761 1.761a2 2 0 010 2.828L9 11.35M3 7a2 2 0 012-2h14a2 2 0 012 2v3a2 2 0 000 4v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3a2 2 0 000-4V7z"/></svg>
+                </div>
+                <div class="voucher-text">Voucher của BN Store</div>
+                <div class="voucher-arrow">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                </div>
+            </div>
+
+            <!-- Variant: Color -->
+            <div class="pdp-variant-section">
+                <div class="variant-header">
+                    <span class="label">Color</span>
+                    <span class="selected-value" id="current-color">Select Color</span>
+                </div>
+                <div class="color-options">
+                    @if (colors.Any())
+                    {
+                        foreach (var color in colors)
+                        {
+                            <div class="color-option" data-color="@color" onclick="selectColor('@color', this)">
+                                <img src="@Model.ImageUrl" alt="@color" />
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="color-option active" data-color="Default" onclick="selectColor('Default', this)">
+                            <img src="@Model.ImageUrl" alt="Default" />
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Variant: Size -->
+            <div class="pdp-variant-section">
+                <div class="variant-header">
+                    <span class="label">Size</span>
+                    <a href="#" class="size-chart-link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V4a2 2 0 00-2-2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2v-4M8 2v20M12 2v20M16 2v20"/></svg>
+                        Bảng size
+                    </a>
+                </div>
+                <div class="size-options">
+                    @{
+                        var sizeLabels = new[] { "S", "M", "L", "XL", "XXL" };
+                        int idx = 0;
+                    }
+                    @if (sizes.Any())
+                    {
+                        @foreach (var size in sizes)
+                        {
+                            var displayLabel = idx < sizeLabels.Length ? sizeLabels[idx] : size;
+                            <div class="size-option" data-size="@size" onclick="selectSize('@size', this)">@displayLabel</div>
+                            idx++;
+                        }
+                    }
+                    else
+                    {
+                        <div class="size-option" data-size="S" onclick="selectSize('S', this)">S</div>
+                        <div class="size-option" data-size="M" onclick="selectSize('M', this)">M</div>
+                        <div class="size-option" data-size="L" onclick="selectSize('L', this)">L</div>
+                    }
+                </div>
+            </div>
+
+            <!-- Quantity -->
+            <div class="pdp-quantity-section">
+                <span class="label">Số lượng</span>
+                <div class="quantity-controller">
+                    <button type="button" onclick="changeQty(-1)">
+                        <svg width="12" height="2" viewBox="0 0 12 2" fill="none" stroke="currentColor" stroke-width="2"><line x1="0" y1="1" x2="12" y2="1"/></svg>
+                    </button>
+                    <input type="number" id="pdp-qty" value="1" min="1" readonly />
+                    <button type="button" onclick="changeQty(1)">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="0" x2="6" y2="12"/><line x1="0" y1="6" x2="12" y2="6"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="pdp-actions">
+                @if (Model.Stock > 0)
+                {
+                    <button type="button" class="btn-pdp btn-secondary" id="btn-add-to-cart">Thêm vào giỏ</button>
+                    <button type="button" class="btn-pdp btn-primary" id="btn-buy-now">Mua ngay</button>
+                }
+                else
+                {
+                    <button type="button" class="btn-pdp btn-secondary disabled" disabled style="opacity: 0.6; cursor: not-allowed; width: 100%;">HẾT HÀNG</button>
+                }
+            </div>
+
+            <!-- Product Info Accordin -->
+            <div class="pdp-accordion">
+                <div class="accordion-item" onclick="toggleAccordion(this)">
+                    <div class="accordion-header">
+                        <span>Thông tin sản phẩm</span>
+                        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="accordion-content">
+                        @Html.Raw(Model.Description?.Replace("\n", "<br/>"))
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const skus = @Html.Raw(Json.Serialize(skus.Select(v => new { id = v.Id, color = v.Color, size = v.Size, stock = v.Stock })));
+    let selectedColor = null;
+    let selectedSize = null;
+
+    function setMainImage(src, el) {
+        document.getElementById('main-product-image').src = src;
+        document.querySelectorAll('.thumb-item').forEach(item => item.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    function selectColor(color, el) {
+        selectedColor = color;
+        document.getElementById('current-color').innerText = color;
+        document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
+        el.classList.add('active');
+        checkAvailability();
+    }
+
+    function selectSize(size, el) {
+        selectedSize = size;
+        document.querySelectorAll('.size-option').forEach(opt => opt.classList.remove('active'));
+        el.classList.add('active');
+        checkAvailability();
+    }
+
+    function changeQty(delta) {
+        const input = document.getElementById('pdp-qty');
+        let val = parseInt(input.value) + delta;
+        if (val < 1) val = 1;
+        input.value = val;
+    }
+
+    function toggleAccordion(el) {
+        el.classList.toggle('active');
+    }
+
+    // Add to Cart
+    document.getElementById('btn-add-to-cart')?.addEventListener('click', function() {
+        const qty = parseInt(document.getElementById('pdp-qty').value);
+        addToCart(qty, false);
+    });
+
+    // Buy Now
+    document.getElementById('btn-buy-now')?.addEventListener('click', function() {
+        const qty = parseInt(document.getElementById('pdp-qty').value);
+        addToCart(qty, true);
+    });
+
+    function addToCart(qty, redirect) {
+        if (!selectedColor && document.querySelectorAll('.color-option').length > 0) {
+            alert("Vui lòng chọn màu sắc"); return;
+        }
+        if (!selectedSize && document.querySelectorAll('.size-option').length > 0) {
+            alert("Vui lòng chọn kích thước"); return;
+        }
+
+        const productId = @Model.Id;
+        const sku = skus.find(v =>
+            (v.color || "").toLowerCase() === (selectedColor || "Default").toLowerCase() &&
+            (v.size || "").toLowerCase() === (selectedSize || "One Size").toLowerCase()
+        );
+        
+        $.post('/Cart/AddToCart', { 
+            productId: productId, 
+            skuId: sku ? sku.id : null,
+            color: selectedColor || "Default", 
+            size: selectedSize || "One Size", 
+            quantity: qty 
+        }, function(res) {
+            if (res.success) {
+                if (redirect) {
+                    window.location.href = '/Checkout';
+                } else {
+                    if (window.openCart) window.openCart();
+                }
+            } else {
+                alert(res.message || "Có lỗi xảy ra");
+            }
+        });
+    }
+
+    function checkAvailability() {
+        const btnCart = document.getElementById('btn-add-to-cart');
+        const btnBuy = document.getElementById('btn-buy-now');
+
+        if (skus.length === 0) {
+            btnCart.disabled = false;
+            btnCart.innerText = "Thêm vào giỏ";
+            btnBuy.disabled = false;
+            btnBuy.innerText = "Mua ngay";
+            return;
+        }
+
+        if (!selectedColor || !selectedSize) {
+            btnCart.disabled = false;
+            btnCart.innerText = "Thêm vào giỏ";
+            btnBuy.disabled = false;
+            btnBuy.innerText = "Mua ngay";
+            return;
+        }
+
+        const sku = skus.find(v =>
+            (v.color || "").toLowerCase() === selectedColor.toLowerCase() &&
+            (v.size || "").toLowerCase() === selectedSize.toLowerCase()
+        );
+        if (sku && sku.stock > 0) {
+            btnCart.disabled = false;
+            btnCart.innerText = "Thêm vào giỏ";
+            btnBuy.disabled = false;
+            btnBuy.innerText = "Mua ngay";
+        } else {
+            btnCart.disabled = true;
+            btnCart.innerText = "Hết hàng";
+            btnBuy.disabled = true;
+            btnBuy.innerText = "Hết hàng";
+        }
+    }
+</script>

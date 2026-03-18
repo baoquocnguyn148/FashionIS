@@ -1,0 +1,218 @@
+@model List<FashionStoreIS.Models.CartItemViewModel>
+@{
+    ViewData["Title"] = "THANH TOÁN";
+    decimal subtotal = Model.Sum(i => i.Quantity * i.Price);
+}
+
+<div class="checkout-page py-5">
+    <div class="container">
+        <form action="/Checkout/ProcessOrder" method="post" id="checkoutForm">
+            @Html.AntiForgeryToken()
+            <div class="row g-5">
+                <!-- Left: Shipping Information -->
+                <div class="col-lg-7">
+                    <div class="checkout-section">
+                        <h2 class="section-title">THÔNG TIN GIAO HÀNG</h2>
+                        
+                        @if (TempData["Error"] != null)
+                        {
+                            <div class="alert alert-danger mb-4 rounded-0 border-0">
+                                <i class="bi bi-exclamation-circle-fill me-2"></i> @TempData["Error"]
+                            </div>
+                        }
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <div class="floating-label-group">
+                                    <input type="text" name="customerName" id="customerName" class="form-control-bn" placeholder=" " required>
+                                    <label for="customerName">HỌ VÀ TÊN</label>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="floating-label-group">
+                                    <input type="tel" name="phone" id="phone" class="form-control-bn" placeholder=" " required>
+                                    <label for="phone">SỐ ĐIỆN THOẠI</label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="floating-label-group">
+                                    <input type="email" name="email" id="email" class="form-control-bn" placeholder=" " @(User.Identity?.IsAuthenticated == true ? "disabled" : "")>
+                                    <label for="email">EMAIL (KHÔNG BẮT BUỘC)</label>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="floating-label-group">
+                                    <input type="text" name="address" id="address" class="form-control-bn" placeholder=" " required>
+                                    <label for="address">ĐỊA CHỈ NHẬN HÀNG (SỐ NHÀ, TÊN ĐƯỜNG, PHƯỜNG/XÃ...)</label>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="floating-label-group">
+                                    <textarea name="note" id="note" class="form-control-bn" rows="2" placeholder=" "></textarea>
+                                    <label for="note">GHI CHÚ ĐƠN HÀNG (TÙY CHỌN)</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 class="section-subtitle mt-5">PHƯƠNG THỨC THANH TOÁN</h3>
+                        <div class="payment-methods mt-3">
+                            <div class="payment-method-item active">
+                                <label class="d-flex align-items-center w-100 cursor-pointer">
+                                    <input type="radio" name="paymentMethod" value="COD" checked class="d-none">
+                                    <div class="custom-radio me-3"></div>
+                                    <div class="method-info">
+                                        <div class="method-name">Thanh toán khi nhận hàng (COD)</div>
+                                        <div class="method-desc text-muted">Thanh toán bằng tiền mặt khi shipper giao hàng đến địa chỉ của bạn.</div>
+                                    </div>
+                                </label>
+                            </div>
+                            
+                            <div class="payment-method-item disabled opacity-50 mt-2">
+                                <label class="d-flex align-items-center w-100 cursor-not-allowed">
+                                    <input type="radio" name="paymentMethod" value="BANK" disabled class="d-none">
+                                    <div class="custom-radio me-3"></div>
+                                    <div class="method-info">
+                                        <div class="method-name">Chuyển khoản ngân hàng (Sắp ra mắt)</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Order Summary -->
+                <div class="col-lg-5">
+                    <div class="order-summary-card">
+                        <h2 class="section-title">ĐƠN HÀNG CỦA BẠN</h2>
+                        
+                        <div class="summary-items">
+                            @foreach (var item in Model)
+                            {
+                                <div class="summary-item">
+                                    <div class="item-img-box">
+                                        <img src="@item.ImageUrl" alt="@item.Name">
+                                        <span class="item-qty-badge">@item.Quantity</span>
+                                    </div>
+                                    <div class="item-details">
+                                        <div class="item-name">@item.Name</div>
+                                        <div class="item-meta">@(item.Color) / @(item.Size)</div>
+                                    </div>
+                                    <div class="item-price">@((item.Price * item.Quantity).ToString("N0")) VND</div>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="voucher-box mt-4">
+                            <div class="input-group">
+                                <input type="text" id="voucherCodeInput" class="form-control-bn" placeholder="MÃ GIẢM GIÁ">
+                                <button type="button" id="applyVoucherBtn" class="btn-bn-outline">ÁP DỤNG</button>
+                            </div>
+                            <div id="voucherMessage" class="mt-2 small"></div>
+                            <input type="hidden" name="voucherCode" id="appliedVoucherCode">
+                        </div>
+
+                        <div class="totals-box mt-4 pt-4 border-top">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Tạm tính</span>
+                                <span class="fw-medium">@subtotal.ToString("N0") VND</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2 text-danger" id="discountRow" style="display:none !important">
+                                <span>Giảm giá</span>
+                                <span id="discountValue">−0 VND</span>
+                            </div>
+                            <div class="d-flex justify-content-between mt-3 pt-3 border-top border-dark">
+                                <span class="h5 fw-bold">TỔNG CỘNG</span>
+                                <span class="h5 fw-bold" id="finalTotal">@subtotal.ToString("N0") VND</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-checkout-submit mt-4">HOÀN TẤT ĐẶT HÀNG</button>
+                        <p class="text-center mt-3 small text-muted">
+                            Bằng cách đặt hàng, bạn đồng ý với các <a href="#" class="text-dark text-decoration-underline">Điều khoản dịch vụ</a> của BN STORE.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    $(document).ready(function() {
+        let subtotal = @subtotal;
+        
+        $('#applyVoucherBtn').click(function() {
+            const code = $('#voucherCodeInput').val().trim();
+            if (!code) return;
+
+            const token = $('meta[name="csrf-token"]').attr('content');
+            $.post('/Checkout/ApplyVoucher', { code: code, currentTotal: subtotal, __RequestVerificationToken: token }, function(res) {
+                if (res.success) {
+                    $('#discountRow').css('display', 'flex').attr('style', 'display: flex !important');
+                    $('#discountValue').text('−' + res.discount.toLocaleString() + ' VND');
+                    $('#finalTotal').text((subtotal - res.discount).toLocaleString() + ' VND');
+                    $('#appliedVoucherCode').val(res.code);
+                    $('#voucherMessage').text('Áp dụng mã thành công!').removeClass('text-danger').addClass('text-success');
+                } else {
+                    $('#voucherMessage').text(res.message).removeClass('text-success').addClass('text-danger');
+                }
+            });
+        });
+
+        // Add loading state to button on submit
+        $('#checkoutForm').on('submit', function() {
+            const $btn = $('.btn-checkout-submit');
+            $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> ĐANG XỬ LÝ...');
+        });
+    });
+</script>
+}
+
+<style>
+    .checkout-page { background-color: #fff; min-height: 100vh; }
+    .section-title { font-size: 18px; font-weight: 800; letter-spacing: 0.1em; margin-bottom: 30px; position: relative; }
+    .section-title::after { content: ''; position: absolute; left: 0; bottom: -10px; width: 40px; height: 2px; background: #000; }
+    .section-subtitle { font-size: 14px; font-weight: 700; letter-spacing: 0.05em; }
+
+    /* Floating Labels */
+    .floating-label-group { position: relative; margin-bottom: 1.5rem; }
+    .form-control-bn { border: none; border-bottom: 1px solid #e0e0e0; border-radius: 0; padding: 20px 0 10px; font-size: 14px; width: 100%; transition: all 0.3s; background: transparent; }
+    .form-control-bn:focus { outline: none; border-bottom-color: #000; }
+    .floating-label-group label { position: absolute; top: 20px; left: 0; font-size: 11px; font-weight: 600; color: #999; transition: all 0.3s; pointer-events: none; text-transform: uppercase; }
+    .form-control-bn:focus ~ label, .form-control-bn:not(:placeholder-shown) ~ label { top: 0; font-size: 10px; color: #000; }
+
+    /* Payment Methods */
+    .payment-method-item { border: 1px solid #f0f0f0; padding: 20px; transition: all 0.2s; }
+    .payment-method-item.active { border-color: #000; background: #fafafa; }
+    .custom-radio { width: 18px; height: 18px; border: 1px solid #ccc; border-radius: 50%; position: relative; flex-shrink: 0; }
+    .payment-method-item.active .custom-radio { border-color: #000; }
+    .payment-method-item.active .custom-radio::after { content: ''; position: absolute; top: 3px; left: 3px; width: 100px; height: 100px; width: 10px; height: 10px; background: #000; border-radius: 50%; }
+    .method-name { font-size: 13px; font-weight: 700; }
+    .method-desc { font-size: 12px; margin-top: 4px; }
+
+    /* Order Summary */
+    .order-summary-card { background: #f9f9f9; padding: 40px; position: sticky; top: 120px; }
+    .summary-item { display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }
+    .item-img-box { position: relative; width: 70px; height: 90px; flex-shrink: 0; background: #eee; }
+    .item-img-box img { width: 100%; height: 100%; object-fit: cover; }
+    .item-qty-badge { position: absolute; top: -8px; right: -8px; background: #000; color: #fff; width: 22px; height: 22px; border-radius: 50%; font-size: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .item-details { flex: 1; }
+    .item-name { font-size: 13px; font-weight: 600; line-height: 1.4; }
+    .item-meta { font-size: 11px; color: #777; margin-top: 4px; }
+    .item-price { font-size: 13px; font-weight: 700; }
+
+    .btn-bn-outline { background: transparent; border: 1px solid #000; padding: 0 25px; font-size: 11px; font-weight: 800; letter-spacing: 0.1em; transition: all 0.3s; }
+    .btn-bn-outline:hover { background: #000; color: #fff; }
+    
+    .btn-checkout-submit { width: 100%; background: #000; color: #fff; border: none; padding: 20px; font-weight: 900; letter-spacing: 0.2em; font-size: 14px; transition: all 0.3s; }
+    .btn-checkout-submit:hover:not(:disabled) { background: #333; transform: translateY(-2px); }
+    .btn-checkout-submit:disabled { opacity: 0.7; cursor: not-allowed; }
+
+    .cursor-pointer { cursor: pointer; }
+    .cursor-not-allowed { cursor: not-allowed; }
+</style>

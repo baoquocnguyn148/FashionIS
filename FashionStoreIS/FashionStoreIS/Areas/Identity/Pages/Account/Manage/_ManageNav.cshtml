@@ -1,0 +1,68 @@
+@using Microsoft.AspNetCore.Identity
+@using FashionStoreIS.Models
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@{
+    var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
+    var user = await UserManager.GetUserAsync(User);
+    var displayName = !string.IsNullOrEmpty(user?.FullName) ? user.FullName : (user?.UserName ?? "User");
+    var activePage = ViewContext.RouteData.Values["page"]?.ToString();
+}
+
+<div class="user-sidebar-header text-center mb-4">
+    <div class="user-avatar-large mb-3">
+        <span style="font-size: 32px;">☁️</span>
+    </div>
+    <div class="user-info">
+        <p class="greeting-text">Xin chào bạn !</p>
+        <h3 class="user-display-name">@displayName</h3>
+        <p class="membership-level">Cấp độ <span class="text-info">Dream Starter</span></p>
+    </div>
+</div>
+
+<ul class="nav nav-pills flex-column profile-nav">
+    <li class="nav-item">
+        <a class="nav-link-expert" href="#">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            Tải hình ảnh đại diện của bạn
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link-expert @(activePage == "/Account/Manage/Index" ? "active" : "")" asp-page="./Index">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"></path><line x1="9" y1="18" x2="15" y2="18"></line><line x1="10" y1="6" x2="14" y2="6"></line></svg>
+            Đơn hàng của tôi
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link-expert" href="#">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+            Sổ địa chỉ
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link-expert @(activePage == "/Account/Manage/PersonalInfo" ? "active" : "")" asp-page="./PersonalInfo">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+            Thông tin của tôi
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link-expert @(activePage == "/Account/Manage/Membership" ? "active" : "")" asp-page="./Membership">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+            Membership
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link-expert @(activePage == "/Account/Manage/ChangePassword" ? "active" : "")" asp-page="./ChangePassword">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+            Thay đổi mật khẩu
+        </a>
+    </li>
+    <li class="nav-item mt-3">
+        <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+            <button type="submit" class="nav-link-expert border-0 bg-transparent w-100 text-start">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Đăng xuất
+            </button>
+        </form>
+    </li>
+</ul>

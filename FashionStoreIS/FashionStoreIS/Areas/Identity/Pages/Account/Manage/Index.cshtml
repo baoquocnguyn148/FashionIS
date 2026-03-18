@@ -1,0 +1,48 @@
+@page
+@model FashionStoreIS.Areas.Identity.Pages.Account.Manage.IndexModel
+@{
+    ViewData["Title"] = "Profile Page";
+}
+
+<!-- Breadcrumbs -->
+<div class="breadcrumb-container mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Profile Page</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="profile-main-area">
+    <!-- Order Filter Tabs -->
+    <div class="order-filter-tabs mb-5">
+        <button class="filter-tab active">Tất cả</button>
+        <button class="filter-tab">Đơn mới</button>
+        <button class="filter-tab">Đã xác nhận</button>
+        <button class="filter-tab">Đã gửi hàng</button>
+        <button class="filter-tab">Đã nhận</button>
+        <button class="filter-tab">Đã huỷ</button>
+    </div>
+
+    <!-- Empty State -->
+    <div class="order-empty-state text-center py-5">
+        <div class="empty-illustration mb-4">
+            <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#eee" stroke-width="1">
+                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <path d="M16 10a4 4 0 0 1-8 0"></path>
+                <circle cx="12" cy="14" r="1" fill="#ddd"></circle>
+                <path d="M10 18h4" stroke="#ddd"></path>
+            </svg>
+        </div>
+        <h4 class="empty-title mb-2">Chưa có đơn hàng nào</h4>
+        <p class="empty-desc text-muted mx-auto" style="max-width: 400px;">
+            Nơi này sẽ giúp xem lại những đơn hàng mà bạn đã đặt, hãy quay lại đây sau khi gửi đơn hàng đầu tiên của mình nhé!
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

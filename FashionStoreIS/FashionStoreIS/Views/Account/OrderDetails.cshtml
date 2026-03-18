@@ -1,0 +1,186 @@
+@model FashionStoreIS.Models.Order
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng #" + Model.Id;
+}
+
+<div class="container py-5" style="margin-top: 100px;">
+    <div class="mb-4">
+        <a href="@Url.Action("Index", "Account")" class="text-dark text-decoration-none">
+            <i class="bi bi-arrow-left me-2"></i> Quay lại lịch sử đơn hàng
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Order info -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm p-4 rounded-4 bg-white mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="fw-bold mb-0">Chi tiết đơn hàng #@Model.Id</h3>
+                    <div class="text-muted small">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table align-middle border-0">
+                        <thead>
+                            <tr class="text-muted small text-uppercase">
+                                <th class="border-0">Sản phẩm</th>
+                                <th class="border-0 text-center">Số lượng</th>
+                                <th class="border-0 text-end">Giá</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model.OrderDetails)
+                            {
+                                <tr>
+                                    <td class="py-3">
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-3 bg-light p-2 me-3" style="width: 60px; height: 60px;">
+                                                <img src="@item.Product?.ImageUrl" alt="" class="w-100 h-100 object-fit-cover rounded-2">
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark">@item.ProductSku?.Product?.Name</div>
+                                                <div class="text-muted small">
+                                                    @if (item.ProductSku != null)
+                                                    {
+                                                        <span>Size: @item.ProductSku.Size</span>
+                                                        @if (!string.IsNullOrEmpty(item.ProductSku.Color))
+                                                        {
+                                                            <span class="mx-1">|</span> <span>Màu: @item.ProductSku.Color</span>
+                                                        }
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="text-center">x@item.Quantity</td>
+                                    <td class="text-end fw-bold">@item.Subtotal.ToString("N0") VND</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="2" class="text-end py-3 text-muted">Tổng phụ</td>
+                                <td class="text-end py-3 fw-bold">@Model.TotalAmount.ToString("N0") VND</td>
+                            </tr>
+                            <tr class="fs-5">
+                                <td colspan="2" class="text-end py-3 fw-bold">Tổng thanh toán</td>
+                                <td class="text-end py-3 fw-bold text-danger">@Model.TotalAmount.ToString("N0") VND</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tracking/Shipping Info -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm p-4 rounded-4 bg-dark text-white mb-4">
+                <h5 class="mb-4 text-uppercase silver-text" style="letter-spacing: 1px;">Trạng thái đơn hàng</h5>
+                
+                <div class="tracking-timeline">
+                    @{
+                        int statusIndex = Model.Status switch
+                        {
+                            FashionStoreIS.Models.OrderStatus.Pending => 0,
+                            FashionStoreIS.Models.OrderStatus.Confirmed => 0,
+                            FashionStoreIS.Models.OrderStatus.Processing => 1,
+                            FashionStoreIS.Models.OrderStatus.Shipped => 2,
+                            FashionStoreIS.Models.OrderStatus.Completed => 3,
+                            _ => 0
+                        };
+                    }
+                    <div class="timeline-item @(statusIndex >= 0 ? "active" : "")">
+                        <div class="icon"><i class="bi bi-receipt"></i></div>
+                        <div class="content">
+                            <h6 class="mb-0">Đã đặt hàng</h6>
+                            <p class="small text-white-50">Hệ thống đã nhận đơn hàng</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item @(statusIndex >= 1 ? "active" : "")">
+                        <div class="icon"><i class="bi bi-gear"></i></div>
+                        <div class="content">
+                            <h6 class="mb-0">Đang xử lý</h6>
+                            <p class="small text-white-50">Shop đang đóng gói sản phẩm</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item @(statusIndex >= 2 ? "active" : "")">
+                        <div class="icon"><i class="bi bi-truck"></i></div>
+                        <div class="content">
+                            <h6 class="mb-0">Đang giao hàng</h6>
+                            <p class="small text-white-50">Đơn hàng đang trên đường đến bạn</p>
+                        </div>
+                    </div>
+                    <div class="timeline-item @(statusIndex >= 3 ? "active" : "")">
+                        <div class="icon"><i class="bi bi-check-circle"></i></div>
+                        <div class="content">
+                            <h6 class="mb-0">Hoàn thành</h6>
+                            <p class="small text-white-50">Giao hàng thành công</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm p-4 rounded-4 bg-white">
+                <h5 class="mb-4">Thông tin nhận hàng</h5>
+                <div class="mb-3">
+                    <div class="text-muted small text-uppercase">Người nhận</div>
+                    <div class="fw-bold">@Model.CustomerName</div>
+                </div>
+                <div class="mb-3">
+                    <div class="text-muted small text-uppercase">Số điện thoại</div>
+                    <div class="fw-bold">@Model.Phone</div>
+                </div>
+                <div class="mb-0">
+                    <div class="text-muted small text-uppercase">Địa chỉ</div>
+                    <div class="fw-bold">@Model.Address</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .silver-text { color: #ccc; }
+    .tracking-timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    .tracking-timeline::before {
+        content: '';
+        position: absolute;
+        left: 10px;
+        top: 10px;
+        bottom: 10px;
+        width: 2px;
+        background: rgba(255,255,255,0.1);
+    }
+    .timeline-item {
+        position: relative;
+        padding-bottom: 20px;
+        opacity: 0.4;
+    }
+    .timeline-item.active {
+        opacity: 1;
+    }
+    .timeline-item .icon {
+        position: absolute;
+        left: -32px;
+        top: 0;
+        width: 24px;
+        height: 24px;
+        background: #000;
+        border: 2px solid #555;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        z-index: 1;
+    }
+    .timeline-item.active .icon {
+        background: #fff;
+        color: #000;
+        border-color: #fff;
+    }
+    .object-fit-cover { object-fit: cover; }
+</style>

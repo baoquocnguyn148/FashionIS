@@ -1,0 +1,197 @@
+@model FashionStoreIS.Models.Product
+@{
+    bool isEdit = Model?.Id > 0;
+    var categories = ViewBag.Categories as List<FashionStoreIS.Models.Category> ?? new List<FashionStoreIS.Models.Category>();
+    var suppliers = ViewBag.Suppliers as List<FashionStoreIS.Models.Supplier> ?? new List<FashionStoreIS.Models.Supplier>();
+}
+
+<div style="max-width: 800px;">
+    <a href="/Admin/Products" class="btn-admin btn-secondary btn-sm" style="margin-bottom:24px; display:inline-flex;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Quay lại
+    </a>
+
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <div class="admin-card-title">@(isEdit ? "Chỉnh sửa sản phẩm" : "Thêm sản phẩm mới")</div>
+        </div>
+        <div style="padding: 28px;">
+            <form method="post" action="@(isEdit ? $"/Admin/Products/Edit/{Model!.Id}" : "/Admin/Products/Create")" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                @if (isEdit) { <input type="hidden" name="Id" value="@Model!.Id" /> }
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Tên sản phẩm *</label>
+                        <input name="Name" class="form-control" value="@Model?.Name" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Giá (VND) *</label>
+                        <input name="Price" type="number" class="form-control" value="@Model?.Price" required />
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Danh mục sản phẩm</label>
+                        <select name="CategoryId" class="form-control" required>
+                            <option value="">-- Chọn danh mục --</option>
+                            @foreach (var cat in categories)
+                            {
+                                @Html.Raw($"<option value='{cat.Id}'{(Model?.CategoryId == cat.Id ? " selected" : "")}>{cat.Name}</option>")
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tồn kho tổng *</label>
+                        <input name="Stock" type="number" class="form-control" value="@(Model?.Stock ?? 0)" required />
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Nhà cung cấp *</label>
+                        <select name="SupplierId" class="form-control" required>
+                            <option value="">-- Chọn nhà cung cấp --</option>
+                            @foreach (var s in suppliers.Where(x => x.IsActive))
+                            {
+                                @Html.Raw($"<option value='{s.Id}'{(Model?.SupplierId == s.Id ? " selected" : "")}>{s.Name}</option>")
+                            }
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Slug (tự tạo nếu bỏ trống)</label>
+                        <input name="Slug" class="form-control" value="@Model?.Slug" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Mô tả sản phẩm</label>
+                    <textarea name="Description" class="form-control" style="min-height:150px;">@Model?.Description</textarea>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group" style="display:flex; align-items:flex-end; padding-bottom:4px;">
+                        <label class="form-check">
+                            <input type="checkbox" name="IsActive" value="true" @(Model?.IsActive != false ? "checked" : "") />
+                            <span style="font-size:13px;">Hiển thị trên website</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Ảnh đại diện (Thumbnail)</label>
+                    <input type="file" name="imageFile" class="form-control" accept="image/*" onchange="previewImage(this)" />
+                    @if (!string.IsNullOrEmpty(Model?.ImageUrl))
+                    {
+                        <img src="@Model.ImageUrl" class="image-preview" id="imgPreview" />
+                    }
+                    else
+                    {
+                        <img id="imgPreview" class="image-preview" style="display:none;" />
+                    }
+                </div>
+
+                <div class="form-group" style="margin-top:24px; border-top:1px solid #2a2a2a; padding-top:24px;">
+                    <label class="form-label">Bộ sưu tập ảnh (Gallery)</label>
+                    <input type="file" name="galleryFiles" class="form-control" accept="image/*" multiple />
+                    <p style="font-size:11px; color:#555; margin-top:4px;">Bạn có thể chọn nhiều ảnh cùng lúc.</p>
+
+                    @if (isEdit && Model?.Images != null && Model.Images.Any())
+                    {
+                        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:12px;">
+                            @foreach (var img in Model.Images)
+                            {
+                                <div style="position:relative; width:80px; height:80px; border:1px solid #333;" id="gallery-img-@img.Id">
+                                    <img src="@img.ImageUrl" style="width:100%; height:100%; object-fit:cover;" />
+                                    <button type="button" onclick="deleteGalleryImage(@img.Id)" style="position:absolute; top:-5px; right:-5px; background:red; color:white; border:none; border-radius:50%; width:18px; height:18px; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center;">×</button>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="form-group" style="margin-top:24px; border-top:1px solid #2a2a2a; padding-top:24px;">
+                    <label class="form-label" style="display:flex; justify-content:space-between; align-items:center;">
+                        SKU (Màu sắc / Size)
+                        <button type="button" class="btn-admin btn-secondary btn-sm" onclick="addSkuRow()">+ Thêm SKU</button>
+                    </label>
+                    <div id="skus-container">
+                        <table class="admin-table" style="background:transparent; margin-top:10px;">
+                            <thead>
+                                <tr>
+                                    <th>Màu sắc</th>
+                                    <th>Kích thước</th>
+                                    <th>Tồn kho</th>
+                                    <th>SKU</th>
+                                    <th>Giá riêng</th>
+                                    <th style="width:40px;"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="skus-body">
+                                @if (Model?.Skus != null && Model.Skus.Any())
+                                {
+                                    @for (int i = 0; i < Model.Skus.Count; i++)
+                                    {
+                                        var v = Model.Skus.ElementAt(i);
+                                        <tr>
+                                            <td style="display:none;"><input name="Skus[@i].Id" type="hidden" value="@v.Id" /></td>
+                                            <td><input name="Skus[@i].Color" class="form-control" value="@v.Color" required /></td>
+                                            <td><input name="Skus[@i].Size" class="form-control" value="@v.Size" required /></td>
+                                            <td><input name="Skus[@i].Stock" type="number" class="form-control" value="@v.Stock" required /></td>
+                                            <td><input name="Skus[@i].SKU" class="form-control" value="@v.SKU" /></td>
+                                            <td><input name="Skus[@i].PriceOverride" type="number" class="form-control" value="@(v.PriceOverride ?? 0)" /></td>
+                                            <td><button type="button" class="btn-admin btn-danger btn-sm" onclick="$(this).closest('tr').remove()">×</button></td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div style="display:flex; gap:12px; margin-top:8px;">
+                    <button type="submit" class="btn-admin btn-primary">
+                        @(isEdit ? "Cập nhật sản phẩm" : "Thêm sản phẩm")
+                    </button>
+                    <a href="/Admin/Products" class="btn-admin btn-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function previewImage(input) {
+    const img = document.getElementById('imgPreview');
+    if (input.files && input.files[0]) {
+        img.src = URL.createObjectURL(input.files[0]);
+        img.style.display = 'block';
+    }
+}
+
+function deleteGalleryImage(id) {
+    if (confirm('Xóa ảnh này khỏi bộ sưu tập?')) {
+        $.post('/Admin/Products/DeleteImage/' + id, function() {
+            $('#gallery-img-' + id).remove();
+        });
+    }
+}
+
+let skuIndex = @(Model?.Skus?.Count ?? 0);
+function addSkuRow() {
+    const html = `
+        <tr>
+            <td style="display:none;"><input name="Skus[${skuIndex}].Id" type="hidden" value="0" /></td>
+            <td><input name="Skus[${skuIndex}].Color" class="form-control" required placeholder="Đen" /></td>
+            <td><input name="Skus[${skuIndex}].Size" class="form-control" required placeholder="M" /></td>
+            <td><input name="Skus[${skuIndex}].Stock" type="number" class="form-control" value="0" required /></td>
+            <td><input name="Skus[${skuIndex}].SKU" class="form-control" placeholder="SKU-123" /></td>
+            <td><input name="Skus[${skuIndex}].PriceOverride" type="number" class="form-control" value="0" /></td>
+            <td><button type="button" class="btn-admin btn-danger btn-sm" onclick="$(this).closest('tr').remove()">×</button></td>
+        </tr>
+    `;
+    $('#skus-body').append(html);
+    skuIndex++;
+}
+</script>

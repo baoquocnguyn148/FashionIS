@@ -1,0 +1,47 @@
+@model List<ApplicationUser>
+@{
+    ViewData["Title"] = "Quản lý Khách hàng";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+    <div>
+        <h2 style="font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 4px;">Danh sách Khách hàng</h2>
+        <p style="font-size: 14px; color: var(--admin-muted);">Xem thông tin những người dùng đã đăng ký tài khoản.</p>
+    </div>
+</div>
+
+<div class="admin-card">
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Họ tên</th>
+                <th>Email</th>
+                <th>Số điện thoại</th>
+                <th>Giới tính</th>
+                <th style="text-align: right;">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var u in Model)
+            {
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(139, 92, 246, 0.1); color: var(--admin-accent); display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                                @(u.FullName?[0] ?? 'U')
+                            </div>
+                            <span style="font-weight: 600; color: #fff;">@u.FullName</span>
+                        </div>
+                    </td>
+                    <td>@u.Email</td>
+                    <td>@(u.PhoneNumber ?? "---")</td>
+                    <td>@(u.Gender ?? "---")</td>
+                    <td style="text-align: right;">
+                        <button class="btn-admin btn-secondary btn-sm">Xem chi tiết</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

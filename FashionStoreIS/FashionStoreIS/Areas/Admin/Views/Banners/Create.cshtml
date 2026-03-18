@@ -1,0 +1,95 @@
+@model FashionStoreIS.Models.Banner
+@{
+    ViewData["Title"] = Model?.Id > 0 ? "Chỉnh sửa Banner" : "Thêm Banner";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    bool isEdit = Model?.Id > 0;
+}
+
+<div style="max-width: 700px;">
+    <a href="/Admin/Banners" class="btn-admin btn-secondary btn-sm" style="margin-bottom:24px; display:inline-flex;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+        Quay lại
+    </a>
+
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <div class="admin-card-title">@(isEdit ? "Chỉnh sửa Banner" : "Thêm Banner mới")</div>
+        </div>
+        <div style="padding: 28px;">
+            <form method="post" action="@(isEdit ? $"/Admin/Banners/Edit/{Model!.Id}" : "/Admin/Banners/Create")" enctype="multipart/form-data">
+                @Html.AntiForgeryToken()
+                @if (isEdit) { <input type="hidden" name="Id" value="@Model!.Id" /> }
+
+                <div class="form-group">
+                    <label class="form-label">Tiêu đề banner *</label>
+                    <input name="Title" class="form-control" value="@Model?.Title" required />
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Phụ đề / Mô tả ngắn</label>
+                    <input name="SubTitle" class="form-control" value="@Model?.SubTitle" />
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Vị trí hiển thị</label>
+                        <select name="Position" class="form-control" required>
+                            @Html.Raw(Model?.Position == "Hero" ? "<option value='Hero' selected>Banner chính (Hero)</option>" : "<option value='Hero'>Banner chính (Hero)</option>")
+                            @Html.Raw(Model?.Position == "Category1" ? "<option value='Category1' selected>Danh mục 1 (Bên trái)</option>" : "<option value='Category1'>Danh mục 1 (Bên trái)</option>")
+                            @Html.Raw(Model?.Position == "Category2" ? "<option value='Category2' selected>Danh mục 2 (Giữa)</option>" : "<option value='Category2'>Danh mục 2 (Giữa)</option>")
+                            @Html.Raw(Model?.Position == "Category3" ? "<option value='Category3' selected>Danh mục 3 (Bên phải)</option>" : "<option value='Category3'>Danh mục 3 (Bên phải)</option>")
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Link URL (khi click)</label>
+                        <input name="LinkUrl" class="form-control" value="@Model?.LinkUrl" placeholder="/Product/List?cat=new-arrival" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Thứ tự hiển thị</label>
+                        <input name="DisplayOrder" type="number" class="form-control" value="@(Model?.DisplayOrder ?? 0)" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-check">
+                        <input type="checkbox" name="IsActive" value="true" @(Model?.IsActive != false ? "checked" : "") />
+                        <span style="font-size:13px;">Hiển thị banner</span>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Ảnh Banner (tỷ lệ 16:9 hoặc 21:9 tốt nhất)</label>
+                    <input type="file" name="imageFile" class="form-control" accept="image/*" onchange="previewImage(this)" />
+                    @if (!string.IsNullOrEmpty(Model?.ImageUrl))
+                    {
+                        <img src="@Model.ImageUrl" style="margin-top:12px; max-width:100%; max-height:200px; object-fit:cover; border:1px solid #2a2a2a;" id="bannerPreview" />
+                    }
+                    else
+                    {
+                        <img id="bannerPreview" style="display:none; margin-top:12px; max-width:100%; max-height:200px; object-fit:cover; border:1px solid #2a2a2a;" />
+                    }
+                </div>
+
+                <div style="display:flex; gap:12px; margin-top:8px;">
+                    <button type="submit" class="btn-admin btn-primary">
+                        @(isEdit ? "Cập nhật Banner" : "Thêm Banner")
+                    </button>
+                    <a href="/Admin/Banners" class="btn-admin btn-secondary">Hủy</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function previewImage(input) {
+    const img = document.getElementById('bannerPreview');
+    if (input.files && input.files[0]) {
+        img.src = URL.createObjectURL(input.files[0]);
+        img.style.display = 'block';
+    }
+}
+</script>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login — BN STORE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Outfit', sans-serif; background: #0f0f0f; color: #e8e8e8; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .login-box { width: 380px; }
+        .login-logo { text-align: center; margin-bottom: 40px; font-size: 22px; font-weight: 900; letter-spacing: 0.2em; color: #fff; }
+        .login-logo span { display: block; font-size: 10px; font-weight: 500; color: #555; letter-spacing: 0.2em; margin-top: 6px; }
+        .login-card { background: #161616; border: 1px solid #2a2a2a; padding: 36px; }
+        .login-title { font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 28px; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: #555; margin-bottom: 8px; }
+        .form-control { width: 100%; padding: 12px 14px; background: #0f0f0f; border: 1px solid #2a2a2a; color: #fff; font-size: 13px; font-family: 'Outfit', sans-serif; outline: none; transition: border-color 0.2s; }
+        .form-control:focus { border-color: rgba(255,255,255,0.3); }
+        .btn-login { width: 100%; padding: 14px; background: #fff; color: #000; border: none; font-size: 12px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; cursor: pointer; margin-top: 24px; transition: opacity 0.2s; }
+        .btn-login:hover { opacity: 0.85; }
+        .error-msg { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; padding: 10px 14px; font-size: 12px; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+    <div class="login-box">
+        <div class="login-logo">
+            BN STORE
+            <span>ADMIN PANEL</span>
+        </div>
+        <div class="login-card">
+            <div class="login-title">Đăng nhập quản trị</div>
+            @if (ViewBag.Error != null)
+            {
+                <div class="error-msg">@ViewBag.Error</div>
+            }
+            <form method="post" action="/Admin/Auth/Login">
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control" placeholder="admin@gmail.com" required />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mật khẩu</label>
+                    <input type="password" name="password" class="form-control" placeholder="••••••" required />
+                </div>
+                <button type="submit" class="btn-login">Đăng nhập</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

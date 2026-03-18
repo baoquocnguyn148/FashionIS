@@ -1,0 +1,21 @@
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<div class="page-container mt-5 mb-5">
+    <div class="profile-page-grid">
+        <!-- Sidebar -->
+        <aside class="profile-sidebar">
+            <partial name="_ManageNav" />
+        </aside>
+
+        <!-- Main Content -->
+        <div class="profile-content">
+            @RenderBody()
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @RenderSection("Scripts", required: false)
+}

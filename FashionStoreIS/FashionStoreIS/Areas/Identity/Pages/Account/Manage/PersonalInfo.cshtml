@@ -1,0 +1,47 @@
+@page
+@model FashionStoreIS.Areas.Identity.Pages.Account.Manage.PersonalInfoModel
+@{
+    ViewData["Title"] = "Thông tin cá nhân";
+}
+
+<h2 class="section-title-expert">Thông tin cá nhân</h2>
+
+<div class="info-grid-expert">
+    <div class="info-row-expert">
+        <div class="info-label-expert">Họ tên:</div>
+        <div class="info-value-expert">@Model.AppUser?.FullName</div>
+    </div>
+    <div class="info-row-expert">
+        <div class="info-label-expert">Số điện thoại:</div>
+        <div class="info-value-expert">@Model.AppUser?.PhoneNumber</div>
+    </div>
+    <div class="info-row-expert">
+        <div class="info-label-expert">Email:</div>
+        <div class="info-value-expert">@Model.AppUser?.Email</div>
+    </div>
+    <div class="info-row-expert">
+        <div class="info-label-expert">Giới tính:</div>
+        <div class="info-value-expert">@Model.AppUser?.Gender</div>
+    </div>
+    <div class="info-row-expert">
+        <div class="info-label-expert">Ngày sinh:</div>
+        <div class="info-value-expert">@(Model.AppUser?.DateOfBirth?.ToString("dd/MM/yyyy") ?? "Chưa cập nhật")</div>
+    </div>
+</div>
+
+<div class="voucher-section-title">Voucher của tôi</div>
+
+<div class="voucher-card-expert">
+    <div class="voucher-logo-area">
+        <div class="voucher-logo-text">BN</div>
+    </div>
+    <div class="voucher-info-area">
+        <div class="voucher-code-expert">LVS1SUXI20</div>
+        <div class="voucher-desc-expert">
+            Đơn hàng từ 600.000 VND, giảm 50.000 VND
+        </div>
+    </div>
+    <div>
+        <button class="btn-use-voucher">Sử dụng</button>
+    </div>
+</div>

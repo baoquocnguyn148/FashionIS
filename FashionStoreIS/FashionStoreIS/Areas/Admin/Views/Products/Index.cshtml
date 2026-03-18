@@ -1,0 +1,155 @@
+@model List<FashionStoreIS.Models.Product>
+@{
+    ViewData["Title"] = "Quản lý Sản phẩm";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    bool isSuperAdmin = User.IsInRole("SuperAdmin");
+}
+
+<div class="search-bar" style="display:flex; align-items:center; gap:20px; background: var(--admin-card); padding: 20px; border-radius: 16px; border: 1px solid var(--admin-border); margin-bottom: 24px;">
+    <form method="get" style="display:flex; gap:12px; flex:1;">
+        <div style="position:relative; flex:1;">
+            <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--admin-muted);" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" name="search" class="form-control" placeholder="Tìm kiếm theo tên sản phẩm..." value="@ViewBag.Search" style="padding-left:40px; border-radius:10px; background: rgba(255,255,255,0.02);" />
+        </div>
+        <select name="categoryId" class="form-control" style="max-width:200px; border-radius:10px; background: rgba(255,255,255,0.02);">
+            <option value="">Tất cả danh mục</option>
+            @foreach (var cat in (List<Category>)ViewBag.Categories)
+            {
+                <option value="@cat.Id" selected="@(ViewBag.CategoryId == cat.Id ? "selected" : null)">@cat.Name</option>
+            }
+        </select>
+        <button type="submit" class="btn-admin btn-secondary" style="border-radius:10px; padding: 0 24px;">Tìm kiếm</button>
+    </form>
+    <a href="/Admin/Products/Create" class="btn-admin btn-primary" style="padding: 12px 24px; border-radius: 12px; background: var(--admin-accent); color: #fff; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Thêm sản phẩm
+    </a>
+</div>
+
+<form id="bulkActionForm" method="post" action="/Admin/Products/BulkAction">
+    @Html.AntiForgeryToken()
+    <div class="admin-card" style="border: none; background: transparent; box-shadow: none;">
+        <table class="admin-table" style="background: var(--admin-card); border-radius: 16px; overflow: hidden; border: 1px solid var(--admin-border);">
+            <thead>
+                <tr style="background: rgba(255,255,255,0.02);">
+                    <th style="width: 50px; padding: 20px 24px;">
+                        <input type="checkbox" id="selectAll" style="width:18px; height:18px; accent-color: var(--admin-accent); cursor:pointer;" />
+                    </th>
+                    <th style="padding: 20px 10px;">Ảnh</th>
+                    <th style="padding: 20px 24px;">Sản phẩm</th>
+                    <th style="padding: 20px 24px;">Danh mục</th>
+                    <th style="padding: 20px 24px;">Giá bán</th>
+                    <th style="padding: 20px 24px; text-align: center;">Kho</th>
+                    <th style="padding: 20px 24px;">Trạng thái</th>
+                    <th style="padding: 20px 24px; text-align: right;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model)
+                {
+                    <tr>
+                        <td style="padding: 20px 24px;">
+                            <input type="checkbox" name="productIds" value="@p.Id" class="product-checkbox" style="width:18px; height:18px; accent-color: var(--admin-accent); cursor:pointer;" />
+                        </td>
+                        <td style="padding: 15px 10px;">
+                            @if (!string.IsNullOrEmpty(p.ImageUrl))
+                            {
+                                <img src="@p.ImageUrl" style="width:48px; height:60px; object-fit:cover; border-radius:8px; border:1px solid var(--admin-border);" />
+                            }
+                            else
+                            {
+                                <div style="width:48px; height:60px; background:var(--admin-border); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#444; font-size:10px;">N/A</div>
+                            }
+                        </td>
+                        <td style="padding: 20px 24px;">
+                            <div style="font-weight: 700; color: #fff; font-size: 14px;">@p.Name</div>
+                            <div style="font-size: 11px; color: var(--admin-muted);">ID: #@p.Id</div>
+                        </td>
+                        <td style="padding: 20px 24px; font-size:12px; color:var(--admin-muted); text-transform:uppercase;">@(p.Category?.Name ?? "N/A")</td>
+                        <td style="padding: 20px 24px; color: #fff; font-weight: 700;">@p.Price.ToString("N0") đ</td>
+                        <td style="padding: 20px 24px; text-align: center; color: @(p.Stock < 5 ? "var(--admin-red)" : "inherit");">@p.Stock</td>
+                        <td style="padding: 20px 24px;">
+                            <span class="badge @(p.IsActive ? "badge-green" : "badge-red")">
+                                @(p.IsActive ? "Hiển thị" : "Ngừng bán")
+                            </span>
+                        </td>
+                        <td style="padding: 20px 24px; text-align: right;">
+                            <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                                <a href="/Admin/Products/Edit/@p.Id" class="btn-admin btn-secondary btn-sm" title="Sửa">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                </a>
+                                @if (isSuperAdmin)
+                                {
+                                    <form method="post" action="/Admin/Products/Delete/@p.Id" style="display:inline;" onsubmit="return confirm('Xóa vĩnh viễn sản phẩm này?')">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn-admin btn-danger btn-sm" title="Xóa">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="8" style="text-align:center; color:var(--admin-muted); padding:80px;">Không tìm thấy sản phẩm nào phù hợp.</td></tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Floating Bulk Action Bar -->
+    <div id="bulkActionBar" style="position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: #1e293b; border: 1px solid var(--admin-accent); padding: 16px 32px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 24px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 1000;">
+        <div style="color: #fff; font-weight: 700;">Đã chọn <span id="selectedCount" style="color: var(--admin-accent);">0</span> mục</div>
+        <div style="height: 24px; width: 1px; background: rgba(255,255,255,0.1);"></div>
+        <div style="display: flex; gap: 12px;">
+            <button type="submit" name="action" value="show" class="btn-admin btn-primary" style="padding: 8px 16px; border-radius: 8px; background: var(--admin-accent);">Hiển thị</button>
+            <button type="submit" name="action" value="hide" class="btn-admin btn-secondary" style="padding: 8px 16px; border-radius: 8px;">Ẩn đi</button>
+            @if (isSuperAdmin)
+            {
+                <button type="submit" name="action" value="delete" class="btn-admin btn-danger" style="padding: 8px 16px; border-radius: 8px;" onclick="return confirm('Xóa vĩnh viễn các sản phẩm đã chọn?')">XÓA HẾT</button>
+            }
+        </div>
+        <button type="button" id="cancelBulk" style="background: none; border: none; color: var(--admin-muted); cursor: pointer; font-size: 13px; text-decoration: underline;">Hủy</button>
+    </div>
+</form>
+
+<style>
+    .admin-table td { border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .btn-admin.btn-sm { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; }
+    .badge { padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 11px; }
+</style>
+
+<script>
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.product-checkbox');
+    const actionBar = document.getElementById('bulkActionBar');
+    const selectedCount = document.getElementById('selectedCount');
+    const cancelBulk = document.getElementById('cancelBulk');
+
+    function updateActionBar() {
+        const checked = document.querySelectorAll('.product-checkbox:checked').length;
+        selectedCount.innerText = checked;
+        if (checked > 0) {
+            actionBar.style.bottom = '40px';
+        } else {
+            actionBar.style.bottom = '-100px';
+        }
+    }
+
+    selectAll.addEventListener('change', () => {
+        checkboxes.forEach(cb => cb.checked = selectAll.checked);
+        updateActionBar();
+    });
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateActionBar);
+    });
+
+    cancelBulk.addEventListener('click', () => {
+        checkboxes.forEach(cb => cb.checked = false);
+        selectAll.checked = false;
+        updateActionBar();
+    });
+</script>

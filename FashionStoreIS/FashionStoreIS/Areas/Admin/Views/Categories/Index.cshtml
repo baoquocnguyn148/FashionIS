@@ -1,0 +1,135 @@
+@model List<Category>
+@{
+    ViewData["Title"] = "Quản lý Danh mục";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    
+    // Helper function to render categories recursively
+    void RenderCategory(Category cat, int level = 0)
+    {
+        <tr>
+            <td>
+                <div style="display: flex; align-items: center; gap: 12px; padding-left: @(level * 32)px;">
+                    @if (level > 0)
+                    {
+                        <div style="width: 20px; border-bottom: 2px solid var(--admin-border); margin-right: 4px;"></div>
+                    }
+                    <div style="width: 40px; height: 40px; background: var(--admin-border); border-radius: 8px; overflow: hidden; flex-shrink: 0; display:flex; align-items:center; justify-content:center;">
+                        @if (!string.IsNullOrEmpty(cat.ImageUrl))
+                        {
+                            <img src="@cat.ImageUrl" style="width: 100%; height: 100%; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+                        }
+                    </div>
+                    <div>
+                        <div style="font-weight: 700; color: #fff; font-size: 14px;">@cat.Name</div>
+                        <div style="font-size: 11px; color: var(--admin-muted);">/@cat.Slug</div>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <div style="font-size: 12px; color: var(--admin-muted); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; max-width: 200px;">
+                    @(string.IsNullOrEmpty(cat.Description) ? "Không có mô tả" : cat.Description)
+                </div>
+            </td>
+            <td style="text-align: center;">
+                <span style="font-family: monospace; color: var(--admin-accent); font-weight: 700;">#@cat.DisplayOrder</span>
+            </td>
+            <td>
+                <span class="badge @(cat.IsActive ? "badge-green" : "badge-red")">
+                    @(cat.IsActive ? "Hoạt động" : "Tạm ẩn")
+                </span>
+            </td>
+            <td>
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                    <a href="/Admin/Categories/Create/@cat.Id" class="btn-admin btn-secondary btn-sm" title="Chỉnh sửa">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    </a>
+                    <button type="button" class="btn-admin btn-danger btn-sm category-delete-btn" data-category-id="@cat.Id" title="Xóa">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                    </button>
+                </div>
+            </td>
+        </tr>
+
+        var children = Model.Where(c => c.ParentCategoryId == cat.Id).OrderBy(c => c.DisplayOrder).ToList();
+        foreach (var child in children)
+        {
+            RenderCategory(child, level + 1);
+        }
+    }
+}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+    <div>
+        <h2 style="font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 4px;">Cấu trúc Danh mục</h2>
+        <p style="font-size: 14px; color: var(--admin-muted);">Tổ chức và phân loại sản phẩm theo cấp bậc chuyên nghiệp.</p>
+    </div>
+    <a href="/Admin/Categories/Create" class="btn-admin btn-primary" style="padding: 12px 24px; border-radius: 12px; background: var(--admin-accent); color: #fff; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Danh mục mới
+    </a>
+</div>
+
+<div class="admin-card" style="border: none; background: transparent; box-shadow: none;">
+    <table class="admin-table" style="background: var(--admin-card); border-radius: 16px; overflow: hidden; border: 1px solid var(--admin-border);">
+        <thead>
+            <tr style="background: rgba(255,255,255,0.02);">
+                <th style="padding: 20px 24px;">Danh mục & Phân cấp</th>
+                <th style="padding: 20px 24px;">Mô tả</th>
+                <th style="padding: 20px 24px; text-align: center;">Thứ tự</th>
+                <th style="padding: 20px 24px;">Trạng thái</th>
+                <th style="padding: 20px 24px; text-align: right;">Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                var rootCategories = Model.Where(c => c.ParentCategoryId == null).OrderBy(c => c.DisplayOrder).ToList();
+                foreach (var cat in rootCategories)
+                {
+                    RenderCategory(cat);
+                }
+                
+                if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 80px 0;">
+                            <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.2;">🗂️</div>
+                            <div style="color: var(--admin-muted); font-size: 16px;">Hệ thống chưa có danh mục nào.</div>
+                            <a href="/Admin/Categories/Create" style="color: var(--admin-accent); text-decoration: none; font-weight: 700; margin-top: 12px; display: inline-block;">+ Tạo danh mục đầu tiên</a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<form id="deleteCategoryForm" method="post" style="display:none;">
+    @Html.AntiForgeryToken()
+</form>
+
+@section Scripts {
+<script>
+    (function () {
+        const form = document.getElementById('deleteCategoryForm');
+        document.addEventListener('click', function (e) {
+            const btn = e.target.closest('.category-delete-btn');
+            if (!btn) return;
+            const id = btn.getAttribute('data-category-id');
+            if (!id) return;
+            if (!confirm('Xóa danh mục này? Các sản phẩm liên quan sẽ bị ảnh hưởng.')) return;
+            form.setAttribute('action', '/Admin/Categories/Delete/' + id);
+            form.submit();
+        });
+    })();
+</script>
+}
+
+<style>
+    .admin-table td { border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .btn-admin.btn-sm { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; }
+    .badge { padding: 4px 12px; border-radius: 20px; font-weight: 600; font-size: 11px; }
+</style>

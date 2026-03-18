@@ -1,0 +1,89 @@
+@model FashionStoreIS.Models.Order
+@{
+    ViewData["Title"] = "ĐẶT HÀNG THÀNH CÔNG";
+}
+
+<div class="order-success-page py-5">
+    <div class="container text-center">
+        <div class="success-icon mb-4">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="1.5">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+        </div>
+        
+        <h1 class="display-5 fw-bold mb-3">CẢM ƠN BẠN ĐÃ ĐẶT HÀNG!</h1>
+        <p class="lead text-muted mb-5">
+            Mã đơn hàng của bạn là <span class="text-dark fw-bold">#@Model.OrderCode</span>. <br>
+            Chúng tôi sẽ sớm liên hệ với bạn để xác nhận đơn hàng.
+        </p>
+
+        <div class="order-info-card mx-auto text-start mb-5" style="max-width: 600px;">
+            <div class="card border-0 rounded-0 shadow-sm p-4">
+                <h3 class="h6 fw-bold border-bottom pb-3 mb-3">CHI TIẾT GIAO HÀNG</h3>
+                <div class="row g-3">
+                    <div class="col-sm-4 text-muted">Người nhận:</div>
+                    <div class="col-sm-8 fw-medium">@Model.CustomerName</div>
+                    
+                    <div class="col-sm-4 text-muted">Số điện thoại:</div>
+                    <div class="col-sm-8 fw-medium">@Model.Phone</div>
+                    
+                    <div class="col-sm-4 text-muted">Địa chỉ:</div>
+                    <div class="col-sm-8 fw-medium">@Model.Address</div>
+                    
+                    <div class="col-sm-4 text-muted">Thanh toán:</div>
+                    <div class="col-sm-8 fw-medium">
+                        @if (Model.PaymentMethod == FashionStoreIS.Models.PaymentMethod.Cash)
+                        {
+                            <span>Thanh toán khi nhận hàng (COD)</span>
+                        }
+                    </div>
+
+                    <div class="col-sm-4 text-muted">Tổng thanh toán:</div>
+                    <div class="col-sm-8 h5 fw-bold text-dark">@Model.TotalAmount.ToString("N0") VND</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3">
+            <a href="/" class="btn-bn-outline px-5 py-3">TIẾP TỤC MUA SẮM</a>
+            <a href="/Order/MyOrders" class="btn-bn-dark px-5 py-3">XEM ĐƠN HÀNG</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .order-success-page { min-height: 80vh; display: flex; align-items: center; background: #fff; }
+    .success-icon { animation: scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+    
+    @@keyframes scaleIn {
+        from { transform: scale(0); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+
+    .order-info-card .card { background: #f9f9f9; }
+    
+    .btn-bn-outline {
+        background: transparent;
+        border: 1px solid #000;
+        color: #000;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    .btn-bn-outline:hover { background: #000; color: #fff; }
+
+    .btn-bn-dark {
+        background: #000;
+        border: 1px solid #000;
+        color: #fff;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.1em;
+        text-decoration: none;
+        transition: all 0.3s;
+    }
+    .btn-bn-dark:hover { background: #333; }
+</style>

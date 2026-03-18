@@ -1,0 +1,59 @@
+@model Voucher
+@{
+    bool isEdit = Model?.Id > 0;
+    ViewData["Title"] = isEdit ? "Sửa Voucher" : "Tạo Voucher";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+}
+
+<div style="max-width: 600px; margin: 0 auto;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px;">
+        <a href="/Admin/Vouchers" class="btn-admin btn-secondary" style="border-radius: 12px; padding: 10px 20px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;"><polyline points="15 18 9 12 15 6"/></svg>
+            Quay lại
+        </a>
+        <h2 style="font-size: 24px; font-weight: 800; color: #fff;">@(isEdit ? "Chỉnh sửa Voucher" : "Tạo Voucher mới")</h2>
+    </div>
+
+    <div class="admin-card" style="padding: 32px; border-radius: 20px; border: 1px solid var(--admin-border); background: var(--admin-card);">
+        <form method="post" action="/Admin/Vouchers/Create">
+            @Html.AntiForgeryToken()
+            @if (isEdit) { <input type="hidden" name="Id" value="@Model!.Id" /> }
+            
+            <div class="form-group">
+                <label class="form-label">Mã Voucher <span style="color: var(--admin-red);">*</span></label>
+                <input name="Code" class="form-control" value="@Model?.Code" required placeholder="VD: SALE2026" style="padding: 14px; border-radius: 12px; font-family: monospace; text-transform: uppercase;" />
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">Số tiền giảm (VND) <span style="color: var(--admin-red);">*</span></label>
+                    <input name="DiscountAmount" type="number" class="form-control" value="@(Model?.DiscountAmount ?? 0)" required style="padding: 14px; border-radius: 12px;" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Đơn tối thiểu (VND)</label>
+                    <input name="MinOrderAmount" type="number" class="form-control" value="@(Model?.MinOrderAmount ?? 0)" required style="padding: 14px; border-radius: 12px;" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Ngày hết hạn <span style="color: var(--admin-red);">*</span></label>
+                <input name="ExpiryDate" type="date" class="form-control" value="@(Model?.Id > 0 ? Model.ExpiryDate.ToString("yyyy-MM-dd") : DateTime.Now.AddDays(7).ToString("yyyy-MM-dd"))" required style="padding: 14px; border-radius: 12px;" />
+            </div>
+
+            <div class="form-group" style="margin-top: 24px;">
+                <label class="form-check" style="cursor: pointer; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid var(--admin-border);">
+                    <input type="checkbox" name="IsActive" value="true" @(Model?.IsActive != false ? "checked" : "") style="width: 20px; height: 20px; accent-color: var(--admin-accent);" />
+                    <span style="font-size: 14px; font-weight: 600; color: #fff; margin-left: 12px;">Kích hoạt Voucher</span>
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 32px;">
+                <button type="submit" class="btn-admin btn-primary" style="flex: 1; padding: 16px; border-radius: 12px; background: var(--admin-accent); color: #fff; font-weight: 800; font-size: 14px; box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/></svg>
+                    @(isEdit ? "CẬP NHẬT VOUCHER" : "XÁC NHẬN TẠO")
+                </button>
+                <a href="/Admin/Vouchers" class="btn-admin btn-secondary" style="padding: 16px; border-radius: 12px; font-weight: 600;">HỦY</a>
+            </div>
+        </form>
+    </div>
+</div>

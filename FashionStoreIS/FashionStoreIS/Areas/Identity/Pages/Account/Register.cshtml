@@ -1,0 +1,65 @@
+@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Đăng ký";
+}
+
+<div class="login-page-wrapper">
+    <div class="login-container">
+        <h2 class="login-title">Đăng ký</h2>
+        
+        <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" class="login-form-container">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+
+            <div class="form-group mb-4">
+                <label class="form-label-expert">Họ và tên *</label>
+                <input asp-for="Input.FullName" class="form-control-expert" placeholder="Nhập họ tên tại đây" />
+                <span asp-validation-for="Input.FullName" class="text-danger mt-1 d-block" style="font-size: 13px;"></span>
+            </div>
+
+            <div class="form-group mb-4">
+                <label class="form-label-expert">Số điện thoại *</label>
+                <input asp-for="Input.PhoneNumber" class="form-control-expert" placeholder="Nhập số điện thoại tại đây" />
+                <span asp-validation-for="Input.PhoneNumber" class="text-danger mt-1 d-block" style="font-size: 13px;"></span>
+            </div>
+
+            <div class="form-group mb-4">
+                <label class="form-label-expert">Email *</label>
+                <input asp-for="Input.Email" class="form-control-expert" placeholder="Thông tin này cần bắt buộc" />
+                <span asp-validation-for="Input.Email" class="text-danger mt-1 d-block" style="font-size: 13px;"></span>
+            </div>
+
+            <div class="form-group mb-4">
+                <label class="form-label-expert">Ngày sinh *</label>
+                <input asp-for="Input.DateOfBirth" class="form-control-expert" type="date" />
+                <span asp-validation-for="Input.DateOfBirth" class="text-danger mt-1 d-block" style="font-size: 13px;"></span>
+            </div>
+
+            <div class="form-group mb-4">
+                <select asp-for="Input.Gender" class="form-control-expert">
+                    <option value="">Giới tính</option>
+                    <option value="Nam">Nam</option>
+                    <option value="Nữ">Nữ</option>
+                    <option value="Khác">Khác</option>
+                </select>
+                <span asp-validation-for="Input.Gender" class="text-danger mt-1 d-block" style="font-size: 13px;"></span>
+            </div>
+
+            <div class="form-group mb-4">
+                <label class="form-label-expert">Mật khẩu *</label>
+                <input asp-for="Input.Password" class="form-control-expert" placeholder="Mật khẩu" />
+                <span asp-validation-for="Input.Password" class="text-danger mt-1 d-block" style="font-size: 13px;"></span>
+            </div>
+
+            <button id="registerSubmit" type="submit" class="btn-login-expert mt-2 mb-4">Đăng ký</button>
+
+            <div class="login-footer-links">
+                Bạn đã có tài khoản? <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl" class="footer-link-bold">Đăng nhập tại đây</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
