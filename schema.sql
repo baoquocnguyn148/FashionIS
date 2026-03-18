@@ -1,0 +1,429 @@
+-- =============================================================================
+-- FASHION STORE / STYLEVIBE - ORACLE 11g - FULL SCHEMA (chạy 1 lần)
+-- Connect: FashionDB/123
+-- =============================================================================
+
+-- PHẦN 1: DROP TẤT CẢ (child trước, parent sau)
+-- --------------------------------------
+BEGIN
+   FOR c IN (
+      SELECT table_name FROM user_tables WHERE table_name IN (
+         'STOCKADJUSTMENTS','LOYALTYTRANSACTIONS','PURCHASEORDERDETAILS','ORDERDETAILS',
+         'INVENTORIES','PRODUCTSKUS','PURCHASEORDERS','PRODUCTS','ORDERS','EMPLOYEES',
+         'SUPPLIERS','STORES','CUSTOMERS','CATEGORIES',
+         'ASPNETUSERTOKENS','ASPNETUSERROLES','ASPNETUSERLOGINS','ASPNETUSERCLAIMS',
+         'ASPNETROLECLAIMS','ASPNETUSERS','ASPNETROLES'
+      ) ORDER BY CASE table_name
+         WHEN 'STOCKADJUSTMENTS' THEN 1 WHEN 'LOYALTYTRANSACTIONS' THEN 2
+         WHEN 'PURCHASEORDERDETAILS' THEN 3 WHEN 'ORDERDETAILS' THEN 4
+         WHEN 'INVENTORIES' THEN 5 WHEN 'PRODUCTSKUS' THEN 6 WHEN 'PURCHASEORDERS' THEN 7
+         WHEN 'PRODUCTS' THEN 8 WHEN 'ORDERS' THEN 9 WHEN 'EMPLOYEES' THEN 10
+         WHEN 'SUPPLIERS' THEN 11 WHEN 'STORES' THEN 12 WHEN 'CUSTOMERS' THEN 13
+         WHEN 'CATEGORIES' THEN 14 WHEN 'ASPNETUSERTOKENS' THEN 15 WHEN 'ASPNETUSERROLES' THEN 16
+         WHEN 'ASPNETUSERLOGINS' THEN 17 WHEN 'ASPNETUSERCLAIMS' THEN 18
+         WHEN 'ASPNETROLECLAIMS' THEN 19 WHEN 'ASPNETUSERS' THEN 20 WHEN 'ASPNETROLES' THEN 21
+         ELSE 99 END
+   ) LOOP
+      EXECUTE IMMEDIATE 'DROP TABLE ' || c.table_name || ' CASCADE CONSTRAINTS PURGE';
+   END LOOP;
+   FOR s IN (SELECT sequence_name FROM user_sequences) LOOP
+      EXECUTE IMMEDIATE 'DROP SEQUENCE ' || s.sequence_name;
+   END LOOP;
+END;
+/
+
+-- PHẦN 2: ASP.NET IDENTITY
+-- ------------------------
+CREATE TABLE AspNetRoles (
+    Id          VARCHAR2(450) NOT NULL,
+    Name        VARCHAR2(256),
+    NormalizedName VARCHAR2(256),
+    ConcurrencyStamp VARCHAR2(2000),
+    CONSTRAINT PK_Roles PRIMARY KEY (Id)
+);
+CREATE UNIQUE INDEX IX_Roles_NormalizedName ON AspNetRoles (NormalizedName);
+
+CREATE TABLE AspNetUsers (
+    Id                  VARCHAR2(450) NOT NULL,
+    UserName            VARCHAR2(256),
+    NormalizedUserName  VARCHAR2(256),
+    Email               VARCHAR2(256),
+    NormalizedEmail     VARCHAR2(256),
+    EmailConfirmed      NUMBER(1) DEFAULT 0 NOT NULL,
+    PasswordHash        VARCHAR2(2000),
+    SecurityStamp       VARCHAR2(2000),
+    ConcurrencyStamp    VARCHAR2(2000),
+    PhoneNumber         VARCHAR2(2000),
+    PhoneNumberConfirmed NUMBER(1) DEFAULT 0 NOT NULL,
+    TwoFactorEnabled    NUMBER(1) DEFAULT 0 NOT NULL,
+    LockoutEnd          TIMESTAMP WITH TIME ZONE,
+    LockoutEnabled      NUMBER(1) DEFAULT 0 NOT NULL,
+    AccessFailedCount   NUMBER(10) DEFAULT 0 NOT NULL,
+    CONSTRAINT PK_Users PRIMARY KEY (Id)
+);
+CREATE INDEX IX_Users_NormalizedEmail ON AspNetUsers (NormalizedEmail);
+CREATE UNIQUE INDEX IX_Users_NormalizedUserName ON AspNetUsers (NormalizedUserName);
+
+CREATE SEQUENCE SEQ_RoleClaims START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE TABLE AspNetRoleClaims (
+    Id          NUMBER(10) NOT NULL,
+    RoleId      VARCHAR2(450) NOT NULL,
+    ClaimType   VARCHAR2(2000),
+    ClaimValue  VARCHAR2(2000),
+    CONSTRAINT PK_RoleClaims PRIMARY KEY (Id),
+    CONSTRAINT FK_RoleClaims_Roles FOREIGN KEY (RoleId) REFERENCES AspNetRoles(Id) ON DELETE CASCADE
+);
+CREATE OR REPLACE TRIGGER TRG_RoleClaims BEFORE INSERT ON AspNetRoleClaims FOR EACH ROW
+BEGIN IF :NEW.Id IS NULL THEN SELECT SEQ_RoleClaims.NEXTVAL INTO :NEW.Id FROM DUAL; END IF; END;
+/
+CREATE INDEX IX_RoleClaims_RoleId ON AspNetRoleClaims (RoleId);
+
+CREATE SEQUENCE SEQ_UserClaims START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE TABLE AspNetUserClaims (
+    Id          NUMBER(10) NOT NULL,
+    UserId      VARCHAR2(450) NOT NULL,
+    ClaimType   VARCHAR2(2000),
+    ClaimValue  VARCHAR2(2000),
+    CONSTRAINT PK_UserClaims PRIMARY KEY (Id),
+    CONSTRAINT FK_UserClaims_Users FOREIGN KEY (UserId) REFERENCES AspNetUsers(Id) ON DELETE CASCADE
+);
+CREATE OR REPLACE TRIGGER TRG_UserClaims BEFORE INSERT ON AspNetUserClaims FOR EACH ROW
+BEGIN IF :NEW.Id IS NULL THEN SELECT SEQ_UserClaims.NEXTVAL INTO :NEW.Id FROM DUAL; END IF; END;
+/
+CREATE INDEX IX_UserClaims_UserId ON AspNetUserClaims (UserId);
+
+CREATE TABLE AspNetUserLogins (
+    LoginProvider       VARCHAR2(128) NOT NULL,
+    ProviderKey         VARCHAR2(128) NOT NULL,
+    ProviderDisplayName VARCHAR2(2000),
+    UserId              VARCHAR2(450) NOT NULL,
+    CONSTRAINT PK_UserLogins PRIMARY KEY (LoginProvider, ProviderKey),
+    CONSTRAINT FK_UserLogins_Users FOREIGN KEY (UserId) REFERENCES AspNetUsers(Id) ON DELETE CASCADE
+);
+CREATE INDEX IX_UserLogins_UserId ON AspNetUserLogins (UserId);
+
+CREATE TABLE AspNetUserRoles (
+    UserId      VARCHAR2(450) NOT NULL,
+    RoleId      VARCHAR2(450) NOT NULL,
+    CONSTRAINT PK_UserRoles PRIMARY KEY (UserId, RoleId),
+    CONSTRAINT FK_UserRoles_Users FOREIGN KEY (UserId) REFERENCES AspNetUsers(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_UserRoles_Roles FOREIGN KEY (RoleId) REFERENCES AspNetRoles(Id) ON DELETE CASCADE
+);
+CREATE INDEX IX_UserRoles_RoleId ON AspNetUserRoles (RoleId);
+
+CREATE TABLE AspNetUserTokens (
+    UserId          VARCHAR2(450) NOT NULL,
+    LoginProvider   VARCHAR2(128) NOT NULL,
+    Name            VARCHAR2(128) NOT NULL,
+    Value           VARCHAR2(2000),
+    CONSTRAINT PK_UserTokens PRIMARY KEY (UserId, LoginProvider, Name),
+    CONSTRAINT FK_UserTokens_Users FOREIGN KEY (UserId) REFERENCES AspNetUsers(Id) ON DELETE CASCADE
+);
+
+-- PHẦN 3: STYLEVIBE BUSINESS SCHEMA
+-- ----------------------------------
+CREATE SEQUENCE SEQ_Categories START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE TABLE Categories (
+    Id          NUMBER(10) NOT NULL,
+    Name        VARCHAR2(50) NOT NULL,
+    Description CLOB,
+    ImageUrl    CLOB,
+    DisplayOrder NUMBER(10) DEFAULT 0 NOT NULL,
+    CreatedAt   TIMESTAMP DEFAULT SYS_EXTRACT_UTC(SYSTIMESTAMP) NOT NULL,
+    UpdatedAt   TIMESTAMP,
+    IsDeleted   NUMBER(1) DEFAULT 0 NOT NULL,
+    CONSTRAINT PK_Categories PRIMARY KEY (Id)
+);
+CREATE OR REPLACE TRIGGER TRG_Categories BEFORE INSERT ON Categories FOR EACH ROW
+BEGIN IF :NEW.Id IS NULL THEN SELECT SEQ_Categories.NEXTVAL INTO :NEW.Id FROM DUAL; END IF; END;
+/
+CREATE UNIQUE INDEX IX_Cat_Name ON Categories (Name);
+
+CREATE SEQUENCE SEQ_Customers START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE TABLE Customers (
+    Id              NUMBER(10) NOT NULL,
+    FullName        VARCHAR2(100) NOT NULL,
+    Phone           VARCHAR2(15) NOT NULL,
+    Email           VARCHAR2(100),
+    Address         CLOB,
+    DateOfBirth     TIMESTAMP,
+    Tier            NUMBER(3) NOT NULL,
+    LoyaltyPoints   NUMBER(10) DEFAULT 0 NOT NULL,
+    UserId          VARCHAR2(2000),
+    JoinDate        TIMESTAMP NOT NULL,
+    CreatedAt       TIMESTAMP DEFAULT SYS_EXTRACT_UTC(SYSTIMESTAMP) NOT NULL,
+    UpdatedAt       TIMESTAMP,
+    IsDeleted       NUMBER(1) DEFAULT 0 NOT NULL,
+    CONSTRAINT PK_Customers PRIMARY KEY (Id)
+);
+CREATE OR REPLACE TRIGGER TRG_Customers BEFORE INSERT ON Customers FOR EACH ROW
+BEGIN IF :NEW.Id IS NULL THEN SELECT SEQ_Customers.NEXTVAL INTO :NEW.Id FROM DUAL; END IF; END;
+/
+CREATE UNIQUE INDEX IX_Cust_Phone ON Customers (Phone);
+
+CREATE SEQUENCE SEQ_Stores START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE TABLE Stores (
+    Id          NUMBER(10) NOT NULL,
+    Name        VARCHAR2(100) NOT NULL,
+    Address     VARCHAR2(200) NOT NULL,
+    Phone       VARCHAR2(15) NOT NULL,
+    ManagerName VARCHAR2(100) NOT NULL,
+    IsActive    NUMBER(1) NOT NULL,
+    CreatedAt   TIMESTAMP DEFAULT SYS_EXTRACT_UTC(SYSTIMESTAMP) NOT NULL,
+    UpdatedAt   TIMESTAMP,
+    IsDeleted   NUMBER(1) DEFAULT 0 NOT NULL,
+    CONSTRAINT PK_Stores PRIMARY KEY (Id)
+);
+CREATE OR REPLACE TRIGGER TRG_Stores BEFORE INSERT ON Stores FOR EACH ROW
+BEGIN IF :NEW.Id IS NULL THEN SELECT SEQ_Stores.NEXTVAL INTO :NEW.Id FROM DUAL; END IF; END;
+/
+
+CREATE SEQUENCE SEQ_Suppliers START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE TABLE Suppliers (
+    Id              NUMBER(10) NOT NULL,
+    Name            VARCHAR2(150) NOT NULL,
+    ContactPerson   CLOB,
+    Phone           VARCHAR2(15) NOT NULL,
+    Email           VARCHAR2(100),
+    Address         CLOB,
+    LeadTimeDays    NUMBER(10) NOT NULL,
+    IsActive        NUMBER(1) NOT NULL,
+    CreatedAt       TIMESTAMP DEFAULT SYS_EXTRACT_UTC(SYSTIMESTAMP) NOT NULL,
+    UpdatedAt       TIMESTAMP,
+    IsDeleted       NUMBER(1) DEFAULT 0 NOT NULL,
+    CONSTRAINT PK_Suppliers PRIMARY KEY (Id)
+);
+CREATE OR REPLACE TRIGGER TRG_Suppliers BEFORE INSERT ON Suppliers FOR EACH ROW
+BEGIN IF :NEW.Id IS NULL THEN SELECT SEQ_Suppliers.NEXTVAL INTO :NEW.Id FROM DUAL; END IF; END;
+/
+
+CREATE SEQUENCE SEQ_Employees START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE TABLE Employees (
+    Id          NUMBER(10) NOT NULL,
+    FullName    VARCHAR2(100) NOT NULL,
+    Phone       VARCHAR2(15) NOT NULL,
+    Email       VARCHAR2(100) NOT NULL,
+    Position    VARCHAR2(50) NOT NULL,
+    HireDate    TIMESTAMP NOT NULL,
+    IsActive    NUMBER(1) NOT NULL,
+    UserId      VARCHAR2(2000),
+    StoreId     NUMBER(10) NOT NULL,
+    CreatedAt   TIMESTAMP DEFAULT SYS_EXTRACT_UTC(SYSTIMESTAMP) NOT NULL,
+    UpdatedAt   TIMESTAMP,
+    IsDeleted   NUMBER(1) DEFAULT 0 NOT NULL,
+    CONSTRAINT PK_Employees PRIMARY KEY (Id),
+    CONSTRAINT FK_Emp_Stores FOREIGN KEY (StoreId) REFERENCES Stores(Id) ON DELETE CASCADE
+);
+CREATE OR REPLACE TRIGGER TRG_Employees BEFORE INSERT ON Employees FOR EACH ROW
+BEGIN IF :NEW.Id IS NULL THEN SELECT SEQ_Employees.NEXTVAL INTO :NEW.Id FROM DUAL; END IF; END;
+/
+CREATE INDEX IX_Emp_StoreId ON Employees (StoreId);
+
+CREATE SEQUENCE SEQ_Orders START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE TABLE Orders (
+    Id              NUMBER(10) NOT NULL,
+    OrderCode       VARCHAR2(20) NOT NULL,
+    OrderDate       TIMESTAMP NOT NULL,
+    Status          NUMBER(3) NOT NULL,
+    PaymentMethod   NUMBER(3) NOT NULL,
+    PaymentStatus   NUMBER(3) NOT NULL,
+    SubTotal        NUMBER(14,0) NOT NULL,
+    DiscountAmount  NUMBER(14,0) NOT NULL,
+    TotalAmount     NUMBER(14,0) NOT NULL,
+    PointsEarned    NUMBER(10) DEFAULT 0 NOT NULL,
+    Note            CLOB,
+    StoreId         NUMBER(10) NOT NULL,
+    CustomerId      NUMBER(10),
+    CreatedAt       TIMESTAMP DEFAULT SYS_EXTRACT_UTC(SYSTIMESTAMP) NOT NULL,
+    UpdatedAt       TIMESTAMP,
+    IsDeleted       NUMBER(1) DEFAULT 0 NOT NULL,
+    CONSTRAINT PK_Orders PRIMARY KEY (Id),
+    CONSTRAINT FK_Ord_Stores FOREIGN KEY (StoreId) REFERENCES Stores(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_Ord_Customers FOREIGN KEY (CustomerId) REFERENCES Customers(Id)
+);
+CREATE OR REPLACE TRIGGER TRG_Orders BEFORE INSERT ON Orders FOR EACH ROW
+BEGIN IF :NEW.Id IS NULL THEN SELECT SEQ_Orders.NEXTVAL INTO :NEW.Id FROM DUAL; END IF; END;
+/
+CREATE UNIQUE INDEX IX_Ord_OrderCode ON Orders (OrderCode);
+CREATE INDEX IX_Ord_StoreId ON Orders (StoreId);
+CREATE INDEX IX_Ord_CustomerId ON Orders (CustomerId);
+
+CREATE SEQUENCE SEQ_Products START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE TABLE Products (
+    Id          NUMBER(10) NOT NULL,
+    Name        VARCHAR2(150) NOT NULL,
+    Description CLOB,
+    ImageUrl    CLOB,
+    IsActive    NUMBER(1) NOT NULL,
+    CategoryId  NUMBER(10) NOT NULL,
+    SupplierId  NUMBER(10) NOT NULL,
+    CreatedAt   TIMESTAMP DEFAULT SYS_EXTRACT_UTC(SYSTIMESTAMP) NOT NULL,
+    UpdatedAt   TIMESTAMP,
+    IsDeleted   NUMBER(1) DEFAULT 0 NOT NULL,
+    CONSTRAINT PK_Products PRIMARY KEY (Id),
+    CONSTRAINT FK_Prod_Cat FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_Prod_Sup FOREIGN KEY (SupplierId) REFERENCES Suppliers(Id) ON DELETE CASCADE
+);
+CREATE OR REPLACE TRIGGER TRG_Products BEFORE INSERT ON Products FOR EACH ROW
+BEGIN IF :NEW.Id IS NULL THEN SELECT SEQ_Products.NEXTVAL INTO :NEW.Id FROM DUAL; END IF; END;
+/
+CREATE INDEX IX_Prod_CategoryId ON Products (CategoryId);
+CREATE INDEX IX_Prod_SupplierId ON Products (SupplierId);
+
+CREATE SEQUENCE SEQ_PurchaseOrders START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE TABLE PurchaseOrders (
+    Id          NUMBER(10) NOT NULL,
+    PoCode      VARCHAR2(20) NOT NULL,
+    OrderDate   TIMESTAMP NOT NULL,
+    ExpectedDate TIMESTAMP,
+    ReceivedDate TIMESTAMP,
+    Status      NUMBER(3) NOT NULL,
+    TotalCost   NUMBER(16,0) NOT NULL,
+    Note        CLOB,
+    SupplierId  NUMBER(10) NOT NULL,
+    StoreId     NUMBER(10) NOT NULL,
+    CreatedAt   TIMESTAMP DEFAULT SYS_EXTRACT_UTC(SYSTIMESTAMP) NOT NULL,
+    UpdatedAt   TIMESTAMP,
+    IsDeleted   NUMBER(1) DEFAULT 0 NOT NULL,
+    CONSTRAINT PK_PurchaseOrders PRIMARY KEY (Id),
+    CONSTRAINT FK_PO_Suppliers FOREIGN KEY (SupplierId) REFERENCES Suppliers(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_PO_Stores FOREIGN KEY (StoreId) REFERENCES Stores(Id) ON DELETE CASCADE
+);
+CREATE OR REPLACE TRIGGER TRG_PurchaseOrders BEFORE INSERT ON PurchaseOrders FOR EACH ROW
+BEGIN IF :NEW.Id IS NULL THEN SELECT SEQ_PurchaseOrders.NEXTVAL INTO :NEW.Id FROM DUAL; END IF; END;
+/
+CREATE UNIQUE INDEX IX_PO_PoCode ON PurchaseOrders (PoCode);
+CREATE INDEX IX_PO_SupplierId ON PurchaseOrders (SupplierId);
+CREATE INDEX IX_PO_StoreId ON PurchaseOrders (StoreId);
+
+CREATE SEQUENCE SEQ_ProductSkus START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE TABLE ProductSkus (
+    Id          NUMBER(10) NOT NULL,
+    SkuCode     VARCHAR2(30) NOT NULL,
+    "Size"      VARCHAR2(10) NOT NULL,
+    Color       VARCHAR2(50) NOT NULL,
+    CostPrice   NUMBER(12,0) NOT NULL,
+    SellingPrice NUMBER(12,0) NOT NULL,
+    IsActive    NUMBER(1) NOT NULL,
+    ProductId   NUMBER(10) NOT NULL,
+    CreatedAt   TIMESTAMP DEFAULT SYS_EXTRACT_UTC(SYSTIMESTAMP) NOT NULL,
+    UpdatedAt   TIMESTAMP,
+    IsDeleted   NUMBER(1) DEFAULT 0 NOT NULL,
+    CONSTRAINT PK_ProductSkus PRIMARY KEY (Id),
+    CONSTRAINT FK_Sku_Products FOREIGN KEY (ProductId) REFERENCES Products(Id) ON DELETE CASCADE
+);
+CREATE OR REPLACE TRIGGER TRG_ProductSkus BEFORE INSERT ON ProductSkus FOR EACH ROW
+BEGIN IF :NEW.Id IS NULL THEN SELECT SEQ_ProductSkus.NEXTVAL INTO :NEW.Id FROM DUAL; END IF; END;
+/
+CREATE UNIQUE INDEX IX_Sku_SkuCode ON ProductSkus (SkuCode);
+CREATE INDEX IX_Sku_ProductId ON ProductSkus (ProductId);
+
+CREATE SEQUENCE SEQ_Inventories START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE TABLE Inventories (
+    Id              NUMBER(10) NOT NULL,
+    QuantityOnHand  NUMBER(10) NOT NULL,
+    ReorderPoint    NUMBER(10) NOT NULL,
+    MaxStockLevel   NUMBER(10),
+    LastUpdated     TIMESTAMP NOT NULL,
+    StoreId         NUMBER(10) NOT NULL,
+    ProductSkuId    NUMBER(10) NOT NULL,
+    CreatedAt       TIMESTAMP DEFAULT SYS_EXTRACT_UTC(SYSTIMESTAMP) NOT NULL,
+    UpdatedAt       TIMESTAMP,
+    IsDeleted       NUMBER(1) DEFAULT 0 NOT NULL,
+    CONSTRAINT PK_Inventories PRIMARY KEY (Id),
+    CONSTRAINT FK_Inv_Stores FOREIGN KEY (StoreId) REFERENCES Stores(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_Inv_Skus FOREIGN KEY (ProductSkuId) REFERENCES ProductSkus(Id) ON DELETE CASCADE
+);
+CREATE OR REPLACE TRIGGER TRG_Inventories BEFORE INSERT ON Inventories FOR EACH ROW
+BEGIN IF :NEW.Id IS NULL THEN SELECT SEQ_Inventories.NEXTVAL INTO :NEW.Id FROM DUAL; END IF; END;
+/
+CREATE INDEX IX_Inv_StoreId ON Inventories (StoreId);
+CREATE INDEX IX_Inv_SkuId ON Inventories (ProductSkuId);
+CREATE UNIQUE INDEX IX_Inv_Store_Sku ON Inventories (StoreId, ProductSkuId);
+
+CREATE SEQUENCE SEQ_OrderDetails START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE TABLE OrderDetails (
+    Id              NUMBER(10) NOT NULL,
+    Quantity        NUMBER(10) NOT NULL,
+    UnitPrice       NUMBER(12,0) NOT NULL,
+    DiscountPercent NUMBER(5,2) NOT NULL,
+    Subtotal        NUMBER(14,0) NOT NULL,
+    OrderId         NUMBER(10) NOT NULL,
+    ProductSkuId    NUMBER(10) NOT NULL,
+    CreatedAt       TIMESTAMP DEFAULT SYS_EXTRACT_UTC(SYSTIMESTAMP) NOT NULL,
+    UpdatedAt       TIMESTAMP,
+    IsDeleted       NUMBER(1) DEFAULT 0 NOT NULL,
+    CONSTRAINT PK_OrderDetails PRIMARY KEY (Id),
+    CONSTRAINT FK_OD_Orders FOREIGN KEY (OrderId) REFERENCES Orders(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_OD_Skus FOREIGN KEY (ProductSkuId) REFERENCES ProductSkus(Id) ON DELETE CASCADE
+);
+CREATE OR REPLACE TRIGGER TRG_OrderDetails BEFORE INSERT ON OrderDetails FOR EACH ROW
+BEGIN IF :NEW.Id IS NULL THEN SELECT SEQ_OrderDetails.NEXTVAL INTO :NEW.Id FROM DUAL; END IF; END;
+/
+CREATE INDEX IX_OD_OrderId ON OrderDetails (OrderId);
+CREATE INDEX IX_OD_SkuId ON OrderDetails (ProductSkuId);
+
+CREATE SEQUENCE SEQ_POD START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE TABLE PurchaseOrderDetails (
+    Id                  NUMBER(10) NOT NULL,
+    QuantityOrdered     NUMBER(10) NOT NULL,
+    QuantityReceived    NUMBER(10) NOT NULL,
+    UnitCost            NUMBER(12,0) NOT NULL,
+    Subtotal            NUMBER(14,0) NOT NULL,
+    PurchaseOrderId     NUMBER(10) NOT NULL,
+    ProductSkuId        NUMBER(10) NOT NULL,
+    CreatedAt           TIMESTAMP DEFAULT SYS_EXTRACT_UTC(SYSTIMESTAMP) NOT NULL,
+    UpdatedAt           TIMESTAMP,
+    IsDeleted           NUMBER(1) DEFAULT 0 NOT NULL,
+    CONSTRAINT PK_POD PRIMARY KEY (Id),
+    CONSTRAINT FK_POD_PO FOREIGN KEY (PurchaseOrderId) REFERENCES PurchaseOrders(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_POD_Sku FOREIGN KEY (ProductSkuId) REFERENCES ProductSkus(Id) ON DELETE CASCADE
+);
+CREATE OR REPLACE TRIGGER TRG_POD BEFORE INSERT ON PurchaseOrderDetails FOR EACH ROW
+BEGIN IF :NEW.Id IS NULL THEN SELECT SEQ_POD.NEXTVAL INTO :NEW.Id FROM DUAL; END IF; END;
+/
+CREATE INDEX IX_POD_POId ON PurchaseOrderDetails (PurchaseOrderId);
+CREATE INDEX IX_POD_SkuId ON PurchaseOrderDetails (ProductSkuId);
+
+CREATE SEQUENCE SEQ_LoyaltyTx START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE TABLE LoyaltyTransactions (
+    Id          NUMBER(10) NOT NULL,
+    Points      NUMBER(10) NOT NULL,
+    Description VARCHAR2(200) NOT NULL,
+    OrderId     NUMBER(10),
+    CustomerId  NUMBER(10) NOT NULL,
+    CreatedAt   TIMESTAMP DEFAULT SYS_EXTRACT_UTC(SYSTIMESTAMP) NOT NULL,
+    UpdatedAt   TIMESTAMP,
+    IsDeleted   NUMBER(1) DEFAULT 0 NOT NULL,
+    CONSTRAINT PK_LoyaltyTx PRIMARY KEY (Id),
+    CONSTRAINT FK_LT_Cust FOREIGN KEY (CustomerId) REFERENCES Customers(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_LT_Ord FOREIGN KEY (OrderId) REFERENCES Orders(Id)
+);
+CREATE OR REPLACE TRIGGER TRG_LoyaltyTx BEFORE INSERT ON LoyaltyTransactions FOR EACH ROW
+BEGIN IF :NEW.Id IS NULL THEN SELECT SEQ_LoyaltyTx.NEXTVAL INTO :NEW.Id FROM DUAL; END IF; END;
+/
+CREATE INDEX IX_LT_CustId ON LoyaltyTransactions (CustomerId);
+CREATE INDEX IX_LT_OrderId ON LoyaltyTransactions (OrderId);
+
+CREATE SEQUENCE SEQ_StockAdj START WITH 1 INCREMENT BY 1 NOCACHE;
+CREATE TABLE StockAdjustments (
+    Id                  NUMBER(10) NOT NULL,
+    QuantityBefore      NUMBER(10) NOT NULL,
+    QuantityChange      NUMBER(10) NOT NULL,
+    QuantityAfter       NUMBER(10) NOT NULL,
+    Reason              NUMBER(3) NOT NULL,
+    Note                CLOB,
+    AdjustedByUserId    VARCHAR2(2000),
+    InventoryId         NUMBER(10) NOT NULL,
+    CreatedAt           TIMESTAMP DEFAULT SYS_EXTRACT_UTC(SYSTIMESTAMP) NOT NULL,
+    UpdatedAt           TIMESTAMP,
+    IsDeleted           NUMBER(1) DEFAULT 0 NOT NULL,
+    CONSTRAINT PK_StockAdj PRIMARY KEY (Id),
+    CONSTRAINT FK_SA_Inv FOREIGN KEY (InventoryId) REFERENCES Inventories(Id) ON DELETE CASCADE
+);
+CREATE OR REPLACE TRIGGER TRG_StockAdj BEFORE INSERT ON StockAdjustments FOR EACH ROW
+BEGIN IF :NEW.Id IS NULL THEN SELECT SEQ_StockAdj.NEXTVAL INTO :NEW.Id FROM DUAL; END IF; END;
+/
+CREATE INDEX IX_SA_InvId ON StockAdjustments (InventoryId);
+
+COMMIT;

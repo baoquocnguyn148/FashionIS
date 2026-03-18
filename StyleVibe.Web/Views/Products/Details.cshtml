@@ -1,0 +1,186 @@
+@model StyleVibe.Domain.Entities.Product
+@{
+    ViewData["Title"] = Model.Name + " – StyleVibe Fashion";
+    var activeSkus = (Model.Skus ?? []).Where(s => s.IsActive).ToList();
+    var sizes  = activeSkus.Select(s => s.Size).Distinct().OrderBy(s => s).ToList();
+    var colors = activeSkus.Select(s => s.Color).Distinct().ToList();
+}
+
+<div class="page-container">
+    <div class="product-detail">
+
+        <!-- Left: Image -->
+        <div class="product-detail-img">
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" alt="@Model.Name" />
+            }
+            else
+            {
+                <div style="aspect-ratio:3/4;background:var(--sv-gray-light);display:flex;align-items:center;justify-content:center;">
+                    <svg width="80" height="80" fill="none" stroke="#bdbdbd" stroke-width="1.5" viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                </div>
+            }
+        </div>
+
+        <!-- Right: Info -->
+        <div class="product-detail-info">
+            <p class="product-detail-category">@Model.Category?.Name</p>
+            <h1 class="product-detail-name">@Model.Name</h1>
+
+            @if (activeSkus.Any())
+            {
+                var minPrice = activeSkus.Min(s => s.SellingPrice);
+                <p class="product-detail-price">@minPrice.ToString("N0")₫</p>
+            }
+
+            <hr class="product-detail-divider" />
+
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <p class="product-detail-description">@Model.Description</p>
+            }
+
+            @if (activeSkus.Any())
+            {
+                <!-- Size Selector -->
+                @if (sizes.Any())
+                {
+                    <div class="size-selector">
+                        <label>Kích thước</label>
+                        <div class="size-options" id="sizeOptions">
+                            @foreach (var size in sizes)
+                            {
+                                <button class="size-option" data-size="@size" onclick="selectSize(this)">@size</button>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Color Selector -->
+                @if (colors.Any())
+                {
+                    <div class="size-selector">
+                        <label>Màu sắc</label>
+                        <div class="size-options" id="colorOptions">
+                            @foreach (var color in colors)
+                            {
+                                <button class="size-option" style="width:auto;padding:0 16px;" data-color="@color" onclick="selectColor(this)">@color</button>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- SKU Data (hidden) -->
+                <script id="skuData" type="application/json">
+                    @Html.Raw(System.Text.Json.JsonSerializer.Serialize(activeSkus.Select(s => new {
+                        s.Id, s.Size, s.Color, price = (long)s.SellingPrice, s.SkuCode
+                    })))
+                </script>
+
+                <hr class="product-detail-divider" />
+
+                <button id="addToCartBtn" class="btn-add-to-cart" onclick="addToCart()">
+                    THÊM VÀO GIỎ HÀNG
+                </button>
+
+                <p id="cartFeedback" style="display:none;font-size:13px;text-align:center;color:var(--sv-success);margin-top:8px;font-weight:600;">
+                    ✓ Đã thêm vào giỏ hàng!
+                </p>
+            }
+            else
+            {
+                <p style="color:var(--sv-gray-text);font-size:13px;letter-spacing:0.06em;text-transform:uppercase;">
+                    Sản phẩm tạm hết hàng
+                </p>
+            }
+
+            <hr class="product-detail-divider" />
+
+            <!-- Features -->
+            <div style="font-size:13px;color:var(--sv-gray-text);line-height:2;">
+                <p style="margin:0">✦ Miễn phí vận chuyển đơn từ 500.000₫</p>
+                <p style="margin:0">✦ Đổi trả miễn phí trong 30 ngày</p>
+                <p style="margin:0">✦ Chất lượng được kiểm tra nghiêm ngặt</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const skuData = JSON.parse(document.getElementById('skuData')?.textContent || '[]');
+    let selectedSize  = null;
+    let selectedColor = null;
+
+    function selectSize(el) {
+        document.querySelectorAll('#sizeOptions .size-option').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedSize = el.dataset.size;
+        updatePrice();
+    }
+
+    function selectColor(el) {
+        document.querySelectorAll('#colorOptions .size-option').forEach(b => b.classList.remove('selected'));
+        el.classList.add('selected');
+        selectedColor = el.dataset.color;
+        updatePrice();
+    }
+
+    function updatePrice() {
+        const sku = skuData.find(s =>
+            (selectedSize  ? s.Size  === selectedSize  : true) &&
+            (selectedColor ? s.Color === selectedColor : true)
+        );
+        if (sku) {
+            const priceEl = document.querySelector('.product-detail-price');
+            if (priceEl) priceEl.textContent = sku.price.toLocaleString('vi-VN') + '₫';
+        }
+    }
+
+    function addToCart() {
+        const needsSize  = document.getElementById('sizeOptions')  !== null;
+        const needsColor = document.getElementById('colorOptions') !== null;
+
+        if (needsSize && !selectedSize) {
+            alert('Vui lòng chọn kích thước!'); return;
+        }
+        if (needsColor && !selectedColor) {
+            alert('Vui lòng chọn màu sắc!'); return;
+        }
+
+        const sku = skuData.find(s =>
+            (!selectedSize  || s.Size  === selectedSize)  &&
+            (!selectedColor || s.Color === selectedColor)
+        );
+        if (!sku) { alert('Không tìm thấy phiên bản phù hợp!'); return; }
+
+        let cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
+        const existing = cart.find(i => i.skuId === sku.Id);
+        if (existing) { existing.quantity += 1; }
+        else { cart.push({ skuId: sku.Id, skuCode: sku.SkuCode, size: sku.Size, color: sku.Color, price: sku.price, quantity: 1, name: document.querySelector('.product-detail-name')?.textContent || '' }); }
+        sessionStorage.setItem('cart', JSON.stringify(cart));
+
+        // Update badge
+        const badge = document.getElementById('cartBadge');
+        const total = cart.reduce((a,b) => a + b.quantity, 0);
+        if (badge) { badge.textContent = total; badge.style.display = 'flex'; }
+
+        // Feedback
+        const fb = document.getElementById('cartFeedback');
+        if (fb) { fb.style.display = 'block'; setTimeout(() => fb.style.display = 'none', 2500); }
+    }
+
+    // Init cart badge
+    document.addEventListener('DOMContentLoaded', () => {
+        const cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
+        const total = cart.reduce((a,b) => a + b.quantity, 0);
+        const badge = document.getElementById('cartBadge');
+        if (badge && total > 0) { badge.textContent = total; badge.style.display = 'flex'; }
+    });
+</script>
+}

@@ -1,0 +1,95 @@
+@model IEnumerable<StyleVibe.Domain.Entities.Product>
+@{
+    ViewData["Title"] = "Sản phẩm – StyleVibe Fashion";
+    var categories = ViewBag.Categories as IEnumerable<StyleVibe.Domain.Entities.Category> ?? [];
+    var activeCatId = Context.Request.Query["categoryId"].ToString();
+}
+
+<div class="page-container">
+    <div style="padding:48px 0 0;">
+        <!-- Page Heading -->
+        <div class="section-title">
+            <h1 style="font-size:1.75rem;letter-spacing:0.08em;text-transform:uppercase;">Sản phẩm</h1>
+            <p>@Model.Count() sản phẩm</p>
+        </div>
+
+        <!-- Category Tabs -->
+        <div class="category-tabs">
+            <a asp-action="Index"
+               class="category-tab @(string.IsNullOrEmpty(activeCatId) ? "active" : "")">
+                Tất cả
+            </a>
+            @foreach (var cat in categories)
+            {
+                <a asp-action="Index" asp-route-categoryId="@cat.Id"
+                   class="category-tab @(activeCatId == cat.Id.ToString() ? "active" : "")">
+                    @cat.Name
+                </a>
+            }
+        </div>
+
+        <!-- Products Grid -->
+        @if (!Model.Any())
+        {
+            <div style="text-align:center;padding:80px 0;color:var(--sv-gray-text)">
+                <svg width="64" height="64" fill="none" stroke="#bdbdbd" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 20px;display:block">
+                    <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+                </svg>
+                <p style="font-size:13px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:24px">
+                    Không có sản phẩm nào trong danh mục này
+                </p>
+                <a asp-action="Index" class="btn btn-primary" style="padding:14px 36px;font-size:12px;letter-spacing:0.1em;">
+                    Xem tất cả
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="products-grid" style="padding-bottom:80px">
+                @foreach (var product in Model)
+                {
+                    <div class="product-card">
+                        <a asp-controller="Products" asp-action="Details" asp-route-id="@product.Id"
+                           style="text-decoration:none;color:inherit;">
+                            <div class="product-card-img-wrap">
+                                @if (!string.IsNullOrEmpty(product.ImageUrl))
+                                {
+                                    <img src="@product.ImageUrl" alt="@product.Name" loading="lazy" />
+                                }
+                                else
+                                {
+                                    <div class="product-no-image">
+                                        <svg width="48" height="48" fill="none" stroke="#bdbdbd" stroke-width="1.5" viewBox="0 0 24 24">
+                                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                                            <polyline points="21 15 16 10 5 21"/>
+                                        </svg>
+                                    </div>
+                                }
+                                <div class="product-card-overlay">
+                                    <span class="quick-view-btn">Xem chi tiết</span>
+                                </div>
+                            </div>
+                            <div class="product-info">
+                                <p class="product-category-label">@product.Category?.Name</p>
+                                <h3 class="product-name">@product.Name</h3>
+                                @if (product.Skus?.Any() == true)
+                                {
+                                    var prices = product.Skus.Where(s => s.IsActive).Select(s => s.SellingPrice);
+                                    if (prices.Any())
+                                    {
+                                        <p class="product-price">@prices.Min().ToString("N0")₫</p>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="product-price" style="color:var(--sv-gray-text);font-size:12px">Liên hệ</p>
+                                }
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>

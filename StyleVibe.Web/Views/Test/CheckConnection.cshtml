@@ -1,0 +1,163 @@
+@{
+    ViewData["Title"] = "Kiểm tra kết nối Database";
+}
+
+<div class="container mt-4">
+    <h1 class="mb-4">Kiểm tra kết nối Database</h1>
+
+    @if (ViewBag.Error != null)
+    {
+        <div class="alert alert-danger">
+            <h5>❌ Lỗi kết nối:</h5>
+            <p><strong>@ViewBag.Error</strong></p>
+            @if (ViewBag.StackTrace != null)
+            {
+                <details>
+                    <summary>Chi tiết lỗi</summary>
+                    <pre class="mt-2">@ViewBag.StackTrace</pre>
+                </details>
+            }
+        </div>
+    }
+    else if (ViewBag.CanConnect == true)
+    {
+        <div class="alert alert-success">
+            <h5>✅ Kết nối Database thành công!</h5>
+            <p>Database: <strong>@ViewBag.DatabaseName</strong></p>
+            <p>Connection String: <code>@ViewBag.ConnectionString</code></p>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0">Thống kê dữ liệu hiện tại</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Bảng</th>
+                            <th>Số bản ghi</th>
+                            <th>Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Stores</strong> (Cửa hàng)</td>
+                            <td>@ViewBag.StoresCount</td>
+                            <td>
+                                @if (ViewBag.StoresCount == 0)
+                                {
+                                    <span class="badge bg-warning">Chưa có dữ liệu</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Có dữ liệu</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Categories</strong> (Danh mục)</td>
+                            <td>@ViewBag.CategoriesCount</td>
+                            <td>
+                                @if (ViewBag.CategoriesCount == 0)
+                                {
+                                    <span class="badge bg-warning">Chưa có dữ liệu</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Có dữ liệu</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Products</strong> (Sản phẩm)</td>
+                            <td>@ViewBag.ProductsCount</td>
+                            <td>
+                                @if (ViewBag.ProductsCount == 0)
+                                {
+                                    <span class="badge bg-warning">Chưa có dữ liệu</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Có dữ liệu</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Customers</strong> (Khách hàng)</td>
+                            <td>@ViewBag.CustomersCount</td>
+                            <td>
+                                @if (ViewBag.CustomersCount == 0)
+                                {
+                                    <span class="badge bg-warning">Chưa có dữ liệu</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Có dữ liệu</span>
+                                }
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Orders</strong> (Đơn hàng)</td>
+                            <td>@ViewBag.OrdersCount</td>
+                            <td>
+                                @if (ViewBag.OrdersCount == 0)
+                                {
+                                    <span class="badge bg-info">Chưa có đơn hàng</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Có đơn hàng</span>
+                                }
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @if (ViewBag.StoresCount == 0 || ViewBag.CategoriesCount == 0 || ViewBag.ProductsCount == 0)
+        {
+            <div class="alert alert-info mt-4">
+                <h5>📝 Bước tiếp theo:</h5>
+                <p>Bạn cần seed dữ liệu demo để test các chức năng:</p>
+                <ul>
+                    <li>✅ Schema đã tạo thành công</li>
+                    <li>⏳ Cần seed: Stores, Categories, Suppliers, Products, ProductSkus, Inventories</li>
+                    <li>💡 Sau khi seed xong, bạn có thể test POS và Storefront</li>
+                </ul>
+            </div>
+        }
+        else
+        {
+            <div class="alert alert-success mt-4">
+                <h5>🎉 Hoàn tất!</h5>
+                <p>Database đã có dữ liệu. Bạn có thể:</p>
+                <ul>
+                    <li><a asp-controller="Home" asp-action="Index">Về trang chủ</a></li>
+                    <li><a asp-controller="Products" asp-action="Index">Xem sản phẩm</a></li>
+                    <li><a asp-controller="Pos" asp-action="Index">Vào POS</a></li>
+                    <li><a asp-controller="Admin" asp-action="Dashboard">Admin Dashboard</a></li>
+                </ul>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="alert alert-warning">
+            <h5>⚠️ Không thể kết nối Database</h5>
+            <p>Vui lòng kiểm tra:</p>
+            <ul>
+                <li>Connection string trong <code>appsettings.json</code></li>
+                <li>SQL Server đang chạy</li>
+                <li>Database <code>StyleVibeDb</code> đã được tạo</li>
+                <li>Quyền truy cập của Windows user hiện tại</li>
+            </ul>
+        </div>
+    }
+
+    <div class="mt-4">
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Về trang chủ</a>
+        <a asp-action="CheckConnection" class="btn btn-secondary">Kiểm tra lại</a>
+    </div>
+</div>

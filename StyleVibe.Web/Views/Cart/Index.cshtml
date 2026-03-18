@@ -1,0 +1,143 @@
+@{
+    ViewData["Title"] = "Giỏ hàng – StyleVibe Fashion";
+}
+
+<div class="page-container">
+    <div class="cart-section">
+        <h1>Giỏ hàng</h1>
+
+        <div class="cart-layout" id="cartLayout">
+            <!-- Items will be rendered by JS -->
+            <div id="cartItemsContainer">
+                <div id="cartEmpty" style="display:none;padding:80px 0;text-align:center;color:var(--sv-gray-text)">
+                    <svg width="64" height="64" fill="none" stroke="#bdbdbd" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 20px;display:block">
+                        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/>
+                        <path d="M16 10a4 4 0 01-8 0"/>
+                    </svg>
+                    <p style="font-size:13px;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:24px">
+                        Giỏ hàng trống
+                    </p>
+                    <a asp-controller="Products" asp-action="Index" class="btn btn-primary" style="padding:14px 36px;font-size:12px;letter-spacing:0.12em;">
+                        TIẾP TỤC MUA SẮM
+                    </a>
+                </div>
+                <div id="cartItemsList"></div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="cart-summary" id="cartSummaryBox" style="display:none">
+                <h2>Tóm tắt đơn hàng</h2>
+                <div class="summary-row">
+                    <span>Tạm tính</span>
+                    <span id="summarySubtotal">0₫</span>
+                </div>
+                <div class="summary-row">
+                    <span>Vận chuyển</span>
+                    <span id="summaryShipping">30.000₫</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Tổng cộng</span>
+                    <span id="summaryTotal">0₫</span>
+                </div>
+                <a href="#" class="btn-checkout">TIẾN HÀNH THANH TOÁN</a>
+                <a asp-controller="Products" asp-action="Index"
+                   style="display:block;text-align:center;margin-top:16px;font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:var(--sv-gray-text);">
+                    ← Tiếp tục mua sắm
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function formatVND(n) {
+        return n.toLocaleString('vi-VN') + '₫';
+    }
+
+    function renderCart() {
+        const cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
+        const listEl    = document.getElementById('cartItemsList');
+        const emptyEl   = document.getElementById('cartEmpty');
+        const summaryEl = document.getElementById('cartSummaryBox');
+
+        if (!cart.length) {
+            listEl.innerHTML = '';
+            emptyEl.style.display = 'block';
+            summaryEl.style.display = 'none';
+            updateBadge(0);
+            return;
+        }
+
+        emptyEl.style.display = 'none';
+        summaryEl.style.display = 'block';
+
+        let html = '';
+        let subtotal = 0;
+
+        cart.forEach((item, idx) => {
+            const lineTotal = item.price * item.quantity;
+            subtotal += lineTotal;
+            html += `
+            <div class="cart-item" data-index="${idx}">
+                <div style="width:100px;aspect-ratio:3/4;background:var(--sv-gray-light);display:flex;align-items:center;justify-content:center;">
+                    <svg width="36" height="36" fill="none" stroke="#bdbdbd" stroke-width="1.5" viewBox="0 0 24 24">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="cart-item-name">${item.name || 'Sản phẩm'}</p>
+                    <p class="cart-item-sku">${item.size || ''} / ${item.color || ''}</p>
+                    <p class="cart-item-price">${formatVND(item.price)}</p>
+                    <div class="cart-qty-wrap">
+                        <button class="cart-qty-btn" onclick="changeQty(${idx}, -1)">−</button>
+                        <span class="cart-qty-num">${item.quantity}</span>
+                        <button class="cart-qty-btn" onclick="changeQty(${idx}, 1)">+</button>
+                    </div>
+                </div>
+                <div>
+                    <button class="cart-remove-btn" onclick="removeItem(${idx})" title="Xoá">✕</button>
+                    <p style="font-size:14px;font-weight:700;margin-top:12px;text-align:right">${formatVND(lineTotal)}</p>
+                </div>
+            </div>`;
+        });
+
+        listEl.innerHTML = html;
+
+        const shipping = subtotal >= 500000 ? 0 : 30000;
+        const total = subtotal + shipping;
+
+        document.getElementById('summarySubtotal').textContent = formatVND(subtotal);
+        document.getElementById('summaryShipping').textContent = shipping === 0 ? 'Miễn phí' : formatVND(shipping);
+        document.getElementById('summaryTotal').textContent    = formatVND(total);
+
+        updateBadge(cart.reduce((a,b) => a + b.quantity, 0));
+    }
+
+    function updateBadge(n) {
+        const badge = document.getElementById('cartBadge');
+        if (!badge) return;
+        if (n > 0) { badge.textContent = n; badge.style.display = 'flex'; }
+        else { badge.style.display = 'none'; }
+    }
+
+    function changeQty(idx, delta) {
+        let cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
+        cart[idx].quantity += delta;
+        if (cart[idx].quantity <= 0) cart.splice(idx, 1);
+        sessionStorage.setItem('cart', JSON.stringify(cart));
+        renderCart();
+    }
+
+    function removeItem(idx) {
+        let cart = JSON.parse(sessionStorage.getItem('cart') || '[]');
+        cart.splice(idx, 1);
+        sessionStorage.setItem('cart', JSON.stringify(cart));
+        renderCart();
+    }
+
+    document.addEventListener('DOMContentLoaded', renderCart);
+</script>
+}

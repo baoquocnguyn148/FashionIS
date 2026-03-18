@@ -1,0 +1,1015 @@
+ĐẠI HỌC KINH TẾ TÀI CHÍNH (UEF)
+Khoa Công nghệ Thông tin · ITE1129E
+TÀI LIỆU ĐẶC TẢ KỸ THUẬT
+StyleVibe Fashion MIS
+Management Information System cho Chuỗi Bán lẻ Thời trang
+Môn học
+ITE1129E – Hệ thống thông tin quản lý
+Giảng viên
+Trần Thành Công
+Lớp
+B01E – HK2B 2025-2026
+Loại tài liệu
+Technical Specification + Database Design
+Phiên bản
+v1.0 – 2026
+1. TỔNG QUAN DỰ ÁN
+1.1 Mô tả hệ thống
+StyleVibe Fashion MIS là hệ thống thông tin quản lý tích hợp toàn diện dành cho chuỗi bán lẻ thời trang địa phương. Hệ thống được xây dựng theo mô hình 3 tầng TPS → MIS → DSS, cung cấp đầy đủ nghiệp vụ từ bán hàng tại quầy, quản lý tồn kho, báo cáo kinh doanh đến hỗ trợ ra quyết định tự động dựa trên ML.
+1.2 Phạm vi hệ thống
+Module
+Mô tả
+Layer
+User Storefront
+Duyệt sản phẩm, giỏ hàng, thanh toán, tích điểm loyalty
+TPS
+Admin – TPS
+CRUD sản phẩm, đơn hàng, tồn kho, nhân viên, khách hàng
+TPS
+Admin – Dashboard
+KPI cards, báo cáo doanh thu tuần/tháng/năm, xuất Excel/PDF
+MIS
+Admin – DSS
+Sales forecast, RFM, What-if simulator, Auto decisions
+DSS
+2. TECHNOLOGY STACK
+2.1 Kiến trúc tổng thể
+Hệ thống áp dụng Clean Architecture (Onion Architecture) với 4 lớp tách biệt, đảm bảo tính bảo trì và mở rộng. Phần DSS/ML được tách thành microservice Python độc lập, giao tiếp với .NET qua HTTP REST API.
+Frontend &amp; Web Layer
+Công nghệ
+Phiên bản
+Mục đích sử dụng
+ASP.NET Core MVC
+.NET 8
+Server-side rendering, Razor Views cho toàn bộ frontend
+Bootstrap 5
+5.3
+Responsive layout, UI components cho cả user và admin
+ApexCharts.js
+3.x
+Interactive charts: Line, Bar, Pie, Heatmap cho dashboard MIS
+DataTables.js
+1.13
+Server-side pagination, search, sort cho bảng dữ liệu lớn
+SweetAlert2
+11.x
+Confirm dialogs, success/error notifications
+jQuery
+3.7
+AJAX calls, DOM manipulation trong Razor Views
+Backend (.NET)
+Công nghệ
+Phiên bản
+Mục đích sử dụng
+ASP.NET Core 8
+8.0 LTS
+Web framework chính, API controllers, middleware pipeline
+Entity Framework Core
+8.0
+ORM, Code-First migrations, LINQ queries với SQL Server
+ASP.NET Identity
+8.0
+Authentication, Authorization, Role management
+AutoMapper
+13.x
+Entity ↔ DTO mapping tự động, giảm boilerplate code
+FluentValidation
+11.x
+Validation rules cho request DTOs, tách biệt logic validate
+ClosedXML
+0.102
+Export báo cáo Excel với formatting, highlight, multiple sheets
+QuestPDF
+2024.x
+Generate PDF: báo cáo tháng, purchase orders
+Serilog
+3.x
+Structured logging, ghi log ra file và console
+Swashbuckle (Swagger)
+6.x
+API documentation tự động cho .NET Web API endpoints
+Database
+Công nghệ
+Phiên bản
+Mục đích sử dụng
+SQL Server
+2022 Express
+Database chính, lưu toàn bộ transactional &amp; analytical data
+SSMS
+20.x
+GUI quản lý database, chạy queries, view schema khi demo
+SQL Server Views
+—
+vw_DailyRevenue, vw_LowStock, vw_CustomerRFM, vw_MonthlySummary
+Stored Procedures
+—
+sp_GeneratePOSuggestion, sp_UpdateCustomerTier, sp_RecalcRFM
+DSS / ML Service (Python)
+Công nghệ
+Phiên bản
+Mục đích sử dụng
+Python FastAPI
+0.110+
+Microservice RESTful API cho tất cả DSS/ML endpoints
+Prophet (Meta)
+1.1
+Time-series sales forecasting, xử lý seasonality (Tết, Q4)
+XGBoost
+2.x
+Demand forecast per SKU, feature importance analysis
+scikit-learn
+1.4
+RFM clustering, price elasticity regression, pipeline
+pandas / numpy
+2.x / 1.26
+Data manipulation, feature engineering, aggregation
+SQLAlchemy + pyodbc
+2.x
+Kết nối Python → SQL Server, load training data
+Uvicorn
+0.29
+ASGI server chạy FastAPI, port 8000
+3. CẤU TRÚC DỰ ÁN
+3.1 Clean Architecture – Solution Structure
+Solution gồm 4 projects .NET theo chuẩn Clean Architecture + 1 Python service riêng:
+Project / Thư mục
+Nội dung chính
+Dependency rule
+StyleVibe.Domain
+Entities, Enums, Interfaces
+Không phụ thuộc vào project nào
+StyleVibe.Application
+Services, DTOs, Interfaces
+Chỉ phụ thuộc Domain
+StyleVibe.Infrastructure
+DbContext, Repositories, EF Configs
+Phụ thuộc Application + Domain
+StyleVibe.Web
+Controllers, Views, ViewModels
+Phụ thuộc tất cả 3 project trên
+dss_service/
+FastAPI Python service
+Độc lập, giao tiếp qua HTTP
+3.2 Chi tiết cấu trúc thư mục
+StyleVibe/
+├── src/
+│   ├── StyleVibe.Domain/
+Core domain – không import gì
+Layer 1
+│   │   ├── Entities/
+Store, Product, SKU, Customer, Order, Inventory, PO...
+│   │   ├── Enums/
+OrderStatus, CustomerTier, PaymentMethod...
+│   │   ├── Common/
+BaseEntity (Id, CreatedAt, UpdatedAt, IsDeleted)
+│   │   └── Interfaces/
+IRepository&lt;T&gt;, IUnitOfWork
+│   ├── StyleVibe.Application/
+Use cases &amp; business logic
+Layer 2
+│   │   ├── Interfaces/
+IProductService, IOrderService, IDssService...
+│   │   ├── Services/
+ProductService, OrderService, ReportService...
+│   │   ├── DTOs/
+Request/ và Response/ cho mỗi feature
+│   │   └── Mappings/
+AutoMapper profiles: Entity ↔ DTO
+│   ├── StyleVibe.Infrastructure/
+Data access &amp; external services
+Layer 3
+│   │   ├── Data/
+AppDbContext.cs, Configurations/, Seeds/
+│   │   ├── Repositories/
+GenericRepository&lt;T&gt;, UnitOfWork
+│   │   ├── Identity/
+ApplicationUser, IdentitySeeder
+│   │   └── Services/
+DssApiClient (gọi Python), ExportService
+│   └── StyleVibe.Web/
+Presentation layer (MVC)
+Layer 4
+│       ├── Controllers/
+HomeController, ProductController, CartController...
+│       ├── Areas/Admin/
+Admin Area: Dashboard, Products, Orders, DSS...
+│       ├── Views/
+Razor .cshtml files theo từng controller
+│       ├── ViewModels/
+ProductListVM, CheckoutVM, DashboardVM...
+│       └── wwwroot/
+css/, js/, lib/ (Bootstrap, ApexCharts)
+├── dss_service/
+Python FastAPI microservice
+ML Service
+│   ├── main.py
+FastAPI app entry point, CORS config
+│   ├── models/
+sales_forecast.py, rfm.py, price_sim.py, demand.py
+│   ├── routers/
+forecast.py, analysis.py, simulation.py, dss.py
+│   ├── schemas/
+Pydantic request/response schemas
+│   ├── data/
+generate_data.py, csv/ seed files
+│   └── requirements.txt
+fastapi, prophet, xgboost, scikit-learn, pandas...
+└── docs/
+Tài liệu: Technical Spec, DB Design, API docs
+4. THIẾT KẾ CƠ SỞ DỮ LIỆU
+4.1 Tổng quan &amp; Nguyên tắc thiết kế (BA Perspective)
+Nguyên tắc
+Chi tiết &amp; Lý do
+Chuẩn hóa 3NF
+Tất cả bảng đạt chuẩn 3NF. Tách ProductSku riêng khỏi Product để tránh repeating groups theo size/color. Tách OrderDetail khỏi Order để tránh phụ thuộc bắc cầu.
+Soft Delete
+Dùng cột IsDeleted TINYINT thay vì DELETE vật lý. Đảm bảo tính toàn vẹn dữ liệu lịch sử, phục hồi khi cần, audit trail đầy đủ.
+Audit Trail
+BaseEntity có CreatedAt, UpdatedAt. Bảng StockAdjustment ghi toàn bộ lịch sử thay đổi tồn kho với lý do. LoyaltyTransaction ghi từng điểm tích/đổi.
+Phân tách nghiệp vụ
+Order (đơn bán) tách biệt hoàn toàn PurchaseOrder (đơn nhập). Inventory quản lý per-store per-SKU, không gộp chung.
+Hỗ trợ MIS/DSS
+SQL Views được thiết kế sẵn để layer MIS query nhanh mà không join phức tạp trong ứng dụng. Indexed foreign keys tối ưu performance.
+Mở rộng tương lai
+Bảng Category hỗ trợ đệ quy (ParentCategoryId). Customer có UserId FK liên kết ASP.NET Identity. Promotion table cho phép nhiều loại ưu đãi.
+4.2 Mô tả chi tiết các bảng
+Bảng: Stores
+Quản lý thông tin 3 cửa hàng trong chuỗi StyleVibe
+Cột
+Kiểu dữ liệu
+Constraint
+Mô tả / Ghi chú BA
+Id
+INT
+PK, IDENTITY(1,1)
+Khóa chính
+Name
+NVARCHAR(100)
+NOT NULL
+Tên cửa hàng, e.g. &quot;StyleVibe Quận 1&quot;
+Address
+NVARCHAR(200)
+NOT NULL
+Địa chỉ đầy đủ
+Phone
+VARCHAR(15)
+NOT NULL
+Số điện thoại cửa hàng
+ManagerName
+NVARCHAR(100)
+NOT NULL
+Tên quản lý cửa hàng
+IsActive
+BIT
+DEFAULT 1
+Trạng thái hoạt động
+CreatedAt
+DATETIME2
+DEFAULT GETUTCDATE()
+Ngày tạo bản ghi
+IsDeleted
+BIT
+DEFAULT 0
+Soft delete flag
+Bảng: Categories
+Danh mục sản phẩm: Áo, Quần, Váy, Áo khoác, Phụ kiện
+Cột
+Kiểu dữ liệu
+Constraint
+Mô tả / Ghi chú BA
+Id
+INT
+PK, IDENTITY
+Khóa chính
+Name
+NVARCHAR(50)
+NOT NULL, UNIQUE
+Tên danh mục
+Description
+NVARCHAR(200)
+NULL
+Mô tả danh mục
+ImageUrl
+NVARCHAR(300)
+NULL
+Đường dẫn ảnh banner danh mục
+DisplayOrder
+INT
+DEFAULT 0
+Thứ tự hiển thị trên storefront
+IsDeleted
+BIT
+DEFAULT 0
+Soft delete
+Bảng: Suppliers
+Nhà cung cấp hàng hóa, liên kết với Products và PurchaseOrders
+Cột
+Kiểu dữ liệu
+Constraint
+Mô tả / Ghi chú BA
+Id
+INT
+PK, IDENTITY
+Khóa chính
+Name
+NVARCHAR(150)
+NOT NULL
+Tên công ty cung cấp
+ContactPerson
+NVARCHAR(100)
+NULL
+Tên người liên hệ
+Phone
+VARCHAR(15)
+NOT NULL
+Số điện thoại
+Email
+VARCHAR(100)
+NULL
+Email liên hệ
+Address
+NVARCHAR(200)
+NULL
+Địa chỉ nhà cung cấp
+LeadTimeDays
+INT
+DEFAULT 7
+Số ngày giao hàng – dùng trong DSS ROP
+IsActive
+BIT
+DEFAULT 1
+Trạng thái hợp tác
+IsDeleted
+BIT
+DEFAULT 0
+Soft delete
+Bảng: Products
+Sản phẩm gốc (chưa tách size/màu). 1 Product có nhiều ProductSkus
+Cột
+Kiểu dữ liệu
+Constraint
+Mô tả / Ghi chú BA
+Id
+INT
+PK, IDENTITY
+Khóa chính
+Name
+NVARCHAR(150)
+NOT NULL
+Tên sản phẩm, e.g. &quot;Áo thun basic cổ tròn&quot;
+Description
+NVARCHAR(MAX)
+NULL
+Mô tả chi tiết sản phẩm
+ImageUrl
+NVARCHAR(300)
+NULL
+Ảnh đại diện sản phẩm
+IsActive
+BIT
+DEFAULT 1
+Hiển thị trên storefront
+CategoryId
+INT
+FK → Categories.Id
+Danh mục sản phẩm
+SupplierId
+INT
+FK → Suppliers.Id
+Nhà cung cấp chính
+CreatedAt
+DATETIME2
+DEFAULT GETUTCDATE()
+Ngày tạo
+UpdatedAt
+DATETIME2
+NULL
+Ngày cập nhật gần nhất
+IsDeleted
+BIT
+DEFAULT 0
+Soft delete
+Bảng: ProductSkus
+SKU = Product + Size + Color. Đây là đơn vị bán hàng thực tế
+Cột
+Kiểu dữ liệu
+Constraint
+Mô tả / Ghi chú BA
+Id
+INT
+PK, IDENTITY
+Khóa chính
+SkuCode
+VARCHAR(30)
+NOT NULL, UNIQUE
+Mã SKU duy nhất, e.g. &quot;P001-M-TRA&quot;
+Size
+VARCHAR(10)
+NOT NULL
+S, M, L, XL, 28, 29... hoặc One Size
+Color
+NVARCHAR(50)
+NOT NULL
+Màu sắc, e.g. &quot;Trắng&quot;, &quot;Xanh navy&quot;
+CostPrice
+DECIMAL(12,0)
+NOT NULL
+Giá vốn – dùng tính gross profit trong MIS
+SellingPrice
+DECIMAL(12,0)
+NOT NULL
+Giá bán lẻ
+ProductId
+INT
+FK → Products.Id
+Sản phẩm gốc
+IsActive
+BIT
+DEFAULT 1
+SKU còn kinh doanh
+IsDeleted
+BIT
+DEFAULT 0
+Soft delete
+Bảng: Customers
+Khách hàng thành viên. Liên kết với ASP.NET Identity qua UserId
+Cột
+Kiểu dữ liệu
+Constraint
+Mô tả / Ghi chú BA
+Id
+INT
+PK, IDENTITY
+Khóa chính
+FullName
+NVARCHAR(100)
+NOT NULL
+Họ tên khách hàng
+Phone
+VARCHAR(15)
+NOT NULL, UNIQUE
+Số điện thoại – dùng để tra cứu nhanh
+Email
+VARCHAR(100)
+NULL
+Email khách hàng
+Address
+NVARCHAR(200)
+NULL
+Địa chỉ giao hàng
+DateOfBirth
+DATE
+NULL
+Ngày sinh – gửi quà sinh nhật
+Tier
+TINYINT
+DEFAULT 1
+1=Bronze, 2=Silver, 3=Gold, 4=VIP
+LoyaltyPoints
+INT
+DEFAULT 0
+Điểm tích lũy hiện tại
+UserId
+NVARCHAR(450)
+NULL, FK → AspNetUsers
+Link với Identity user
+JoinDate
+DATETIME2
+DEFAULT GETUTCDATE()
+Ngày đăng ký thành viên
+IsDeleted
+BIT
+DEFAULT 0
+Soft delete
+Bảng: Employees
+Nhân viên cửa hàng. Phân quyền qua UserId liên kết ASP.NET Identity
+Cột
+Kiểu dữ liệu
+Constraint
+Mô tả / Ghi chú BA
+Id
+INT
+PK, IDENTITY
+Khóa chính
+FullName
+NVARCHAR(100)
+NOT NULL
+Họ tên nhân viên
+Phone
+VARCHAR(15)
+NOT NULL
+Số điện thoại liên hệ
+Email
+VARCHAR(100)
+NOT NULL, UNIQUE
+Email đăng nhập hệ thống
+Position
+NVARCHAR(50)
+NOT NULL
+Chức vụ: Thu ngân, Quản lý cửa hàng...
+StoreId
+INT
+FK → Stores.Id
+Cửa hàng làm việc
+UserId
+NVARCHAR(450)
+NULL, FK → AspNetUsers
+Tài khoản đăng nhập
+IsActive
+BIT
+DEFAULT 1
+Đang làm việc
+HireDate
+DATE
+NOT NULL
+Ngày vào làm
+IsDeleted
+BIT
+DEFAULT 0
+Soft delete
+Bảng: Orders
+Đơn bán hàng – trung tâm của TPS. Ghi nhận từng giao dịch tại quầy hoặc online
+Cột
+Kiểu dữ liệu
+Constraint
+Mô tả / Ghi chú BA
+Id
+INT
+PK, IDENTITY
+Khóa chính
+OrderCode
+VARCHAR(20)
+NOT NULL, UNIQUE
+Mã đơn: ORD-20241201-0001
+OrderDate
+DATETIME2
+DEFAULT GETUTCDATE()
+Thời điểm đặt hàng – dùng trong báo cáo
+Status
+TINYINT
+DEFAULT 1
+1=Pending, 2=Confirmed, 3=Processing, 4=Completed, 5=Cancelled
+PaymentMethod
+TINYINT
+NOT NULL
+1=Cash, 2=Bank, 3=EWallet, 4=Card
+PaymentStatus
+TINYINT
+DEFAULT 1
+1=Unpaid, 2=Paid, 3=Refunded
+SubTotal
+DECIMAL(14,0)
+NOT NULL
+Tổng trước giảm giá
+DiscountAmount
+DECIMAL(14,0)
+DEFAULT 0
+Số tiền giảm giá
+TotalAmount
+DECIMAL(14,0)
+NOT NULL
+Tổng thực thu – dùng trong tất cả báo cáo
+PointsEarned
+INT
+DEFAULT 0
+Điểm tích được từ đơn này
+Note
+NVARCHAR(300)
+NULL
+Ghi chú đơn hàng
+StoreId
+INT
+FK → Stores.Id, IDX
+Cửa hàng phát sinh đơn
+CustomerId
+INT
+NULL, FK → Customers.Id
+NULL nếu khách vãng lai
+CreatedAt
+DATETIME2
+DEFAULT GETUTCDATE()
+Thời gian tạo
+IsDeleted
+BIT
+DEFAULT 0
+Soft delete
+Bảng: OrderDetails
+Chi tiết từng dòng sản phẩm trong đơn hàng. Junction table Order ↔ ProductSku
+Cột
+Kiểu dữ liệu
+Constraint
+Mô tả / Ghi chú BA
+Id
+INT
+PK, IDENTITY
+Khóa chính
+Quantity
+INT
+NOT NULL, CHECK &gt; 0
+Số lượng mua
+UnitPrice
+DECIMAL(12,0)
+NOT NULL
+Giá bán tại thời điểm mua (snapshot)
+DiscountPercent
+DECIMAL(5,2)
+DEFAULT 0
+Phần trăm giảm giá dòng này
+Subtotal
+DECIMAL(14,0)
+NOT NULL
+UnitPrice × Qty × (1 - Discount%)
+OrderId
+INT
+FK → Orders.Id, IDX
+Đơn hàng chứa dòng này
+ProductSkuId
+INT
+FK → ProductSkus.Id, IDX
+SKU được mua
+IsDeleted
+BIT
+DEFAULT 0
+Soft delete
+Bảng: Inventories
+Tồn kho per-store per-SKU. Cập nhật sau mỗi Order và PurchaseOrder
+Cột
+Kiểu dữ liệu
+Constraint
+Mô tả / Ghi chú BA
+Id
+INT
+PK, IDENTITY
+Khóa chính
+QuantityOnHand
+INT
+NOT NULL, DEFAULT 0
+Số lượng tồn kho hiện tại
+ReorderPoint
+INT
+NOT NULL, DEFAULT 10
+Ngưỡng cảnh báo – dùng trong DSS ROP
+MaxStockLevel
+INT
+DEFAULT 200
+Tồn kho tối đa – tránh over-stock
+LastUpdated
+DATETIME2
+DEFAULT GETUTCDATE()
+Lần cập nhật gần nhất
+StoreId
+INT
+FK → Stores.Id
+Cửa hàng sở hữu tồn kho
+ProductSkuId
+INT
+FK → ProductSkus.Id
+SKU cụ thể
+UNIQUE
+—
+(StoreId, ProductSkuId)
+Mỗi cửa hàng chỉ có 1 record / SKU
+Bảng: StockAdjustments
+Audit trail toàn bộ thay đổi tồn kho. Không bao giờ xóa bảng này
+Cột
+Kiểu dữ liệu
+Constraint
+Mô tả / Ghi chú BA
+Id
+INT
+PK, IDENTITY
+Khóa chính
+QuantityBefore
+INT
+NOT NULL
+Tồn kho trước khi thay đổi
+QuantityChange
+INT
+NOT NULL
+Số lượng thay đổi: + nhập, - xuất
+QuantityAfter
+INT
+NOT NULL
+Tồn kho sau khi thay đổi
+Reason
+TINYINT
+NOT NULL
+1=PO, 2=SaleReturn, 3=Transfer, 4=Damage, 5=Manual
+Note
+NVARCHAR(200)
+NULL
+Ghi chú lý do điều chỉnh
+AdjustedByUserId
+NVARCHAR(450)
+NULL
+Người thực hiện điều chỉnh
+InventoryId
+INT
+FK → Inventories.Id
+Inventory bị ảnh hưởng
+CreatedAt
+DATETIME2
+DEFAULT GETUTCDATE()
+Thời điểm điều chỉnh
+Bảng: PurchaseOrders
+Đơn đặt hàng nhập kho từ nhà cung cấp. Được tạo thủ công hoặc từ DSS Restock
+Cột
+Kiểu dữ liệu
+Constraint
+Mô tả / Ghi chú BA
+Id
+INT
+PK, IDENTITY
+Khóa chính
+PoCode
+VARCHAR(20)
+NOT NULL, UNIQUE
+Mã PO: PO-20241201-001
+OrderDate
+DATETIME2
+DEFAULT GETUTCDATE()
+Ngày tạo đơn
+ExpectedDate
+DATE
+NULL
+Ngày dự kiến nhận hàng
+ReceivedDate
+DATETIME2
+NULL
+Ngày thực tế nhận hàng
+Status
+TINYINT
+DEFAULT 1
+1=Draft, 2=Sent, 3=Confirmed, 4=Received, 5=Cancelled
+TotalCost
+DECIMAL(16,0)
+NOT NULL
+Tổng giá trị đơn nhập
+Note
+NVARCHAR(300)
+NULL
+Ghi chú đơn nhập
+SupplierId
+INT
+FK → Suppliers.Id
+Nhà cung cấp
+StoreId
+INT
+FK → Stores.Id
+Cửa hàng nhận hàng
+IsDeleted
+BIT
+DEFAULT 0
+Soft delete
+Bảng: PurchaseOrderDetails
+Chi tiết từng dòng SKU trong đơn nhập kho
+Cột
+Kiểu dữ liệu
+Constraint
+Mô tả / Ghi chú BA
+Id
+INT
+PK, IDENTITY
+Khóa chính
+QuantityOrdered
+INT
+NOT NULL, CHECK &gt; 0
+Số lượng đặt mua
+QuantityReceived
+INT
+DEFAULT 0
+Số lượng đã nhận thực tế
+UnitCost
+DECIMAL(12,0)
+NOT NULL
+Giá nhập tại thời điểm đặt (snapshot)
+Subtotal
+DECIMAL(14,0)
+NOT NULL
+UnitCost × QuantityOrdered
+PurchaseOrderId
+INT
+FK → PurchaseOrders.Id
+Đơn nhập chứa dòng này
+ProductSkuId
+INT
+FK → ProductSkus.Id
+SKU cần nhập
+IsDeleted
+BIT
+DEFAULT 0
+Soft delete
+Bảng: LoyaltyTransactions
+Lịch sử tích/đổi điểm loyalty. Mỗi dòng là 1 sự kiện điểm
+Cột
+Kiểu dữ liệu
+Constraint
+Mô tả / Ghi chú BA
+Id
+INT
+PK, IDENTITY
+Khóa chính
+Points
+INT
+NOT NULL
+Số điểm: + tích, - đổi/trừ
+Description
+NVARCHAR(200)
+NOT NULL
+Mô tả: &quot;Tích điểm đơn ORD-xxx&quot;, &quot;Đổi ưu đãi&quot;
+OrderId
+INT
+NULL, FK → Orders.Id
+Đơn hàng liên quan (nếu có)
+CustomerId
+INT
+FK → Customers.Id
+Khách hàng sở hữu điểm
+CreatedAt
+DATETIME2
+DEFAULT GETUTCDATE()
+Thời điểm giao dịch điểm
+4.3 SQL Views phục vụ MIS &amp; DSS
+Các Views được thiết kế sẵn nhằm tối ưu hiệu suất truy vấn cho Dashboard và báo cáo. Thay vì join phức tạp trong code, Application layer chỉ cần query View.
+View Name
+Mục đích
+Dùng trong
+Cột chính
+vw_DailyRevenue
+Doanh thu theo ngày × cửa hàng, gồm txn_count, avg_order_value
+MIS Dashboard
+date, store_id, revenue, txn_count
+vw_ProductSales
+Tổng qty sold, revenue, gross_profit theo SKU toàn thời gian
+Top Products
+product_id, qty_sold, revenue, profit
+vw_MonthlySummary
+KPI tháng: revenue, orders, unique customers theo store
+Monthly Report
+year, month, store_id, revenue
+vw_LowStock
+SKU dưới Reorder Point, gồm thông tin nhà cung cấp và lead time
+DSS Restock
+store, sku, qty, rop, supplier, lead_time
+vw_CustomerRFM
+Recency (ngày), Frequency (số đơn), Monetary (tổng chi) per customer
+DSS RFM
+customer_id, recency, frequency, monetary
+vw_StoreComparison
+So sánh doanh thu, đơn hàng, khách hàng giữa 3 cửa hàng theo tháng
+MIS Report
+year, month, store_name, revenue
+4.4 Quan hệ giữa các bảng (ERD Summary)
+Quan hệ
+Cardinality
+FK Column
+Ghi chú BA
+Categories → Products
+1 : N
+Products.CategoryId
+Bắt buộc
+Suppliers → Products
+1 : N
+Products.SupplierId
+Bắt buộc
+Products → ProductSkus
+1 : N
+ProductSkus.ProductId
+Bắt buộc
+Stores → Inventories
+1 : N
+Inventories.StoreId
+Bắt buộc
+ProductSkus → Inventories
+1 : N
+Inventories.ProductSkuId
+Bắt buộc
+Inventories → StockAdjustments
+1 : N
+StockAdjustments.InventoryId
+Không xóa
+Stores → Orders
+1 : N
+Orders.StoreId
+Bắt buộc
+Customers → Orders
+1 : N (nullable)
+Orders.CustomerId
+NULL = khách vãng lai
+Orders → OrderDetails
+1 : N
+OrderDetails.OrderId
+Cascade delete
+ProductSkus → OrderDetails
+1 : N
+OrderDetails.ProductSkuId
+Bắt buộc
+Suppliers → PurchaseOrders
+1 : N
+PurchaseOrders.SupplierId
+Bắt buộc
+Stores → PurchaseOrders
+1 : N
+PurchaseOrders.StoreId
+Bắt buộc
+PurchaseOrders → PODetails
+1 : N
+PODetails.PurchaseOrderId
+Cascade delete
+Customers → LoyaltyTransactions
+1 : N
+LoyaltyTransactions.CustomerId
+Không xóa
+Stores → Employees
+1 : N
+Employees.StoreId
+Bắt buộc
+5. DSS – LUỒNG DỮ LIỆU &amp; ENDPOINTS
+5.1 Luồng dữ liệu TPS → MIS → DSS
+Layer
+Nguồn dữ liệu
+Xử lý
+Output
+TPS
+User input (POS)
+Validate → Ghi Orders + OrderDetails → Trừ Inventory
+Dữ liệu giao dịch thô
+MIS
+SQL Views
+Aggregate theo ngày/tháng/năm, group by store/category
+Báo cáo + KPI cards
+DSS
+Python đọc từ SQL Server
+ML models: Prophet, XGBoost, RFM, Price Elasticity
+Dự báo + Gợi ý hành động
+5.2 Python FastAPI Endpoints
+Endpoint
+Method
+Model sử dụng
+Mô tả
+/forecast/sales
+POST
+Prophet
+Dự báo doanh thu 30/90 ngày + confidence interval
+/forecast/demand
+POST
+XGBoost
+Dự báo nhu cầu per SKU, top 20 sản phẩm
+/analysis/rfm
+GET
+scikit-learn KMeans
+RFM scores + phân loại VIP/Gold/Silver/Bronze
+/dss/restock
+GET
+ROP formula
+Danh sách SKU cần đặt + EOQ + urgency level
+/simulation/price-change
+POST
+Price Elasticity Regression
+What-if: giảm giá X% → doanh thu thay đổi bao nhiêu?
+/simulation/marketing
+POST
+Historical Campaign Data
+Dự báo ROI khi chạy campaign theo segment
+/dss/auto-decisions
+GET
+Rule Engine + ML
+Top 5 gợi ý hành động ưu tiên tự động
+6. HƯỚNG DẪN SETUP &amp; CHẠY DỰ ÁN
+6.1 Yêu cầu môi trường
+Tool
+Version
+Download
+Visual Studio 2022
+17.8+
+visualstudio.microsoft.com
+.NET SDK
+8.0 LTS
+dotnet.microsoft.com/download
+SQL Server Express
+2022
+microsoft.com/sql-server/downloads
+SSMS
+20.x
+aka.ms/ssmsfullsetup
+Python
+3.11+
+python.org/downloads
+VS Code
+Latest
+code.visualstudio.com (cho Python)
+Git
+2.x
+git-scm.com
+6.2 Các bước setup lần đầu
+Bước 1 – Clone repo: git clone &lt;repo-url&gt; &amp;&amp; cd StyleVibe
+Bước 2 – Mở StyleVibe.sln trong Visual Studio 2022
+Bước 3 – Cập nhật ConnectionString trong src/StyleVibe.Web/appsettings.json
+Bước 4 – Package Manager Console: Update-Database (chạy EF Core migrations)
+Bước 5 – Chạy data seed: python dss_service/data/generate_data.py
+Bước 6 – Import CSV vào SQL Server: python dss_service/data/import_to_sqlserver.py
+Bước 7 – Setup Python: cd dss_service &amp;&amp; pip install -r requirements.txt
+Bước 8 – Chạy FastAPI: uvicorn main:app --reload --port 8000
+Bước 9 – Chạy .NET: Ctrl+F5 trong Visual Studio (port 5000)
+Bước 10 – Truy cập: http://localhost:5000 (user) | http://localhost:5000/admin (admin)
+StyleVibe Fashion MIS – Technical Specification v1.0 | ITE1129E – UEF 2025-2026
