@@ -42,7 +42,7 @@ public class CheckoutController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ProcessOrder(
         string customerName, string address, string phone, string? note,
-        int storeId, int paymentMethod, string itemsJson,
+        int storeId, int paymentMethod, string itemsJson, string? voucherCode,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(itemsJson))
@@ -80,6 +80,7 @@ public class CheckoutController : Controller
                 customerName: customerName,
                 phone: phone,
                 address: address,
+                voucherCode: voucherCode,
                 cancellationToken: cancellationToken);
 
             return RedirectToAction(nameof(Success), new { orderId = order.Id });

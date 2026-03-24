@@ -45,7 +45,11 @@
             z-index: 100;
             padding: 32px 20px;
             transition: width 0.3s ease;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+            scrollbar-width: none; /* Firefox */
         }
+        .admin-sidebar::-webkit-scrollbar { display: none; } /* Chrome, Safari, Edge */
+
         .sidebar-logo {
             padding: 0 10px 40px;
             display: flex;
@@ -69,7 +73,17 @@
             box-shadow: 0 8px 16px rgba(99, 102, 241, 0.2);
         }
         
-        .sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; }
+        .sidebar-nav { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px; 
+            overflow-y: auto;
+            overflow-x: hidden;
+            scrollbar-width: none; /* Firefox */
+        }
+        .sidebar-nav::-webkit-scrollbar { display: none; } /* Chrome, Safari, Edge */
+        
         .nav-item {
             display: flex;
             align-items: center;
@@ -204,6 +218,16 @@
                 Dashboard
             </a>
 
+            <a href="/Admin/Pos" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Pos" ? "active" : "")">
+                <i class="fa-solid fa-cash-register"></i>
+                Bán hàng tại quầy
+            </a>
+
+            <a href="/Admin/Analytics" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Analytics" ? "active" : "")">
+                <i class="fa-solid fa-chart-line"></i>
+                Phân tích & DWH
+            </a>
+
             <a href="/Admin/Products" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Products" ? "active" : "")">
                 <i class="fa-solid fa-boxes-stacked"></i>
                 Sản phẩm
@@ -212,6 +236,11 @@
             <a href="/Admin/Order" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Order" ? "active" : "")">
                 <i class="fa-solid fa-cart-shopping"></i>
                 Đơn hàng
+            </a>
+
+            <a href="/Admin/Inventory" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inventory" ? "active" : "")">
+                <i class="fa-solid fa-warehouse"></i>
+                Tồn kho SKU
             </a>
 
             <a href="/Admin/Customers" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Customers" ? "active" : "")">

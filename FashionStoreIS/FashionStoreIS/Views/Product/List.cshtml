@@ -3,214 +3,519 @@
     ViewData["Title"] = ViewBag.CategoryTitle;
 }
 
-<div class="page-container" style="margin-top: 40px;">
-    <!-- Breadcrumb -->
-    <div class="pdp-breadcrumb" style="margin-bottom: 30px;">
-        <a href="/">Home</a> / 
-        @if (ViewBag.CurrentCat != null && ViewBag.CurrentCat != "all-products")
-        {
-            <a href="/Product/List">Collection</a> <span> / </span>
-        }
-        <span>@ViewBag.CategoryTitle</span>
+<!-- Filter / Sort Bar -->
+<div class="sm-filter-bar">
+    <div class="sm-filter-left">
+        <button class="sm-filter-btn" id="togglePriceFilter">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+            Lọc
+            @if (ViewBag.MinPrice != null || ViewBag.MaxPrice != null)
+            {
+                <span class="sm-active-badge">1</span>
+            }
+        </button>
+        <span class="sm-product-count">@Model.Count sản phẩm</span>
     </div>
 
-    <div class="collection-layout">
-        <!-- Sidebar -->
-        <aside class="filter-sidebar">
-            <div class="filter-group collapsed">
-                <div class="filter-title">
-                    COLOR
-                    <span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </span>
-                </div>
-                <div class="filter-content">
-                    @{
-                        var currentColor = ViewBag.CurrentColor as string;
-                        var colors = ViewBag.AvailableColors as List<string> ?? new List<string>();
-                        string ColorSwatch(string c)
-                        {
-                            var key = (c ?? "").Trim().ToLowerInvariant();
-                            return key switch
-                            {
-                                "black" => "#111111",
-                                "white" => "#ffffff",
-                                "navy" => "#0b1f3a",
-                                "blue" => "#1f6feb",
-                                "red" => "#e11d48",
-                                "green" => "#15803d",
-                                "brown" => "#7c4a2d",
-                                "beige" => "#e7d7c1",
-                                "gray" => "#9ca3af",
-                                "grey" => "#9ca3af",
-                                _ => "#dddddd"
-                            };
-                        }
-                    }
-                    @if (colors.Count == 0)
-                    {
-                        <p class="filter-placeholder-text">Đang cập nhật...</p>
-                    }
-                    else
-                    {
-                        <div class="filter-color-grid">
-                            @foreach (var c in colors)
-                            {
-                                <button type="button" class="color-btn @(string.Equals(currentColor, c, StringComparison.OrdinalIgnoreCase) ? "active" : "")" data-color="@c">
-                                    <span class="color-swatch" style="background:@ColorSwatch(c)"></span>
-                                    <span class="color-name">@c</span>
-                                </button>
-                            }
-                        </div>
-                    }
-                </div>
+    <div class="sm-filter-right">
+        <div class="sm-sort-wrapper">
+            <span class="sm-sort-label">Sắp xếp theo</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+            <div class="sm-sort-dropdown">
+                <a href="javascript:void(0)" onclick="setSort('newest')" class="sm-sort-option @(ViewBag.CurrentSort == "newest" || ViewBag.CurrentSort == null ? "active" : "")">Mới nhất</a>
+                <a href="javascript:void(0)" onclick="setSort('best-selling')" class="sm-sort-option @(ViewBag.CurrentSort == "best-selling" ? "active" : "")">Bán chạy</a>
+                <a href="javascript:void(0)" onclick="setSort('price-asc')" class="sm-sort-option @(ViewBag.CurrentSort == "price-asc" ? "active" : "")">Giá tăng dần</a>
+                <a href="javascript:void(0)" onclick="setSort('price-desc')" class="sm-sort-option @(ViewBag.CurrentSort == "price-desc" ? "active" : "")">Giá giảm dần</a>
+                <a href="javascript:void(0)" onclick="setSort('name-a-z')" class="sm-sort-option @(ViewBag.CurrentSort == "name-a-z" ? "active" : "")">Theo bảng chữ cái A-Z</a>
+                <a href="javascript:void(0)" onclick="setSort('name-z-a')" class="sm-sort-option @(ViewBag.CurrentSort == "name-z-a" ? "active" : "")">Theo bảng chữ cái Z-A</a>
             </div>
-
-            <div class="filter-group collapsed">
-                <div class="filter-title">
-                    SIZE
-                    <span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </span>
-                </div>
-                <div class="filter-content">
-                    <div class="filter-size-grid">
-                        @{
-                            var currentSize = ViewBag.CurrentSize as string;
-                            var sizes = new[] { "S", "M", "L", "XL" };
-                        }
-                        @foreach (var s in sizes)
-                        {
-                            <button type="button" class="size-btn @(string.Equals(currentSize, s, StringComparison.OrdinalIgnoreCase) ? "active" : "")" data-size="@s">@s</button>
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <div class="filter-group collapsed">
-                <div class="filter-title">
-                    PRICE
-                    <span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    </span>
-                </div>
-                <div class="filter-content">
-                    <div class="price-input-container">
-                        <div class="price-input-item">
-                            <label>TỐI THIỂU</label>
-                            <input type="number" id="minPriceInput" placeholder="VND" value="@ViewBag.MinPrice" />
-                        </div>
-                        <div class="price-input-separator">-</div>
-                        <div class="price-input-item">
-                            <label>TỐI ĐA</label>
-                            <input type="number" id="maxPriceInput" placeholder="VND" value="@ViewBag.MaxPrice" />
-                        </div>
-                    </div>
-                    <div class="price-quick-btns">
-                        <button type="button" class="btn-quick-price" onclick="setQuickPrice(0, 500000)">0 - 500K</button>
-                        <button type="button" class="btn-quick-price" onclick="setQuickPrice(500000, 1000000)">500K - 1M</button>
-                    </div>
-                    <button class="btn-pdp btn-primary btn-sm w-100 mt-3" id="applyPriceFilter">ÁP DỤNG</button>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Product Grid -->
-        <main class="product-main">
-            <div class="product-grid-header">
-                <div class="product-count">@Model.Count sản phẩm</div>
-                <div class="sort-area" style="display: flex; align-items: center; gap: 10px;">
-                    <span style="font-size: 12px; color: #888;">Sắp xếp:</span>
-                        <select class="sort-select">
-                        <option value="newest" selected="@(ViewBag.CurrentSort == "newest")">Mới nhất</option>
-                        <option value="price-asc" selected="@(ViewBag.CurrentSort == "price-asc")">Giá tăng dần</option>
-                        <option value="price-desc" selected="@(ViewBag.CurrentSort == "price-desc")">Giá giảm dần</option>
-                    </select>
-                </div>
-            </div>
-
-            @if (Model.Any())
-            {
-                <div class="product-grid">
-                    @foreach (var p in Model)
-                    {
-                        <div class="product-card-bn" onclick="window.location.href='/Product/Detail/@p.Id'">
-                            <div class="product-image-bn">
-                                @if (p.Stock <= 0)
-                                {
-                                    <div class="sold-out-badge">SOLD OUT</div>
-                                }
-                                <img src="@(string.IsNullOrEmpty(p.ImageUrl) ? "https://placehold.co/600x720/333/fff?text=NO+IMAGE" : p.ImageUrl)" alt="@p.Name" loading="lazy" />
-                            </div>
-                            <div class="product-info-bn">
-                                <div class="product-title-bn">@p.Name</div>
-                                <div class="product-price-bn">@p.Price.ToString("N0") VND</div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
-            else
-            {
-                <div class="text-center py-5">
-                    <p style="color: #888;">Không tìm thấy sản phẩm nào.</p>
-                </div>
-            }
-        </main>
+        </div>
     </div>
 </div>
 
-@section Scripts {
-<script>
-    $(document).ready(function() {
-        $('#applyPriceFilter').click(function() {
-            updateFilters();
-        });
+<!-- Price Filter Dropdown Panel -->
+<div class="sm-price-panel" id="smPricePanel">
+    <div class="sm-price-inner">
+        <h4 class="sm-price-title">KHOẢNG GIÁ</h4>
+        <div class="sm-price-inputs">
+            <div class="sm-price-field">
+                <label>Tối thiểu</label>
+                <input type="number" id="minPriceInput" placeholder="VND" value="@ViewBag.MinPrice" />
+            </div>
+            <span class="sm-price-dash">—</span>
+            <div class="sm-price-field">
+                <label>Tối đa</label>
+                <input type="number" id="maxPriceInput" placeholder="VND" value="@ViewBag.MaxPrice" />
+            </div>
+        </div>
+        <div class="sm-price-quickbtns">
+            <button type="button" onclick="setQuickPrice(0,500000)">0 – 500K</button>
+            <button type="button" onclick="setQuickPrice(500000,1000000)">500K – 1M</button>
+            <button type="button" onclick="setQuickPrice(1000000,2000000)">1M – 2M</button>
+        </div>
+        <div class="sm-price-actions">
+            <button class="sm-btn-clear" onclick="clearPriceFilter()">Xóa</button>
+            <button class="sm-btn-apply" id="applyPriceFilter">Áp dụng</button>
+        </div>
+    </div>
+</div>
+<div class="sm-panel-overlay" id="smOverlay"></div>
 
-        $('.sort-select').on('change', function() {
-            updateFilters();
-        });
+<!-- Product Grid -->
+<div class="sm-product-wrapper">
+    @if (Model.Any())
+    {
+        <div class="sm-product-grid">
+            @foreach (var p in Model)
+            {
+                <a class="sm-product-card" href="/Product/Detail/@p.Id">
+                    <div class="sm-card-image">
+                        @if (p.Stock <= 0)
+                        {
+                            <div class="sm-sold-out">SOLD OUT</div>
+                        }
+                        <img src="@(string.IsNullOrEmpty(p.ImageUrl) ? "https://placehold.co/600x750/f0f0f0/999?text=NO+IMAGE" : p.ImageUrl)"
+                             alt="@p.Name" loading="lazy" />
+                    </div>
+                    <div class="sm-card-info">
+                        <div class="sm-card-name">@p.Name.ToUpper()</div>
+                        <div class="sm-card-price">@p.Price.ToString("N0")₫</div>
+                    </div>
+                </a>
+            }
+        </div>
 
-        $('.size-btn').on('click', function() {
-            const size = $(this).data('size');
-            const urlParams = new URLSearchParams(window.location.search);
-            const current = urlParams.get('size');
-            if (size && current && current.toLowerCase() === String(size).toLowerCase()) urlParams.delete('size');
-            else if (size) urlParams.set('size', size);
-            else urlParams.delete('size');
-            window.location.href = window.location.pathname + '?' + urlParams.toString();
-        });
-        
-        $('.color-btn').on('click', function() {
-            const color = $(this).data('color');
-            const urlParams = new URLSearchParams(window.location.search);
-            const current = urlParams.get('color');
-            if (color && current && current.toLowerCase() === String(color).toLowerCase()) urlParams.delete('color');
-            else if (color) urlParams.set('color', color);
-            else urlParams.delete('color');
-            window.location.href = window.location.pathname + '?' + urlParams.toString();
-        });
-
-        window.setQuickPrice = function(min, max) {
-            $('#minPriceInput').val(min);
-            $('#maxPriceInput').val(max);
-            updateFilters();
+        <!-- Pagination -->
+        @if (ViewBag.TotalPages > 1)
+        {
+            <div class="sm-pagination">
+                @if (ViewBag.CurrentPage > 1)
+                {
+                    <a class="sm-page-btn sm-page-nav" href="javascript:void(0)" onclick="changePage(@(ViewBag.CurrentPage - 1))">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                    </a>
+                }
+                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                {
+                    <a class="sm-page-btn @(ViewBag.CurrentPage == i ? "active" : "")" href="javascript:void(0)" onclick="changePage(@i)">@i</a>
+                }
+                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                {
+                    <a class="sm-page-btn sm-page-nav" href="javascript:void(0)" onclick="changePage(@(ViewBag.CurrentPage + 1))">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </a>
+                }
+            </div>
         }
+    }
+    else
+    {
+        <div class="sm-empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><path d="M20 7H4a2 2 0 00-2 2v6a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+            <p>Không tìm thấy sản phẩm nào.</p>
+        </div>
+    }
+</div>
 
-        function updateFilters() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const minPrice = $('#minPriceInput').val();
-            const maxPrice = $('#maxPriceInput').val();
-            const sort = $('.sort-select').val();
-
-            if (minPrice) urlParams.set('minPrice', minPrice); else urlParams.delete('minPrice');
-            if (maxPrice) urlParams.set('maxPrice', maxPrice); else urlParams.delete('maxPrice');
-            if (sort) urlParams.set('sort', sort); else urlParams.delete('sort');
-
-            // Keep category and query
-            window.location.href = window.location.pathname + '?' + urlParams.toString();
-        }
-    });
-</script>
+<style>
+/* =================== FILTER BAR =================== */
+.sm-filter-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid #e5e5e5;
+    border-bottom: 1px solid #e5e5e5;
+    padding: 12px 24px;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 100;
+    margin-bottom: 0;
 }
 
+.sm-filter-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.sm-filter-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: none;
+    border: none;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    color: #111;
+    padding: 6px 0;
+}
+.sm-filter-btn:hover { opacity: 0.6; }
+
+.sm-active-badge {
+    background: #111;
+    color: #fff;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.sm-product-count {
+    font-size: 13px;
+    color: #888;
+}
+
+.sm-filter-right { display: flex; align-items: center; }
+
+.sm-sort-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    cursor: pointer;
+    height: 100%;
+}
+.sm-sort-label { font-size: 14px; color: #111; font-weight: 500;}
+
+.sm-sort-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: #fff;
+    min-width: 220px;
+    border: 1px solid #111;
+    display: none;
+    flex-direction: column;
+    z-index: 200;
+}
+
+.sm-sort-wrapper:hover .sm-sort-dropdown {
+    display: flex;
+}
+
+.sm-sort-option {
+    padding: 12px 16px;
+    font-size: 14px;
+    color: #111;
+    text-decoration: none;
+    border-bottom: 1px solid #eee;
+    transition: background 0.2s;
+}
+.sm-sort-option:last-child {
+    border-bottom: none;
+}
+.sm-sort-option:hover {
+    background: #f9f9f9;
+}
+.sm-sort-option.active {
+    font-weight: 700;
+    pointer-events: none;
+}
+
+/* =================== PRICE PANEL =================== */
+.sm-price-panel {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 320px;
+    background: #fff;
+    z-index: 9999;
+    box-shadow: 4px 0 30px rgba(0,0,0,0.12);
+    transform: translateX(-100%);
+    transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+}
+.sm-price-panel.open {
+    display: flex;
+    transform: translateX(0);
+}
+.sm-panel-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 9998;
+}
+.sm-panel-overlay.open { display: block; }
+
+.sm-price-inner {
+    padding: 32px 28px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+.sm-price-title {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    margin: 0;
+}
+.sm-price-inputs {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.sm-price-field {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.sm-price-field label { font-size: 11px; color: #888; letter-spacing: 0.05em; text-transform: uppercase; }
+.sm-price-field input {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 14px;
+    width: 100%;
+    outline: none;
+}
+.sm-price-field input:focus { border-color: #111; }
+.sm-price-dash { color: #ccc; font-size: 18px; margin-top: 20px; }
+.sm-price-quickbtns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.sm-price-quickbtns button {
+    border: 1px solid #ddd;
+    background: none;
+    padding: 7px 14px;
+    font-size: 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.sm-price-quickbtns button:hover { border-color: #111; background: #111; color: #fff; }
+.sm-price-actions { display: flex; gap: 10px; margin-top: auto; }
+.sm-btn-clear {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #ddd;
+    background: none;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+.sm-btn-clear:hover { border-color: #111; }
+.sm-btn-apply {
+    flex: 1;
+    padding: 12px;
+    background: #111;
+    color: #fff;
+    border: none;
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: 600;
+    transition: opacity 0.2s;
+}
+.sm-btn-apply:hover { opacity: 0.8; }
+
+/* =================== PRODUCT GRID =================== */
+.sm-product-wrapper {
+    padding: 0;
+}
+
+.sm-product-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    border-left: 1px solid #e5e5e5;
+}
+
+@@media (max-width: 1024px) {
+    .sm-product-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@@media (max-width: 768px) {
+    .sm-product-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+.sm-product-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    border-right: 1px solid #e5e5e5;
+    border-bottom: 1px solid #e5e5e5;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.sm-product-card:hover { background: #fafafa; }
+
+.sm-card-image {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 3/4;
+    background: #f5f5f5;
+}
+.sm-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s cubic-bezier(0.25,0.1,0.25,1);
+    display: block;
+}
+.sm-product-card:hover .sm-card-image img { transform: scale(1.04); }
+
+.sm-sold-out {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: rgba(0,0,0,0.7);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    padding: 4px 8px;
+    z-index: 2;
+}
+
+.sm-card-info {
+    padding: 14px 16px 18px;
+    border-top: 1px solid #e5e5e5;
+}
+.sm-card-name {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: #111;
+    margin-bottom: 4px;
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.sm-card-price {
+    font-size: 13px;
+    font-weight: 400;
+    color: #555;
+}
+
+/* =================== PAGINATION =================== */
+.sm-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 48px 0 60px;
+    border-top: 1px solid #e5e5e5;
+}
+.sm-page-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    padding: 0 8px;
+    text-decoration: none;
+    color: #111;
+    font-size: 13px;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    transition: all 0.2s;
+    cursor: pointer;
+}
+.sm-page-btn:hover { border-color: #ddd; }
+.sm-page-btn.active { border-color: #111; font-weight: 700; }
+.sm-page-nav { color: #555; }
+
+/* =================== EMPTY STATE =================== */
+.sm-empty-state {
+    text-align: center;
+    padding: 100px 0;
+    color: #aaa;
+}
+.sm-empty-state p { font-size: 14px; margin-top: 16px; }
+
+/* =================== OVERRIDES =================== */
+.page-container { margin-top: 0 !important; padding-top: 0 !important; }
+.pdp-breadcrumb { display: none; }
+.collection-layout { display: block !important; }
+.filter-sidebar { display: none !important; }
+.product-main { max-width: 100% !important; padding: 0 !important; }
+</style>
+
+@section Scripts {
+<script>
+$(document).ready(function () {
+
+    // ---- Filter Panel Toggle ----
+    var $panel   = $('#smPricePanel');
+    var $overlay = $('#smOverlay');
+
+    $('#togglePriceFilter').on('click', function () {
+        $panel.addClass('open');
+        $overlay.addClass('open');
+        $('body').css('overflow', 'hidden');
+    });
+
+    $overlay.on('click', function () {
+        closePanel();
+    });
+
+    function closePanel() {
+        $panel.removeClass('open');
+        $overlay.removeClass('open');
+        $('body').css('overflow', '');
+    }
+
+    // ---- Price Apply ----
+    $('#applyPriceFilter').on('click', function () {
+        updateFilters();
+        closePanel();
+    });
+
+    // ---- Price Quick Buttons ----
+    window.setQuickPrice = function (min, max) {
+        $('#minPriceInput').val(min);
+        $('#maxPriceInput').val(max);
+    };
+
+    // ---- Clear Price ----
+    window.clearPriceFilter = function () {
+        $('#minPriceInput').val('');
+        $('#maxPriceInput').val('');
+    };
+
+    // ---- Core Filter Logic ----
+    function updateFilters() {
+        var urlParams = new URLSearchParams(window.location.search);
+        var minPrice  = $('#minPriceInput').val();
+        var maxPrice  = $('#maxPriceInput').val();
+        
+        // Note: sort is handled directly via setSort() now
+
+        if (minPrice) urlParams.set('minPrice', minPrice); else urlParams.delete('minPrice');
+        if (maxPrice) urlParams.set('maxPrice', maxPrice); else urlParams.delete('maxPrice');
+
+        urlParams.delete('page');
+        window.location.href = window.location.pathname + '?' + urlParams.toString();
+    }
+    
+    // ---- Custom Sort logic ----
+    window.setSort = function (sortValue) {
+        var urlParams = new URLSearchParams(window.location.search);
+        if (sortValue) urlParams.set('sort', sortValue); else urlParams.delete('sort');
+        urlParams.delete('page');
+        window.location.href = window.location.pathname + '?' + urlParams.toString();
+    };
+
+    // ---- Pagination ----
+    window.changePage = function (page) {
+        var urlParams = new URLSearchParams(window.location.search);
+        urlParams.set('page', page);
+        window.location.href = window.location.pathname + '?' + urlParams.toString();
+    };
+});
+</script>
+}

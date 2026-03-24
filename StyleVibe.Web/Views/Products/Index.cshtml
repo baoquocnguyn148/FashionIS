@@ -41,10 +41,10 @@
                 <!-- Sort -->
                 <select name="sortBy" class="form-select" style="max-width:170px;font-size:13px"
                         onchange="this.form.submit()">
-                    <option value="newest" @(ViewBag.CurrentSortBy == "newest" ? "selected" : "")>Mới nhất</option>
-                    <option value="price_asc" @(ViewBag.CurrentSortBy == "price_asc" ? "selected" : "")>Giá tăng dần</option>
-                    <option value="price_desc" @(ViewBag.CurrentSortBy == "price_desc" ? "selected" : "")>Giá giảm dần</option>
-                    <option value="name" @(ViewBag.CurrentSortBy == "name" ? "selected" : "")>Tên A→Z</option>
+                    <option value="newest" selected="@(ViewBag.CurrentSortBy == "newest" ? "selected" : null)">Mới nhất</option>
+                    <option value="price_asc" selected="@(ViewBag.CurrentSortBy == "price_asc" ? "selected" : null)">Giá tăng dần</option>
+                    <option value="price_desc" selected="@(ViewBag.CurrentSortBy == "price_desc" ? "selected" : null)">Giá giảm dần</option>
+                    <option value="name" selected="@(ViewBag.CurrentSortBy == "name" ? "selected" : null)">Tên A→Z</option>
                 </select>
                 <!-- Price range -->
                 <input type="number" name="minPrice" value="@ViewBag.MinPrice"

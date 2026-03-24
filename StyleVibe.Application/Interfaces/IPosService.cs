@@ -13,6 +13,7 @@ public interface IPosService
         string? customerName = null,
         string? phone = null,
         string? address = null,
+        string? voucherCode = null,
         CancellationToken cancellationToken = default);
 }
 

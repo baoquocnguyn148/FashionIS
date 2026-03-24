@@ -21,5 +21,7 @@ namespace FashionStoreIS.Models
         public DateTime ExpiryDate { get; set; }
 
         public bool IsActive { get; set; } = true;
+        public int MaxUsageCount { get; set; } = 1;
+        public int UsedCount { get; set; } = 0;
     }
 }

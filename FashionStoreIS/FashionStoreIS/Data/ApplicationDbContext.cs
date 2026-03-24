@@ -204,6 +204,9 @@ namespace FashionStoreIS.Data
                 b.Property(x => x.PriceOverride).HasColumnName("PRICEOVERRIDE").HasColumnType("NUMBER(12,2)");
                 b.Property(x => x.Stock).HasColumnName("STOCK").HasDefaultValue(0);
                 
+                // Dùng Stock làm concurrency token thay RowVersion
+                b.Property(e => e.Stock).IsConcurrencyToken();
+                
                 b.HasOne(x => x.Product).WithMany(p => p.Skus).HasForeignKey(x => x.ProductId).HasConstraintName("FK_SKU_PROD");
             });
 
@@ -238,9 +241,33 @@ namespace FashionStoreIS.Data
                 b.Property(x => x.TotalAmount).HasColumnName("TOTALAMOUNT").HasColumnType("NUMBER(14,0)");
                 b.Property(x => x.Status).HasColumnName("STATUS").HasConversion<byte>();
                 
+                // Nullable properties
+                b.Property(e => e.Note).IsRequired(false);
+                b.Property(e => e.CustomerName).IsRequired(false);
+                b.Property(e => e.Phone).IsRequired(false);
+                b.Property(e => e.Address).IsRequired(false);
+                b.Property(e => e.UserId).IsRequired(false);
+                b.Property(e => e.SubTotal).HasDefaultValue(0m);
+                b.Property(e => e.DiscountAmount).HasDefaultValue(0m);
+                b.Property(e => e.TotalAmount).HasDefaultValue(0m);
+                b.Property(e => e.PointsEarned).HasDefaultValue(0);
+                
                 b.HasOne(x => x.Store).WithMany(s => s.Orders).HasForeignKey(x => x.StoreId).HasConstraintName("FK_ORD_STORE");
-                b.HasOne(x => x.Customer).WithMany(c => c.Orders).HasForeignKey(x => x.CustomerId).HasConstraintName("FK_ORD_CUST");
-                b.HasOne(x => x.User).WithMany(u => u.Orders).HasForeignKey(x => x.UserId).HasConstraintName("FK_ORD_USER");
+                b.HasOne(x => x.Customer)
+                    .WithMany()
+                    .HasForeignKey(x => x.CustomerId)
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(x => x.Voucher)
+                    .WithMany()
+                    .HasForeignKey(x => x.VoucherId)
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(x => x.User)
+                    .WithMany(u => u.Orders)
+                    .HasForeignKey(x => x.UserId)
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<OrderDetail>(b => {
@@ -248,9 +275,22 @@ namespace FashionStoreIS.Data
                 b.Property(x => x.UnitPrice).HasColumnName("UNITPRICE").HasColumnType("NUMBER(12,0)");
                 b.Property(x => x.Subtotal).HasColumnName("SUBTOTAL").HasColumnType("NUMBER(14,0)");
                 
+                // Nullable properties
+                b.Property(e => e.ProductSkuId).IsRequired(false);
+                b.Property(e => e.ProductId).IsRequired(false);
+                b.Property(e => e.DiscountPercent).HasDefaultValue(0m);
+                
                 b.HasOne(x => x.Order).WithMany(o => o.OrderDetails).HasForeignKey(x => x.OrderId).HasConstraintName("FK_OD_ORD");
-                b.HasOne(x => x.ProductSku).WithMany(s => s.OrderDetails).HasForeignKey(x => x.ProductSkuId).IsRequired(false).HasConstraintName("FK_OD_SKU");
-                b.HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId).IsRequired(false).HasConstraintName("FK_OD_PROD");
+                b.HasOne(x => x.ProductSku)
+                    .WithMany(s => s.OrderDetails)
+                    .HasForeignKey(x => x.ProductSkuId)
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.Restrict);
+                b.HasOne(x => x.Product)
+                    .WithMany()
+                    .HasForeignKey(x => x.ProductId)
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.Restrict);
             });
 
             builder.Entity<Inventory>(b => {
@@ -306,6 +346,8 @@ namespace FashionStoreIS.Data
                 b.Property(x => x.MinOrderAmount).HasColumnName("MINORDERAMOUNT").HasColumnType("NUMBER(12,0)");
                 b.Property(x => x.ExpiryDate).HasColumnName("EXPIRYDATE");
                 b.Property(x => x.IsActive).HasColumnName("ISACTIVE");
+                b.Property(x => x.MaxUsageCount).HasColumnName("MAXUSAGECOUNT");
+                b.Property(x => x.UsedCount).HasColumnName("USEDCOUNT");
             });
 
 

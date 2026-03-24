@@ -99,7 +99,7 @@
                                     </div>
                                     <div class="item-details">
                                         <div class="item-name">@item.Name</div>
-                                        <div class="item-meta">@(item.Color) / @(item.Size)</div>
+                                        <div class="item-meta">@(item.Color ?? "") / @(item.Size ?? "")</div>
                                     </div>
                                     <div class="item-price">@((item.Price * item.Quantity).ToString("N0")) VND</div>
                                 </div>

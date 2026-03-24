@@ -22,11 +22,25 @@ namespace FashionStoreIS.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var customers = await _userManager.GetUsersInRoleAsync("User");
+            var users = await _userManager.GetUsersInRoleAsync("User");
+            var result = new List<FashionStoreIS.Areas.Admin.ViewModels.CustomerAdminViewModel>();
             
-            // In a real app, we'd probably want to join with orders to get stats
-            // For now, let's just list them
-            return View(customers.ToList());
+            foreach (var user in users)
+            {
+                var orders = await _db.Orders
+                    .Where(o => o.UserId == user.Id && o.Status != OrderStatus.Cancelled)
+                    .ToListAsync();
+                
+                result.Add(new FashionStoreIS.Areas.Admin.ViewModels.CustomerAdminViewModel
+                {
+                    User = user,
+                    OrderCount = orders.Count,
+                    TotalSpent = orders.Sum(o => o.TotalAmount),
+                    LastOrderDate = orders.Max(o => (DateTime?)o.CreatedAt)
+                });
+            }
+            
+            return View(result.OrderByDescending(r => r.TotalSpent).ToList());
         }
     }
 }

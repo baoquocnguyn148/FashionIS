@@ -38,6 +38,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => {
 builder.Services.AddScoped<IAppDbContext>(sp => sp.GetRequiredService<AppDbContext>());
 builder.Services.AddScoped<IPosService, PosService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 
 // Session (cho cart server-side sau này)
 builder.Services.AddSession(options => {

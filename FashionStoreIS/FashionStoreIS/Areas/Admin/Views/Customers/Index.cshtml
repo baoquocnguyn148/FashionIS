@@ -1,13 +1,13 @@
-@model List<ApplicationUser>
+@using FashionStoreIS.Areas.Admin.ViewModels
+@model List<CustomerAdminViewModel>
 @{
     ViewData["Title"] = "Quản lý Khách hàng";
-    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
     <div>
         <h2 style="font-size: 24px; font-weight: 800; color: #fff; margin-bottom: 4px;">Danh sách Khách hàng</h2>
-        <p style="font-size: 14px; color: var(--admin-muted);">Xem thông tin những người dùng đã đăng ký tài khoản.</p>
+        <p style="font-size: 14px; color: var(--admin-muted);">Xem thông tin những người dùng đã đăng ký tài khoản và lịch sử mua hàng.</p>
     </div>
 </div>
 
@@ -15,28 +15,37 @@
     <table class="admin-table">
         <thead>
             <tr>
-                <th>Họ tên</th>
-                <th>Email</th>
-                <th>Số điện thoại</th>
-                <th>Giới tính</th>
+                <th>Khách hàng</th>
+                <th>Thông tin liên hệ</th>
+                <th>Số đơn hàng</th>
+                <th>Tổng chi tiêu</th>
+                <th>Lần mua cuối</th>
                 <th style="text-align: right;">Thao tác</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var u in Model)
+            @foreach (var item in Model)
             {
+                var u = item.User;
                 <tr>
                     <td>
                         <div style="display: flex; align-items: center; gap: 12px;">
                             <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(139, 92, 246, 0.1); color: var(--admin-accent); display: flex; align-items: center; justify-content: center; font-weight: 700;">
                                 @(u.FullName?[0] ?? 'U')
                             </div>
-                            <span style="font-weight: 600; color: #fff;">@u.FullName</span>
+                            <div>
+                                <div style="font-weight: 600; color: #fff;">@u.FullName</div>
+                                <div style="font-size: 12px; color: var(--admin-muted);">@u.Gender</div>
+                            </div>
                         </div>
                     </td>
-                    <td>@u.Email</td>
-                    <td>@(u.PhoneNumber ?? "---")</td>
-                    <td>@(u.Gender ?? "---")</td>
+                    <td>
+                        <div>@u.Email</div>
+                        <div style="font-size: 12px; color: var(--admin-muted);">@u.PhoneNumber</div>
+                    </td>
+                    <td><span class="badge badge-info">@item.OrderCount đơn</span></td>
+                    <td style="font-weight: 600; color: var(--admin-green);">@item.TotalSpent.ToString("N0") VNĐ</td>
+                    <td>@(item.LastOrderDate?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa mua hàng")</td>
                     <td style="text-align: right;">
                         <button class="btn-admin btn-secondary btn-sm">Xem chi tiết</button>
                     </td>

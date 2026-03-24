@@ -22,6 +22,204 @@ namespace StyleVibe.Infrastructure.Migrations
 
             OracleModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("NVARCHAR2(450)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("NVARCHAR2(2000)");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(256)
+                        .HasColumnType("NVARCHAR2(256)");
+
+                    b.Property<string>("NormalizedName")
+                        .HasMaxLength(256)
+                        .HasColumnType("NVARCHAR2(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("RoleNameIndex")
+                        .HasFilter("\"NormalizedName\" IS NOT NULL");
+
+                    b.ToTable("AspNetRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("NVARCHAR2(2000)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("NVARCHAR2(2000)");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("NVARCHAR2(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("NVARCHAR2(450)");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("NUMBER(10)");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("NVARCHAR2(2000)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("NVARCHAR2(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("NUMBER(1)");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("NUMBER(1)");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("TIMESTAMP(7) WITH TIME ZONE");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("NVARCHAR2(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("NVARCHAR2(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("NVARCHAR2(2000)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("NVARCHAR2(2000)");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("NUMBER(1)");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("NVARCHAR2(2000)");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("NUMBER(1)");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("NVARCHAR2(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex")
+                        .HasFilter("\"NormalizedUserName\" IS NOT NULL");
+
+                    b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("NUMBER(10)");
+
+                    OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("NVARCHAR2(2000)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("NVARCHAR2(2000)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("NVARCHAR2(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("NVARCHAR2(450)");
+
+                    b.Property<string>("ProviderKey")
+                        .HasColumnType("NVARCHAR2(450)");
+
+                    b.Property<string>("ProviderDisplayName")
+                        .HasColumnType("NVARCHAR2(2000)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("NVARCHAR2(450)");
+
+                    b.HasKey("LoginProvider", "ProviderKey");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserLogins", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("NVARCHAR2(450)");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("NVARCHAR2(450)");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("NVARCHAR2(450)");
+
+                    b.Property<string>("LoginProvider")
+                        .HasColumnType("NVARCHAR2(450)");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("NVARCHAR2(450)");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("NVARCHAR2(2000)");
+
+                    b.HasKey("UserId", "LoginProvider", "Name");
+
+                    b.ToTable("AspNetUserTokens", (string)null);
+                });
+
             modelBuilder.Entity("StyleVibe.Domain.Entities.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -33,7 +231,7 @@ namespace StyleVibe.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TIMESTAMP(7)")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasDefaultValueSql("SYS_EXTRACT_UTC(SYSTIMESTAMP)");
 
                     b.Property<string>("Description")
                         .HasColumnType("NVARCHAR2(2000)");
@@ -46,7 +244,7 @@ namespace StyleVibe.Infrastructure.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("BOOLEAN")
+                        .HasColumnType("NUMBER(1)")
                         .HasDefaultValue(false);
 
                     b.Property<string>("Name")
@@ -79,7 +277,7 @@ namespace StyleVibe.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TIMESTAMP(7)")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasDefaultValueSql("SYS_EXTRACT_UTC(SYSTIMESTAMP)");
 
                     b.Property<DateTime?>("DateOfBirth")
                         .HasColumnType("TIMESTAMP(7)");
@@ -95,7 +293,7 @@ namespace StyleVibe.Infrastructure.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("BOOLEAN")
+                        .HasColumnType("NUMBER(1)")
                         .HasDefaultValue(false);
 
                     b.Property<DateTime>("JoinDate")
@@ -137,7 +335,7 @@ namespace StyleVibe.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TIMESTAMP(7)")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasDefaultValueSql("SYS_EXTRACT_UTC(SYSTIMESTAMP)");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -153,11 +351,11 @@ namespace StyleVibe.Infrastructure.Migrations
                         .HasColumnType("TIMESTAMP(7)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("BOOLEAN");
+                        .HasColumnType("NUMBER(1)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("BOOLEAN")
+                        .HasColumnType("NUMBER(1)")
                         .HasDefaultValue(false);
 
                     b.Property<string>("Phone")
@@ -167,8 +365,7 @@ namespace StyleVibe.Infrastructure.Migrations
 
                     b.Property<string>("Position")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("NVARCHAR2(50)");
+                        .HasColumnType("NVARCHAR2(2000)");
 
                     b.Property<int>("StoreId")
                         .HasColumnType("NUMBER(10)");
@@ -197,11 +394,11 @@ namespace StyleVibe.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TIMESTAMP(7)")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasDefaultValueSql("SYS_EXTRACT_UTC(SYSTIMESTAMP)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("BOOLEAN")
+                        .HasColumnType("NUMBER(1)")
                         .HasDefaultValue(false);
 
                     b.Property<DateTime>("LastUpdated")
@@ -229,8 +426,7 @@ namespace StyleVibe.Infrastructure.Migrations
 
                     b.HasIndex("ProductSkuId");
 
-                    b.HasIndex("StoreId", "ProductSkuId")
-                        .IsUnique();
+                    b.HasIndex("StoreId");
 
                     b.ToTable("Inventories");
                 });
@@ -246,19 +442,18 @@ namespace StyleVibe.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TIMESTAMP(7)")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasDefaultValueSql("SYS_EXTRACT_UTC(SYSTIMESTAMP)");
 
                     b.Property<int>("CustomerId")
                         .HasColumnType("NUMBER(10)");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("NVARCHAR2(200)");
+                        .HasColumnType("NVARCHAR2(2000)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("BOOLEAN")
+                        .HasColumnType("NUMBER(1)")
                         .HasDefaultValue(false);
 
                     b.Property<int?>("OrderId")
@@ -287,20 +482,26 @@ namespace StyleVibe.Infrastructure.Migrations
 
                     OraclePropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Address")
+                        .HasColumnType("NVARCHAR2(2000)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TIMESTAMP(7)")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasDefaultValueSql("SYS_EXTRACT_UTC(SYSTIMESTAMP)");
 
                     b.Property<int?>("CustomerId")
                         .HasColumnType("NUMBER(10)");
 
+                    b.Property<string>("CustomerName")
+                        .HasColumnType("NVARCHAR2(2000)");
+
                     b.Property<decimal>("DiscountAmount")
-                        .HasColumnType("decimal(14,0)");
+                        .HasColumnType("decimal(12,0)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("BOOLEAN")
+                        .HasColumnType("NUMBER(1)")
                         .HasDefaultValue(false);
 
                     b.Property<string>("Note")
@@ -320,6 +521,9 @@ namespace StyleVibe.Infrastructure.Migrations
                     b.Property<byte>("PaymentStatus")
                         .HasColumnType("NUMBER(3)");
 
+                    b.Property<string>("Phone")
+                        .HasColumnType("NVARCHAR2(2000)");
+
                     b.Property<int>("PointsEarned")
                         .HasColumnType("NUMBER(10)");
 
@@ -330,10 +534,10 @@ namespace StyleVibe.Infrastructure.Migrations
                         .HasColumnType("NUMBER(10)");
 
                     b.Property<decimal>("SubTotal")
-                        .HasColumnType("decimal(14,0)");
+                        .HasColumnType("decimal(12,0)");
 
                     b.Property<decimal>("TotalAmount")
-                        .HasColumnType("decimal(14,0)");
+                        .HasColumnType("decimal(12,0)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TIMESTAMP(7)");
@@ -361,27 +565,27 @@ namespace StyleVibe.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TIMESTAMP(7)")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasDefaultValueSql("SYS_EXTRACT_UTC(SYSTIMESTAMP)");
 
                     b.Property<decimal>("DiscountPercent")
-                        .HasColumnType("decimal(5,2)");
+                        .HasColumnType("DECIMAL(18, 2)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("BOOLEAN")
+                        .HasColumnType("NUMBER(1)")
                         .HasDefaultValue(false);
 
                     b.Property<int>("OrderId")
                         .HasColumnType("NUMBER(10)");
 
-                    b.Property<int>("ProductSkuId")
+                    b.Property<int?>("ProductSkuId")
                         .HasColumnType("NUMBER(10)");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("NUMBER(10)");
 
                     b.Property<decimal>("Subtotal")
-                        .HasColumnType("decimal(14,0)");
+                        .HasColumnType("decimal(12,0)");
 
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("decimal(12,0)");
@@ -412,7 +616,7 @@ namespace StyleVibe.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TIMESTAMP(7)")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasDefaultValueSql("SYS_EXTRACT_UTC(SYSTIMESTAMP)");
 
                     b.Property<string>("Description")
                         .HasColumnType("NVARCHAR2(2000)");
@@ -421,11 +625,11 @@ namespace StyleVibe.Infrastructure.Migrations
                         .HasColumnType("NVARCHAR2(2000)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("BOOLEAN");
+                        .HasColumnType("NUMBER(1)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("BOOLEAN")
+                        .HasColumnType("NUMBER(1)")
                         .HasDefaultValue(false);
 
                     b.Property<string>("Name")
@@ -467,14 +671,14 @@ namespace StyleVibe.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TIMESTAMP(7)")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasDefaultValueSql("SYS_EXTRACT_UTC(SYSTIMESTAMP)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("BOOLEAN");
+                        .HasColumnType("NUMBER(1)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("BOOLEAN")
+                        .HasColumnType("NUMBER(1)")
                         .HasDefaultValue(false);
 
                     b.Property<int>("ProductId")
@@ -517,14 +721,14 @@ namespace StyleVibe.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TIMESTAMP(7)")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasDefaultValueSql("SYS_EXTRACT_UTC(SYSTIMESTAMP)");
 
                     b.Property<DateTime?>("ExpectedDate")
                         .HasColumnType("TIMESTAMP(7)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("BOOLEAN")
+                        .HasColumnType("NUMBER(1)")
                         .HasDefaultValue(false);
 
                     b.Property<string>("Note")
@@ -551,7 +755,7 @@ namespace StyleVibe.Infrastructure.Migrations
                         .HasColumnType("NUMBER(10)");
 
                     b.Property<decimal>("TotalCost")
-                        .HasColumnType("decimal(16,0)");
+                        .HasColumnType("decimal(12,0)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TIMESTAMP(7)");
@@ -579,17 +783,14 @@ namespace StyleVibe.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TIMESTAMP(7)")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasDefaultValueSql("SYS_EXTRACT_UTC(SYSTIMESTAMP)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("BOOLEAN")
+                        .HasColumnType("NUMBER(1)")
                         .HasDefaultValue(false);
 
                     b.Property<int>("ProductSkuId")
-                        .HasColumnType("NUMBER(10)");
-
-                    b.Property<int?>("ProductSkuId1")
                         .HasColumnType("NUMBER(10)");
 
                     b.Property<int>("PurchaseOrderId")
@@ -602,7 +803,7 @@ namespace StyleVibe.Infrastructure.Migrations
                         .HasColumnType("NUMBER(10)");
 
                     b.Property<decimal>("Subtotal")
-                        .HasColumnType("decimal(14,0)");
+                        .HasColumnType("decimal(12,0)");
 
                     b.Property<decimal>("UnitCost")
                         .HasColumnType("decimal(12,0)");
@@ -613,8 +814,6 @@ namespace StyleVibe.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ProductSkuId");
-
-                    b.HasIndex("ProductSkuId1");
 
                     b.HasIndex("PurchaseOrderId");
 
@@ -635,14 +834,14 @@ namespace StyleVibe.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TIMESTAMP(7)")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasDefaultValueSql("SYS_EXTRACT_UTC(SYSTIMESTAMP)");
 
                     b.Property<int>("InventoryId")
                         .HasColumnType("NUMBER(10)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("BOOLEAN")
+                        .HasColumnType("NUMBER(1)")
                         .HasDefaultValue(false);
 
                     b.Property<string>("Note")
@@ -686,14 +885,14 @@ namespace StyleVibe.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TIMESTAMP(7)")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasDefaultValueSql("SYS_EXTRACT_UTC(SYSTIMESTAMP)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("BOOLEAN");
+                        .HasColumnType("NUMBER(1)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("BOOLEAN")
+                        .HasColumnType("NUMBER(1)")
                         .HasDefaultValue(false);
 
                     b.Property<string>("ManagerName")
@@ -736,18 +935,18 @@ namespace StyleVibe.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TIMESTAMP(7)")
-                        .HasDefaultValueSql("GETUTCDATE()");
+                        .HasDefaultValueSql("SYS_EXTRACT_UTC(SYSTIMESTAMP)");
 
                     b.Property<string>("Email")
                         .HasMaxLength(100)
                         .HasColumnType("NVARCHAR2(100)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("BOOLEAN");
+                        .HasColumnType("NUMBER(1)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("BOOLEAN")
+                        .HasColumnType("NUMBER(1)")
                         .HasDefaultValue(false);
 
                     b.Property<int>("LeadTimeDays")
@@ -769,6 +968,57 @@ namespace StyleVibe.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Suppliers");
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("StyleVibe.Domain.Entities.Employee", b =>
@@ -822,8 +1072,7 @@ namespace StyleVibe.Infrastructure.Migrations
                 {
                     b.HasOne("StyleVibe.Domain.Entities.Customer", "Customer")
                         .WithMany("Orders")
-                        .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.NoAction);
+                        .HasForeignKey("CustomerId");
 
                     b.HasOne("StyleVibe.Domain.Entities.Store", "Store")
                         .WithMany("Orders")
@@ -846,9 +1095,7 @@ namespace StyleVibe.Infrastructure.Migrations
 
                     b.HasOne("StyleVibe.Domain.Entities.ProductSku", "ProductSku")
                         .WithMany("OrderDetails")
-                        .HasForeignKey("ProductSkuId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ProductSkuId");
 
                     b.Navigation("Order");
 
@@ -907,19 +1154,15 @@ namespace StyleVibe.Infrastructure.Migrations
             modelBuilder.Entity("StyleVibe.Domain.Entities.PurchaseOrderDetail", b =>
                 {
                     b.HasOne("StyleVibe.Domain.Entities.ProductSku", "ProductSku")
-                        .WithMany()
+                        .WithMany("PurchaseOrderDetails")
                         .HasForeignKey("ProductSkuId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("StyleVibe.Domain.Entities.ProductSku", null)
-                        .WithMany("PurchaseOrderDetails")
-                        .HasForeignKey("ProductSkuId1");
-
                     b.HasOne("StyleVibe.Domain.Entities.PurchaseOrder", "PurchaseOrder")
-                        .WithMany("Details")
+                        .WithMany("PurchaseOrderDetails")
                         .HasForeignKey("PurchaseOrderId")
-                        .OnDelete(DeleteBehavior.NoAction)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("ProductSku");
@@ -976,7 +1219,7 @@ namespace StyleVibe.Infrastructure.Migrations
 
             modelBuilder.Entity("StyleVibe.Domain.Entities.PurchaseOrder", b =>
                 {
-                    b.Navigation("Details");
+                    b.Navigation("PurchaseOrderDetails");
                 });
 
             modelBuilder.Entity("StyleVibe.Domain.Entities.Store", b =>

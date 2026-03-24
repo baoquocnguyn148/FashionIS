@@ -164,10 +164,7 @@ function prepareSubmit(event) {
     btn.disabled = true;
     btn.textContent = 'ĐANG XỬ LÝ...';
     
-    // Xóa giỏ hàng trong localStorage sau khi submit (vì submit sẽ reload trang/đi tiếp)
-    // Lưu ý: Nếu server trả về lỗi, user sẽ mất giỏ hàng. 
-    // Nhưng vì đây là form POST thành công sẽ Redirect, nên ta xóa luôn.
-    localStorage.removeItem('cart');
+    // KHÔNG xóa localStorage ở đây — chỉ xóa sau khi server xác nhận thành công tại trang Success
     
     document.getElementById('checkoutForm').submit();
 }

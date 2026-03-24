@@ -1,7 +1,6 @@
 @model List<FashionStoreIS.Models.Order>
 @{
     ViewData["Title"] = "Quản lý Đơn hàng";
-    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
 
 <div class="search-bar" style="display:flex; justify-content:space-between; align-items:center;">
@@ -9,9 +8,10 @@
         <input type="text" name="search" class="form-control" style="width:250px;" placeholder="Tên khách hàng, SĐT..." value="@ViewBag.Search" />
         <select name="status" class="form-control" style="width:180px;">
             <option value="">Tất cả trạng thái</option>
-            <option value="Pending" selected="@(ViewBag.Status == "Pending" ? "selected" : null)">Chờ xử lý</option>
+            <option value="Pending" selected="@(ViewBag.Status == "Pending" ? "selected" : null)">Chờ xác nhận</option>
+            <option value="Confirmed" selected="@(ViewBag.Status == "Confirmed" ? "selected" : null)">Đã xác nhận</option>
             <option value="Processing" selected="@(ViewBag.Status == "Processing" ? "selected" : null)">Đang xử lý</option>
-            <option value="Shipped" selected="@(ViewBag.Status == "Shipped" ? "selected" : null)">Đã giao hàng</option>
+            <option value="Shipped" selected="@(ViewBag.Status == "Shipped" ? "selected" : null)">Đang giao hàng</option>
             <option value="Completed" selected="@(ViewBag.Status == "Completed" ? "selected" : null)">Đã nhận hàng</option>
             <option value="Cancelled" selected="@(ViewBag.Status == "Cancelled" ? "selected" : null)">Đã hủy</option>
         </select>
@@ -50,10 +50,11 @@
                             var statusClass = order.Status.ToString().ToLower();
                             var statusName = order.Status switch
                             {
-                                FashionStoreIS.Models.OrderStatus.Pending => "Chờ xử lý",
+                                FashionStoreIS.Models.OrderStatus.Pending => "Chờ xác nhận",
+                                FashionStoreIS.Models.OrderStatus.Confirmed => "Đã xác nhận",
                                 FashionStoreIS.Models.OrderStatus.Processing => "Đang xử lý",
-                                FashionStoreIS.Models.OrderStatus.Shipped => "Đã giao hàng",
-                                FashionStoreIS.Models.OrderStatus.Completed => "Hoàn thành",
+                                FashionStoreIS.Models.OrderStatus.Shipped => "Đang giao hàng",
+                                FashionStoreIS.Models.OrderStatus.Completed => "Đã nhận hàng",
                                 FashionStoreIS.Models.OrderStatus.Cancelled => "Đã hủy",
                                 _ => order.Status.ToString()
                             };
@@ -69,7 +70,8 @@
                             <form method="post" action="/Admin/Order/UpdateStatus/@order.Id" style="display:flex; gap:5px;">
                                 @Html.AntiForgeryToken()
                                 <select name="status" class="form-control select-compact">
-                                    <option value="Pending" selected="@(order.Status == FashionStoreIS.Models.OrderStatus.Pending ? "selected" : null)">Đợi</option>
+                                    <option value="Pending" selected="@(order.Status == FashionStoreIS.Models.OrderStatus.Pending ? "selected" : null)">Chờ XN</option>
+                                    <option value="Confirmed" selected="@(order.Status == FashionStoreIS.Models.OrderStatus.Confirmed ? "selected" : null)">Xác nhận</option>
                                     <option value="Processing" selected="@(order.Status == FashionStoreIS.Models.OrderStatus.Processing ? "selected" : null)">Xử lý</option>
                                     <option value="Shipped" selected="@(order.Status == FashionStoreIS.Models.OrderStatus.Shipped ? "selected" : null)">Giao</option>
                                     <option value="Completed" selected="@(order.Status == FashionStoreIS.Models.OrderStatus.Completed ? "selected" : null)">Xong</option>

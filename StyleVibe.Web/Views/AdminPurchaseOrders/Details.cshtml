@@ -1,0 +1,69 @@
+@model StyleVibe.Domain.Entities.PurchaseOrder
+@{
+    ViewData["Title"] = "Chi tiết Đơn nhập hàng";
+    Layout = "_AdminLayout";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="fa-solid fa-file-invoice"></i> @Model.PoCode</h2>
+    <a href="/AdminPurchaseOrders" class="btn btn-outline-light">Quay lại danh sách</a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card bg-dark text-light border-secondary mb-4">
+            <div class="card-header bg-secondary border-secondary">Thông tin chung</div>
+            <div class="card-body">
+                <p><strong>Ngày nhập:</strong> @Model.OrderDate.ToString("dd/MM/yyyy HH:mm")</p>
+                <p><strong>Nhà cung cấp:</strong> @(Model.Supplier?.Name ?? "N/A")</p>
+                <p><strong>Người xử lý:</strong> (Hành động từ Admin)</p>
+                <hr class="border-secondary" />
+                <p><strong>Tổng tiền:</strong> <span class="text-warning fs-4 fw-bold">@Model.TotalCost.ToString("N0") ₫</span></p>
+                @if (!string.IsNullOrEmpty(Model.Note))
+                {
+                    <p><strong>Ghi chú:</strong><br />@Model.Note</p>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card bg-dark text-light border-secondary">
+            <div class="card-header bg-secondary border-secondary">Danh sách sản phẩm nhập</div>
+            <div class="card-body p-0">
+                <table class="table table-dark table-striped m-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm / SKU</th>
+                            <th>Màu - Size</th>
+                            <th class="text-end">Đơn Giá Nhập</th>
+                            <th class="text-center">Số Lượng</th>
+                            <th class="text-end">Thành Tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var detail in Model.PurchaseOrderDetails)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@(detail.ProductSku?.Product?.Name ?? "Sản phẩm đã xóa")</strong><br/>
+                                    <small class="text-muted">@detail.ProductSku?.SkuCode</small>
+                                </td>
+                                <td>
+                                    @detail.ProductSku?.Color - @detail.ProductSku?.Size
+                                </td>
+                                <td class="text-end text-info">@detail.UnitCost.ToString("N0") ₫</td>
+                                <td class="text-center">@detail.QuantityReceived</td>
+                                <td class="text-end fw-bold">@detail.Subtotal.ToString("N0") ₫</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

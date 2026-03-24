@@ -2,275 +2,388 @@
 @{
     ViewData["Title"] = Model.Name;
     var gallery = Model.Images?.OrderBy(i => i.DisplayOrder).ToList() ?? new List<ProductImage>();
-    var skus = Model.Skus?.ToList() ?? new List<ProductSku>();
-    var colors = skus.Select(v => v.Color).Distinct().ToList();
-    var sizes = skus.Select(v => v.Size).Distinct().ToList();
+    var skus = Model.Skus?.Where(s => s.IsActive).ToList() ?? new List<ProductSku>();
+    var colors = skus.Select(v => v.Color).Distinct().Where(c => !string.IsNullOrWhiteSpace(c)).ToList();
+    var sizes = skus.Select(v => v.Size).Distinct().Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+
+    // Build all images list: main + gallery
+    var allImages = new List<(string Url, string? Color)>();
+    allImages.Add((Model.ImageUrl ?? "", null));
+    foreach (var img in gallery) allImages.Add((img.ImageUrl ?? "", null));
 }
 
-<div class="pdp-container">
+<style>
+    .pdp-wrap { max-width: 1280px; margin: 0 auto; padding: 20px 24px 60px; }
+    .pdp-breadcrumb { font-size: 12px; color: #888; margin-bottom: 24px; }
+    .pdp-breadcrumb a { color: #888; text-decoration: none; }
+    .pdp-breadcrumb a:hover { color: #000; }
+
+    .pdp-layout { display: grid; grid-template-columns: 72px 1fr 440px; gap: 20px; align-items: start; }
+    @@media (max-width: 900px) { .pdp-layout { grid-template-columns: 1fr; } .pdp-thumbs { display: flex; flex-direction: row !important; overflow-x: auto; gap: 8px; } }
+
+    /* Thumbnails column */
+    .pdp-thumbs { display: flex; flex-direction: column; gap: 8px; }
+    .pdp-thumb { width: 64px; height: 64px; border: 1.5px solid transparent; border-radius: 4px; overflow: hidden; cursor: pointer; transition: border-color 0.2s; flex-shrink: 0; }
+    .pdp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .pdp-thumb.active { border-color: #111; }
+
+    /* Main image */
+    .pdp-main-img-wrap { position: sticky; top: 20px; border-radius: 4px; overflow: hidden; background: #f5f5f5; aspect-ratio: 4/5; }
+    .pdp-main-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; transition: opacity 0.25s; }
+    .sold-out-overlay { position: absolute; top: 16px; left: 16px; background: #111; color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 0.1em; padding: 4px 10px; }
+
+    /* Info column */
+    .pdp-info { padding: 0 0 0 8px; }
+    .pdp-brand { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #888; margin-bottom: 8px; }
+    .pdp-name { font-size: 22px; font-weight: 700; color: #111; line-height: 1.3; margin-bottom: 12px; }
+    .pdp-price { font-size: 20px; font-weight: 600; color: #111; margin-bottom: 16px; }
+
+    /* Voucher banner */
+    .pdp-voucher { display: flex; align-items: center; justify-content: space-between; border: 1.5px dashed #e53935; padding: 10px 14px; border-radius: 4px; cursor: pointer; margin-bottom: 20px; }
+    .pdp-voucher span { font-size: 13px; color: #e53935; font-weight: 500; }
+
+    /* Variant sections */
+    .var-section { margin-bottom: 18px; }
+    .var-label { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; color: #555; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+    .var-label strong { color: #111; font-weight: 700; }
+    .size-chart-btn { font-size: 11px; color: #555; border: 1px solid #ccc; padding: 3px 8px; border-radius: 3px; cursor: pointer; background: none; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+
+    /* Color options */
+    .color-opts { display: flex; gap: 6px; flex-wrap: wrap; }
+    .color-opt { width: 52px; height: 52px; border: 2px solid transparent; border-radius: 4px; overflow: hidden; cursor: pointer; transition: border-color 0.2s; padding: 1px; }
+    .color-opt img { width: 100%; height: 100%; object-fit: cover; border-radius: 2px; display: block; }
+    .color-opt.active { border-color: #111; }
+    .color-opt.out-of-stock { opacity: 0.4; cursor: not-allowed; }
+
+    /* Size options */
+    .size-opts { display: flex; gap: 8px; flex-wrap: wrap; }
+    .size-opt { min-width: 52px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1.5px solid #ddd; border-radius: 3px; font-size: 13px; font-weight: 600; cursor: pointer; padding: 0 12px; transition: all 0.2s; user-select: none; }
+    .size-opt:hover:not(.disabled) { border-color: #111; }
+    .size-opt.active { border-color: #111; background: #111; color: #fff; }
+    .size-opt.disabled { opacity: 0.35; cursor: not-allowed; text-decoration: line-through; }
+
+    /* Quantity */
+    .qty-row { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .qty-label { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; color: #555; }
+    .qty-ctrl { display: flex; align-items: center; border: 1.5px solid #ddd; border-radius: 3px; overflow: hidden; }
+    .qty-ctrl button { width: 38px; height: 40px; border: none; background: none; cursor: pointer; font-size: 18px; color: #111; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+    .qty-ctrl button:hover { background: #f5f5f5; }
+    .qty-ctrl input { width: 48px; height: 40px; border: none; text-align: center; font-size: 15px; font-weight: 600; outline: none; }
+    .qty-stock { font-size: 11px; color: #888; }
+
+    /* Action buttons */
+    .pdp-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .btn-add-cart, .btn-buy-now { height: 48px; border: none; font-size: 13px; font-weight: 700; letter-spacing: 0.05em; cursor: pointer; border-radius: 3px; transition: all 0.2s; }
+    .btn-add-cart { background: #f5f5f5; color: #111; border: 1.5px solid #ddd; }
+    .btn-add-cart:hover:not(:disabled) { background: #e8e8e8; }
+    .btn-buy-now { background: #111; color: #fff; }
+    .btn-buy-now:hover:not(:disabled) { background: #333; }
+    .btn-add-cart:disabled, .btn-buy-now:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Accordion */
+    .pdp-accordion { border-top: 1px solid #eee; }
+    .acc-item { border-bottom: 1px solid #eee; }
+    .acc-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; cursor: pointer; font-size: 13px; font-weight: 600; color: #111; user-select: none; }
+    .acc-header svg { transition: transform 0.3s; }
+    .acc-item.open .acc-header svg { transform: rotate(180deg); }
+    .acc-body { display: none; padding-bottom: 14px; font-size: 13px; color: #555; line-height: 1.7; }
+    .acc-item.open .acc-body { display: block; }
+</style>
+
+<div class="pdp-wrap">
     <!-- Breadcrumb -->
     <div class="pdp-breadcrumb">
-        <a href="/">Home</a> / 
-        <a href="/Product/List?cat=@Model.Category?.Slug">@Model.Category?.Name</a> / 
+        <a href="/">Home</a> /
+        @if (Model.Category != null)
+        {
+            <a href="/Product/List?cat=@Model.Category.Slug">@Model.Category.Name</a>
+            <text> / </text>
+        }
         <span>@Model.Name</span>
     </div>
 
-    <div class="pdp-main-grid">
-        <!-- 1. Left: Thumbnails Column -->
-        <div class="pdp-thumbnails">
-            <div class="thumb-item active" onclick="setMainImage('@Model.ImageUrl', this)">
-                <img src="@Model.ImageUrl" alt="Main image thumb" />
-            </div>
-            @foreach (var img in gallery)
-            {
-                <div class="thumb-item" onclick="setMainImage('@img.ImageUrl', this)">
-                    <img src="@img.ImageUrl" alt="Gallery image thumb" />
-                </div>
+    <div class="pdp-layout">
+        <!-- 1. Thumbnail column -->
+        <div class="pdp-thumbs" id="thumb-col">
+            @{
+                bool first = true;
+                foreach (var (url, _) in allImages)
+                {
+                    if (string.IsNullOrWhiteSpace(url)) continue;
+                    <div class="pdp-thumb @(first ? "active" : "")" onclick="switchMain('@url', this)" data-src="@url">
+                        <img src="@url" />
+                    </div>
+                    first = false;
+                }
             }
         </div>
 
-        <!-- 2. Middle: Main Image Column -->
-        <div class="pdp-main-image-wrapper" style="position: relative;">
-            @if (Model.Stock <= 0)
+        <!-- 2. Main image -->
+        <div class="pdp-main-img-wrap" style="position: relative;">
+            @if (Model.Stock <= 0 && skus.All(s => s.Stock <= 0))
             {
-                <div class="sold-out-badge">SOLD OUT</div>
+                <div class="sold-out-overlay">SOLD OUT</div>
             }
-            <img id="main-product-image" src="@Model.ImageUrl" alt="@Model.Name" />
+            <img id="main-img" src="@(allImages.FirstOrDefault().Url ?? Model.ImageUrl)" alt="@Model.Name" />
         </div>
 
-        <!-- 3. Right: Product Info Column -->
-        <div class="pdp-info-column">
-            <div class="pdp-brand">bn store premium</div>
-            <h1 class="pdp-title">@Model.Name</h1>
-            <div class="pdp-price">@Model.Price.ToString("N0") <span class="currency">₫</span></div>
+        <!-- 3. Info column -->
+        <div class="pdp-info">
+            <div class="pdp-brand">BN Store Premium</div>
+            <h1 class="pdp-name">@Model.Name</h1>
+            <div class="pdp-price" id="display-price">@Model.Price.ToString("N0") ₫</div>
 
-            <!-- Voucher Banner -->
-            <div class="pdp-voucher-banner">
-                <div class="voucher-icon">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15 5l-1.761 1.761a2 2 0 000 2.828L15 11.35M9 5l1.761 1.761a2 2 0 010 2.828L9 11.35M3 7a2 2 0 012-2h14a2 2 0 012 2v3a2 2 0 000 4v3a2 2 0 01-2 2H5a2 2 0 01-2-2v-3a2 2 0 000-4V7z"/></svg>
-                </div>
-                <div class="voucher-text">Voucher của BN Store</div>
-                <div class="voucher-arrow">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
-                </div>
+            <!-- Voucher -->
+            <div class="pdp-voucher">
+                <span>🎟️ Voucher của BN Store</span>
+                <span>›</span>
             </div>
 
-            <!-- Variant: Color -->
-            <div class="pdp-variant-section">
-                <div class="variant-header">
-                    <span class="label">Color</span>
-                    <span class="selected-value" id="current-color">Select Color</span>
-                </div>
-                <div class="color-options">
-                    @if (colors.Any())
-                    {
-                        foreach (var color in colors)
+            @if (colors.Any())
+            {
+                <!-- Color selector -->
+                <div class="var-section">
+                    <div class="var-label">
+                        Màu sắc: <strong id="current-color-lbl">Chọn màu</strong>
+                    </div>
+                    <div class="color-opts" id="color-opts">
+                        @foreach (var color in colors)
                         {
-                            <div class="color-option" data-color="@color" onclick="selectColor('@color', this)">
-                                <img src="@Model.ImageUrl" alt="@color" />
+                            var colorSkus = skus.Where(s => (s.Color ?? "").Equals(color, StringComparison.OrdinalIgnoreCase)).ToList();
+                            var hasStock = colorSkus.Any(s => s.Stock > 0);
+                            <!-- Use product main image as color swatch — admin can upload color-specific image in gallery -->
+                            var colorImg = Model.ImageUrl ?? "";
+                            <div class="color-opt @(!hasStock ? "out-of-stock" : "")" data-color="@color" onclick="@(!hasStock ? "" : $"selectColor('{color.Replace("'","\\'")}', this)")">
+                                <img src="@colorImg" alt="@color" title="@color" />
                             </div>
                         }
-                    }
-                    else
-                    {
-                        <div class="color-option active" data-color="Default" onclick="selectColor('Default', this)">
-                            <img src="@Model.ImageUrl" alt="Default" />
-                        </div>
-                    }
+                    </div>
                 </div>
-            </div>
+            }
 
-            <!-- Variant: Size -->
-            <div class="pdp-variant-section">
-                <div class="variant-header">
-                    <span class="label">Size</span>
-                    <a href="#" class="size-chart-link">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12V4a2 2 0 00-2-2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2v-4M8 2v20M12 2v20M16 2v20"/></svg>
-                        Bảng size
-                    </a>
-                </div>
-                <div class="size-options">
-                    @{
-                        var sizeLabels = new[] { "S", "M", "L", "XL", "XXL" };
-                        int idx = 0;
-                    }
-                    @if (sizes.Any())
-                    {
+            @if (sizes.Any())
+            {
+                <!-- Size selector -->
+                <div class="var-section">
+                    <div class="var-label">
+                        Size:
+                        <a href="#" class="size-chart-btn" onclick="return false;">
+                            📏 Bảng size
+                        </a>
+                    </div>
+                    <div class="size-opts" id="size-opts">
                         @foreach (var size in sizes)
                         {
-                            var displayLabel = idx < sizeLabels.Length ? sizeLabels[idx] : size;
-                            <div class="size-option" data-size="@size" onclick="selectSize('@size', this)">@displayLabel</div>
-                            idx++;
+                            <div class="size-opt" data-size="@size" onclick="selectSize('@size', this)">@size</div>
                         }
-                    }
-                    else
-                    {
-                        <div class="size-option" data-size="S" onclick="selectSize('S', this)">S</div>
-                        <div class="size-option" data-size="M" onclick="selectSize('M', this)">M</div>
-                        <div class="size-option" data-size="L" onclick="selectSize('L', this)">L</div>
-                    }
+                    </div>
                 </div>
-            </div>
+            }
 
             <!-- Quantity -->
-            <div class="pdp-quantity-section">
-                <span class="label">Số lượng</span>
-                <div class="quantity-controller">
-                    <button type="button" onclick="changeQty(-1)">
-                        <svg width="12" height="2" viewBox="0 0 12 2" fill="none" stroke="currentColor" stroke-width="2"><line x1="0" y1="1" x2="12" y2="1"/></svg>
-                    </button>
-                    <input type="number" id="pdp-qty" value="1" min="1" readonly />
-                    <button type="button" onclick="changeQty(1)">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="0" x2="6" y2="12"/><line x1="0" y1="6" x2="12" y2="6"/></svg>
-                    </button>
+            <div class="qty-row">
+                <span class="qty-label">Số lượng</span>
+                <div class="qty-ctrl">
+                    <button type="button" onclick="changeQty(-1)">−</button>
+                    <input type="number" id="qty-input" value="1" min="1" readonly />
+                    <button type="button" onclick="changeQty(1)">+</button>
                 </div>
+                <span class="qty-stock" id="stock-info"></span>
             </div>
 
-            <!-- Action Buttons -->
+            <!-- Action buttons -->
             <div class="pdp-actions">
-                @if (Model.Stock > 0)
-                {
-                    <button type="button" class="btn-pdp btn-secondary" id="btn-add-to-cart">Thêm vào giỏ</button>
-                    <button type="button" class="btn-pdp btn-primary" id="btn-buy-now">Mua ngay</button>
-                }
-                else
-                {
-                    <button type="button" class="btn-pdp btn-secondary disabled" disabled style="opacity: 0.6; cursor: not-allowed; width: 100%;">HẾT HÀNG</button>
-                }
+                <button class="btn-add-cart" id="btn-cart" type="button">Thêm vào giỏ</button>
+                <button class="btn-buy-now" id="btn-buy" type="button">Mua ngay</button>
             </div>
 
-            <!-- Product Info Accordin -->
+            <!-- Accordion -->
             <div class="pdp-accordion">
-                <div class="accordion-item" onclick="toggleAccordion(this)">
-                    <div class="accordion-header">
+                <div class="acc-item open">
+                    <div class="acc-header" onclick="this.parentElement.classList.toggle('open')">
                         <span>Thông tin sản phẩm</span>
-                        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
-                    <div class="accordion-content">
-                        @Html.Raw(Model.Description?.Replace("\n", "<br/>"))
+                    <div class="acc-body">
+                        @if (!string.IsNullOrWhiteSpace(Model.Description))
+                        {
+                            @Html.Raw(Model.Description.Replace("\n", "<br/>"))
+                        }
+                        else
+                        {
+                            <span style="color:#aaa;">Chưa có mô tả sản phẩm.</span>
+                        }
                     </div>
+                </div>
+                <div class="acc-item">
+                    <div class="acc-header" onclick="this.parentElement.classList.toggle('open')">
+                        <span>Chính sách đổi trả</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                    </div>
+                    <div class="acc-body">Đổi hàng trong vòng 7 ngày nếu sản phẩm lỗi từ nhà sản xuất. Liên hệ hotline để được hỗ trợ.</div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+@section Scripts {
 <script>
-    const skus = @Html.Raw(Json.Serialize(skus.Select(v => new { id = v.Id, color = v.Color, size = v.Size, stock = v.Stock })));
-    let selectedColor = null;
-    let selectedSize = null;
+const ALL_SKUS = @Html.Raw(Json.Serialize(skus.Select(v => new {
+    id = v.Id,
+    color = v.Color ?? "",
+    size = v.Size ?? "",
+    stock = v.Stock,
+    price = (v.PriceOverride.HasValue && v.PriceOverride.Value > 0) ? v.PriceOverride.Value : v.SellingPrice
+})));
 
-    function setMainImage(src, el) {
-        document.getElementById('main-product-image').src = src;
-        document.querySelectorAll('.thumb-item').forEach(item => item.classList.remove('active'));
-        el.classList.add('active');
-    }
+const BASE_PRICE = @Model.Price;
+let selectedColor = null;
+let selectedSize = null;
 
-    function selectColor(color, el) {
-        selectedColor = color;
-        document.getElementById('current-color').innerText = color;
-        document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('active'));
-        el.classList.add('active');
-        checkAvailability();
-    }
+function switchMain(src, el) {
+    document.getElementById('main-img').src = src;
+    document.querySelectorAll('.pdp-thumb').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+}
 
-    function selectSize(size, el) {
-        selectedSize = size;
-        document.querySelectorAll('.size-option').forEach(opt => opt.classList.remove('active'));
-        el.classList.add('active');
-        checkAvailability();
-    }
+function selectColor(color, el) {
+    if (el.classList.contains('out-of-stock')) return;
+    selectedColor = color;
+    document.getElementById('current-color-lbl').textContent = color;
+    document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+    selectedSize = null; // reset size
+    updateSizeAvailability();
+    updateStockInfo();
+}
 
-    function changeQty(delta) {
-        const input = document.getElementById('pdp-qty');
-        let val = parseInt(input.value) + delta;
-        if (val < 1) val = 1;
-        input.value = val;
-    }
+function selectSize(size, el) {
+    if (el.classList.contains('disabled')) return;
+    selectedSize = size;
+    document.querySelectorAll('.size-opt').forEach(o => o.classList.remove('active'));
+    el.classList.add('active');
+    updateStockInfo();
+}
 
-    function toggleAccordion(el) {
-        el.classList.toggle('active');
-    }
-
-    // Add to Cart
-    document.getElementById('btn-add-to-cart')?.addEventListener('click', function() {
-        const qty = parseInt(document.getElementById('pdp-qty').value);
-        addToCart(qty, false);
-    });
-
-    // Buy Now
-    document.getElementById('btn-buy-now')?.addEventListener('click', function() {
-        const qty = parseInt(document.getElementById('pdp-qty').value);
-        addToCart(qty, true);
-    });
-
-    function addToCart(qty, redirect) {
-        if (!selectedColor && document.querySelectorAll('.color-option').length > 0) {
-            alert("Vui lòng chọn màu sắc"); return;
-        }
-        if (!selectedSize && document.querySelectorAll('.size-option').length > 0) {
-            alert("Vui lòng chọn kích thước"); return;
-        }
-
-        const productId = @Model.Id;
-        const sku = skus.find(v =>
-            (v.color || "").toLowerCase() === (selectedColor || "Default").toLowerCase() &&
-            (v.size || "").toLowerCase() === (selectedSize || "One Size").toLowerCase()
-        );
-        
-        $.post('/Cart/AddToCart', { 
-            productId: productId, 
-            skuId: sku ? sku.id : null,
-            color: selectedColor || "Default", 
-            size: selectedSize || "One Size", 
-            quantity: qty 
-        }, function(res) {
-            if (res.success) {
-                if (redirect) {
-                    window.location.href = '/Checkout';
-                } else {
-                    if (window.openCart) window.openCart();
-                }
-            } else {
-                alert(res.message || "Có lỗi xảy ra");
+function updateSizeAvailability() {
+    document.querySelectorAll('.size-opt').forEach(el => {
+        const size = el.dataset.size;
+        el.classList.remove('active', 'disabled');
+        if (selectedColor) {
+            const sku = ALL_SKUS.find(s =>
+                s.color.toLowerCase() === selectedColor.toLowerCase() &&
+                s.size.toLowerCase() === size.toLowerCase()
+            );
+            if (!sku || sku.stock <= 0) {
+                el.classList.add('disabled');
             }
-        });
+        }
+    });
+}
+
+function updateStockInfo() {
+    const infoEl = document.getElementById('stock-info');
+    const btnCart = document.getElementById('btn-cart');
+    const btnBuy = document.getElementById('btn-buy');
+    const priceEl = document.getElementById('display-price');
+
+    if (ALL_SKUS.length === 0) {
+        infoEl.textContent = '';
+        btnCart.disabled = false;
+        btnBuy.disabled = false;
+        return;
     }
 
-    function checkAvailability() {
-        const btnCart = document.getElementById('btn-add-to-cart');
-        const btnBuy = document.getElementById('btn-buy-now');
-
-        if (skus.length === 0) {
-            btnCart.disabled = false;
-            btnCart.innerText = "Thêm vào giỏ";
-            btnBuy.disabled = false;
-            btnBuy.innerText = "Mua ngay";
-            return;
-        }
-
-        if (!selectedColor || !selectedSize) {
-            btnCart.disabled = false;
-            btnCart.innerText = "Thêm vào giỏ";
-            btnBuy.disabled = false;
-            btnBuy.innerText = "Mua ngay";
-            return;
-        }
-
-        const sku = skus.find(v =>
-            (v.color || "").toLowerCase() === selectedColor.toLowerCase() &&
-            (v.size || "").toLowerCase() === selectedSize.toLowerCase()
+    if (selectedColor && selectedSize) {
+        const sku = ALL_SKUS.find(s =>
+            s.color.toLowerCase() === selectedColor.toLowerCase() &&
+            s.size.toLowerCase() === selectedSize.toLowerCase()
         );
         if (sku && sku.stock > 0) {
+            infoEl.textContent = `Còn ${sku.stock} sản phẩm`;
+            infoEl.style.color = sku.stock <= 5 ? '#e53935' : '#888';
             btnCart.disabled = false;
-            btnCart.innerText = "Thêm vào giỏ";
             btnBuy.disabled = false;
-            btnBuy.innerText = "Mua ngay";
+            if (sku.price) priceEl.textContent = sku.price.toLocaleString('vi-VN') + ' ₫';
         } else {
+            infoEl.textContent = 'Hết hàng';
+            infoEl.style.color = '#e53935';
             btnCart.disabled = true;
-            btnCart.innerText = "Hết hàng";
             btnBuy.disabled = true;
-            btnBuy.innerText = "Hết hàng";
         }
+    } else {
+        infoEl.textContent = '';
+        btnCart.disabled = false;
+        btnBuy.disabled = false;
     }
+}
+
+function changeQty(delta) {
+    const inp = document.getElementById('qty-input');
+    let val = parseInt(inp.value) + delta;
+    if (val < 1) val = 1;
+    inp.value = val;
+}
+
+function addToCart(gotoCheckout) {
+    const hasColors = document.querySelectorAll('.color-opt').length > 0;
+    const hasSizes = document.querySelectorAll('.size-opt:not(.disabled)').length > 0;
+
+    if (hasColors && !selectedColor) { alert('Vui lòng chọn màu sắc'); return; }
+    if (hasSizes && !selectedSize) { alert('Vui lòng chọn kích thước'); return; }
+
+    const sku = ALL_SKUS.find(s =>
+        (!selectedColor || s.color.toLowerCase() === selectedColor.toLowerCase()) &&
+        (!selectedSize || s.size.toLowerCase() === selectedSize.toLowerCase())
+    );
+
+    const qty = parseInt(document.getElementById('qty-input').value);
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+                  document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+    const btn = gotoCheckout ? document.getElementById('btn-buy') : document.getElementById('btn-cart');
+    const originalText = btn.innerHTML;
+    
+    // Set loading state
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" style="margin-right: 6px;"></span> Chờ...`;
+
+    $.post('/Cart/AddToCart', {
+        productId: @Model.Id,
+        skuId: sku ? sku.id : null,
+        color: selectedColor || '',
+        size: selectedSize || '',
+        quantity: qty,
+        __RequestVerificationToken: token
+    }, function(res) {
+        if (res.success) {
+            if (gotoCheckout) {
+                window.location.href = '/Checkout';
+            } else {
+                if (window.showCart) window.showCart();
+                else if (window.updateCartCount) updateCartCount(res.cartCount);
+                
+                // Restore button state
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        } else {
+            alert(res.message || 'Có lỗi xảy ra. Vui lòng thử lại.');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }).fail(function() {
+        alert('Lỗi kết nối. Vui lòng thử lại.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    });
+}
+
+document.getElementById('btn-cart').addEventListener('click', () => addToCart(false));
+document.getElementById('btn-buy').addEventListener('click', () => addToCart(true));
+
+// Initialize
+updateStockInfo();
 </script>
+}

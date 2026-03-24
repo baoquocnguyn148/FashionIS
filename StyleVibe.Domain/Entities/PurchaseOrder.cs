@@ -1,4 +1,5 @@
 using StyleVibe.Domain.Common;
+using StyleVibe.Domain.Enums;
 
 namespace StyleVibe.Domain.Entities;
 
@@ -8,7 +9,7 @@ public class PurchaseOrder : BaseEntity
     public DateTime OrderDate { get; set; } = DateTime.UtcNow;
     public DateTime? ExpectedDate { get; set; }
     public DateTime? ReceivedDate { get; set; }
-    public byte Status { get; set; } = 1; // 1=Draft,2=Sent,3=Confirmed,4=Received,5=Cancelled
+    public OrderStatus Status { get; set; } = OrderStatus.Pending;
     public decimal TotalCost { get; set; }
     public string? Note { get; set; }
 
@@ -18,6 +19,6 @@ public class PurchaseOrder : BaseEntity
     public int StoreId { get; set; }
     public Store Store { get; set; } = null!;
 
-    public ICollection<PurchaseOrderDetail> Details { get; set; } = new List<PurchaseOrderDetail>();
+    public ICollection<PurchaseOrderDetail> PurchaseOrderDetails { get; set; } = new List<PurchaseOrderDetail>();
 }
 

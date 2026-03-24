@@ -50,8 +50,12 @@ namespace FashionStoreIS.Controllers
             }
 
             // 3. Check existing quantity in cart
-            var cart = await GetCartItemsAsync();
-            var existingItem = cart.FirstOrDefault(i => i.ProductId == productId && i.ProductSkuId == skuId && i.Color == color && i.Size == size);
+            // WE MUST ENSURE RAW CART IS LOADED (no hydration yet)
+            var cart = await GetRawCartItemsAsync();
+            var existingItem = cart.FirstOrDefault(i => i.ProductId == productId && i.ProductSkuId == skuId && 
+                (i.Color ?? "").Equals(color ?? "", StringComparison.OrdinalIgnoreCase) && 
+                (i.Size ?? "").Equals(size ?? "", StringComparison.OrdinalIgnoreCase));
+            
             int currentQtyInCart = existingItem?.Quantity ?? 0;
 
             if (currentQtyInCart + quantity > availableStock)
@@ -84,8 +88,10 @@ namespace FashionStoreIS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateQuantity(int productId, string color, string size, int delta)
         {
-            var cart = await GetCartItemsAsync();
-            var item = cart.FirstOrDefault(i => i.ProductId == productId && i.Color == color && i.Size == size);
+            var cart = await GetRawCartItemsAsync();
+            var item = cart.FirstOrDefault(i => i.ProductId == productId && 
+                (i.Color ?? "").Equals(color ?? "", StringComparison.OrdinalIgnoreCase) && 
+                (i.Size ?? "").Equals(size ?? "", StringComparison.OrdinalIgnoreCase));
 
             if (item != null)
             {
@@ -114,8 +120,10 @@ namespace FashionStoreIS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RemoveFromCart(int productId, string color, string size)
         {
-            var cart = await GetCartItemsAsync();
-            var item = cart.FirstOrDefault(i => i.ProductId == productId && i.Color == color && i.Size == size);
+            var cart = await GetRawCartItemsAsync();
+            var item = cart.FirstOrDefault(i => i.ProductId == productId && 
+                (i.Color ?? "").Equals(color ?? "", StringComparison.OrdinalIgnoreCase) && 
+                (i.Size ?? "").Equals(size ?? "", StringComparison.OrdinalIgnoreCase));
 
             if (item != null)
             {
@@ -130,7 +138,7 @@ namespace FashionStoreIS.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCartCount()
         {
-            var cart = await GetCartItemsAsync();
+            var cart = await GetRawCartItemsAsync();
             return Json(new { count = cart.Sum(i => i.Quantity) });
         }
 
@@ -141,46 +149,15 @@ namespace FashionStoreIS.Controllers
             return PartialView("_CartDrawerPartial", cart);
         }
 
-        private async Task<List<CartItemViewModel>> GetCartItemsAsync()
+        private async Task<List<CartItemViewModel>> GetRawCartItemsAsync()
         {
             var cookie = Request.Cookies[CART_COOKIE_NAME];
             if (string.IsNullOrEmpty(cookie)) return new List<CartItemViewModel>();
 
             try
             {
-                var cartItems = JsonSerializer.Deserialize<List<CartItemViewModel>>(cookie) ?? new List<CartItemViewModel>();
-                
-                if (cartItems.Any())
-                {
-                    // Hydrate data from Database
-                    var productIds = cartItems.Select(i => i.ProductId).Distinct().ToList();
-                    var skuIds = cartItems.Where(i => i.ProductSkuId.HasValue).Select(i => i.ProductSkuId!.Value).Distinct().ToList();
-
-                    var products = await _db.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
-                    var skus = await _db.ProductSkus.Where(s => skuIds.Contains(s.Id)).ToListAsync();
-
-                    foreach (var item in cartItems)
-                    {
-                        var product = products.FirstOrDefault(p => p.Id == item.ProductId);
-                        if (product != null)
-                        {
-                            item.Name = product.Name;
-                            item.ImageUrl = product.ImageUrl ?? "";
-                            
-                            // Use SKU price if available, otherwise product price
-                            if (item.ProductSkuId.HasValue)
-                            {
-                                var sku = skus.FirstOrDefault(s => s.Id == item.ProductSkuId.Value);
-                                item.Price = sku?.SellingPrice ?? product.Price;
-                            }
-                            else
-                            {
-                                item.Price = product.Price;
-                            }
-                        }
-                    }
-                }
-                return cartItems;
+                var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                return JsonSerializer.Deserialize<List<CartItemViewModel>>(cookie, options) ?? new List<CartItemViewModel>();
             }
             catch
             {
@@ -188,9 +165,44 @@ namespace FashionStoreIS.Controllers
             }
         }
 
+        private async Task<List<CartItemViewModel>> GetCartItemsAsync()
+        {
+            var cartItems = await GetRawCartItemsAsync();
+            
+            if (cartItems.Any())
+            {
+                // Hydrate data from Database
+                var productIds = cartItems.Select(i => i.ProductId).Distinct().ToList();
+                var skuIds = cartItems.Where(i => i.ProductSkuId.HasValue).Select(i => i.ProductSkuId!.Value).Distinct().ToList();
+
+                var products = await _db.Products.Where(p => productIds.Contains(p.Id)).ToListAsync();
+                var skus = await _db.ProductSkus.Where(s => skuIds.Contains(s.Id)).ToListAsync();
+
+                foreach (var item in cartItems)
+                {
+                    var product = products.FirstOrDefault(p => p.Id == item.ProductId);
+                    if (product != null)
+                    {
+                        item.Name = product.Name;
+                        item.ImageUrl = product.ImageUrl ?? "";
+                        
+                        if (item.ProductSkuId.HasValue)
+                        {
+                            var sku = skus.FirstOrDefault(s => s.Id == item.ProductSkuId.Value);
+                            item.Price = sku?.SellingPrice ?? product.Price;
+                        }
+                        else
+                        {
+                            item.Price = product.Price;
+                        }
+                    }
+                }
+            }
+            return cartItems;
+        }
+
         private void SaveCartItems(List<CartItemViewModel> items)
         {
-            // Only store minimal info for security and space
             var cookieData = items.Select(i => new
             {
                 i.ProductId,
@@ -203,12 +215,16 @@ namespace FashionStoreIS.Controllers
             var options = new CookieOptions
             {
                 Expires = DateTimeOffset.Now.AddDays(7),
-                HttpOnly = true,
+                HttpOnly = false, // Allow client-side read if needed, but not required
                 Secure = Request.IsHttps,
                 SameSite = SameSiteMode.Lax,
-                IsEssential = true
+                IsEssential = true,
+                Path = "/" // CRITICAL: Ensure cookie is valid for all paths
             };
-            Response.Cookies.Append(CART_COOKIE_NAME, JsonSerializer.Serialize(cookieData), options);
+            
+            // Use standard JsonSerializer which by default matches CartItemViewModel properties
+            var json = JsonSerializer.Serialize(cookieData);
+            Response.Cookies.Append(CART_COOKIE_NAME, json, options);
         }
     }
 }

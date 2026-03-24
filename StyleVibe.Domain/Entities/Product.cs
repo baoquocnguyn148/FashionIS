@@ -8,6 +8,7 @@ public class Product : BaseEntity
     public string? Description { get; set; }
     public string? ImageUrl { get; set; }
     public bool IsActive { get; set; } = true;
+    public int Stock { get; set; }
 
     public int CategoryId { get; set; }
     public Category Category { get; set; } = null!;

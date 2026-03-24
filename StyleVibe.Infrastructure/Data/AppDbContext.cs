@@ -25,6 +25,7 @@ public class AppDbContext : IdentityDbContext<IdentityUser>, IAppDbContext
     public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
     public DbSet<PurchaseOrderDetail> PurchaseOrderDetails => Set<PurchaseOrderDetail>();
     public DbSet<LoyaltyTransaction> LoyaltyTransactions => Set<LoyaltyTransaction>();
+    public DbSet<Voucher> Vouchers => Set<Voucher>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -86,6 +87,7 @@ public class AppDbContext : IdentityDbContext<IdentityUser>, IAppDbContext
             b.Property(x => x.Color).HasMaxLength(50).IsRequired();
             b.Property(x => x.CostPrice).HasColumnType("decimal(12,0)");
             b.Property(x => x.SellingPrice).HasColumnType("decimal(12,0)");
+            b.Property(x => x.RowVersion).IsRowVersion();
         });
 
         modelBuilder.Entity<Customer>(b =>

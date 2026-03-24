@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Oracle.EntityFrameworkCore;
 
 using FashionStoreIS.Models;
+using FashionStoreIS.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -30,6 +31,10 @@ else
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
         options.UseOracle(connectionString));
 }
+
+var analyticsDbPath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "DataWarehouse.db");
+builder.Services.AddDbContext<AnalyticsDbContext>(options =>
+    options.UseSqlite($"Data Source={analyticsDbPath}"));
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => 
 {
@@ -71,6 +76,7 @@ builder.Services.AddSession(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHostedService<EtlDataSyncService>();
 
 var app = builder.Build();
 
@@ -101,6 +107,10 @@ using (var scope = app.Services.CreateScope())
     {
         Console.WriteLine($"Database seeding error: {ex.Message}");
     }
+    
+    // Auto-create Analytics Data Warehouse Tables if missing
+    var analyticsContext = services.GetRequiredService<AnalyticsDbContext>();
+    analyticsContext.Database.EnsureCreated();
 }
 
 app.UseHttpsRedirection();
@@ -122,5 +132,6 @@ app.MapControllerRoute(
 
 app.MapRazorPages()
    .WithStaticAssets();
+
 
 app.Run();

@@ -2,7 +2,6 @@
 @{
     bool isEdit = Model?.Id > 0;
     ViewData["Title"] = isEdit ? "Sửa Voucher" : "Tạo Voucher";
-    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
 
 <div style="max-width: 600px; margin: 0 auto;">
@@ -24,7 +23,7 @@
                 <input name="Code" class="form-control" value="@Model?.Code" required placeholder="VD: SALE2026" style="padding: 14px; border-radius: 12px; font-family: monospace; text-transform: uppercase;" />
             </div>
 
-            <div class="form-grid">
+            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div class="form-group">
                     <label class="form-label">Số tiền giảm (VND) <span style="color: var(--admin-red);">*</span></label>
                     <input name="DiscountAmount" type="number" class="form-control" value="@(Model?.DiscountAmount ?? 0)" required style="padding: 14px; border-radius: 12px;" />
@@ -35,9 +34,15 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label class="form-label">Ngày hết hạn <span style="color: var(--admin-red);">*</span></label>
-                <input name="ExpiryDate" type="date" class="form-control" value="@(Model?.Id > 0 ? Model.ExpiryDate.ToString("yyyy-MM-dd") : DateTime.Now.AddDays(7).ToString("yyyy-MM-dd"))" required style="padding: 14px; border-radius: 12px;" />
+            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+                <div class="form-group">
+                    <label class="form-label">Ngày hết hạn <span style="color: var(--admin-red);">*</span></label>
+                    <input name="ExpiryDate" type="date" class="form-control" value="@(Model?.Id > 0 ? Model.ExpiryDate.ToString("yyyy-MM-dd") : DateTime.Now.AddDays(7).ToString("yyyy-MM-dd"))" required style="padding: 14px; border-radius: 12px;" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Số lượt sử dụng tối đa <span style="color: var(--admin-red);">*</span></label>
+                    <input name="MaxUsageCount" type="number" class="form-control" value="@(Model?.MaxUsageCount ?? 1)" required style="padding: 14px; border-radius: 12px;" />
+                </div>
             </div>
 
             <div class="form-group" style="margin-top: 24px;">

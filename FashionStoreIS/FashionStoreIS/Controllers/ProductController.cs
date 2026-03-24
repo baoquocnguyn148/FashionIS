@@ -14,7 +14,7 @@ namespace FashionStoreIS.Controllers
             _db = db;
         }
 
-        public async Task<IActionResult> List(string? cat, string? q, decimal? minPrice, decimal? maxPrice, string? sort, string? size, string? color, int page = 1, int pageSize = 20)
+        public async Task<IActionResult> List(string? cat, string? q, decimal? minPrice, decimal? maxPrice, string? sort, int page = 1, int pageSize = 40)
         {
             try
             {
@@ -46,29 +46,8 @@ namespace FashionStoreIS.Controllers
                 if (minPrice.HasValue) query = query.Where(p => p.Price >= minPrice.Value);
                 if (maxPrice.HasValue) query = query.Where(p => p.Price <= maxPrice.Value);
 
-                // 4. Size filter (via SKUs)
-                if (!string.IsNullOrWhiteSpace(size))
-                {
-                    var sizeValue = size.Trim();
-                    query = query.Where(p => _db.ProductSkus.Any(s => s.ProductId == p.Id && s.Size == sizeValue && s.IsActive));
-                }
-
                 var productIdsForFilters = await query.Select(p => p.Id).ToListAsync();
-                var availableColors = await _db.ProductSkus
-                    .Where(s => productIdsForFilters.Contains(s.ProductId) && s.IsActive && s.Color != null && s.Color != "")
-                    .Select(s => s.Color)
-                    .Distinct()
-                    .OrderBy(c => c)
-                    .ToListAsync();
-                ViewBag.AvailableColors = availableColors;
-
-                // 5. Color filter (via SKUs)
-                if (!string.IsNullOrWhiteSpace(color))
-                {
-                    var colorValue = color.Trim();
-                    query = query.Where(p => _db.ProductSkus.Any(s => s.ProductId == p.Id && s.Color == colorValue && s.IsActive));
-                }
-
+                
                 // 6. Sorting
                 switch (sort)
                 {
@@ -77,6 +56,19 @@ namespace FashionStoreIS.Controllers
                         break;
                     case "price-desc":
                         query = query.OrderByDescending(p => p.Price);
+                        break;
+                    case "name-a-z":
+                        query = query.OrderBy(p => p.Name);
+                        break;
+                    case "name-z-a":
+                        query = query.OrderByDescending(p => p.Name);
+                        break;
+                    case "best-selling":
+                        // Using Stock ascending as a proxy for best selling since SoldCount isn't available
+                        query = query.OrderBy(p => p.Stock);
+                        break;
+                    case "newest":
+                        query = query.OrderByDescending(p => p.CreatedAt);
                         break;
                     default:
                         if (cat == "new-arrival")
@@ -106,8 +98,6 @@ namespace FashionStoreIS.Controllers
                 ViewBag.MinPrice = minPrice;
                 ViewBag.MaxPrice = maxPrice;
                 ViewBag.CurrentSort = sort;
-                ViewBag.CurrentSize = size;
-                ViewBag.CurrentColor = color;
 
                 // 7. Pagination and Execution
                 var totalItems = await query.CountAsync();
@@ -142,8 +132,6 @@ namespace FashionStoreIS.Controllers
                 ViewBag.MinPrice = minPrice;
                 ViewBag.MaxPrice = maxPrice;
                 ViewBag.CurrentSort = sort;
-                ViewBag.CurrentSize = size;
-                ViewBag.CurrentColor = color;
                 return View(new List<Product>());
             }
         }

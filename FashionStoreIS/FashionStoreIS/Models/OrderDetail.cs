@@ -1,10 +1,11 @@
+// FILE: d:\FashionStoreIS\FashionStoreIS\FashionStoreIS\Models\OrderDetail.cs
 namespace FashionStoreIS.Models
 {
     public class OrderDetail : BaseEntity
     {
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
-        public decimal DiscountPercent { get; set; }
+        public decimal DiscountPercent { get; set; } = 0;
         public decimal Subtotal { get; set; }
 
         public int OrderId { get; set; }

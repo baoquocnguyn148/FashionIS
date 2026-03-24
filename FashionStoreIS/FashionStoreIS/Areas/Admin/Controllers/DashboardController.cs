@@ -2,6 +2,7 @@ using FashionStoreIS.Areas.Admin.ViewModels;
 using FashionStoreIS.Data;
 using FashionStoreIS.Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,7 +13,13 @@ namespace FashionStoreIS.Areas.Admin.Controllers
     public class DashboardController : Controller
     {
         private readonly ApplicationDbContext _db;
-        public DashboardController(ApplicationDbContext db) => _db = db;
+        private readonly RoleManager<IdentityRole> _roleManager;
+
+        public DashboardController(ApplicationDbContext db, RoleManager<IdentityRole> roleManager)
+        {
+            _db = db;
+            _roleManager = roleManager;
+        }
 
         public async Task<IActionResult> Index()
         {
@@ -24,11 +31,13 @@ namespace FashionStoreIS.Areas.Admin.Controllers
                 .SumAsync(o => o.TotalAmount);
 
             model.TotalOrders = await _db.Orders.CountAsync();
-            model.TotalCustomers = await _db.Orders
-                .Where(o => o.Phone != null)
-                .Select(o => o.Phone)
-                .Distinct()
-                .CountAsync();
+
+            // Đếm ApplicationUser có role "User"
+            var userRole = await _roleManager.FindByNameAsync("User");
+            model.TotalCustomers = userRole != null 
+                ? await _db.UserRoles.CountAsync(ur => ur.RoleId == userRole.Id)
+                : 0;
+
             model.TotalProducts = await _db.Products.CountAsync();
 
             // Monthly Revenue Trend (Last 12 months)
@@ -117,7 +126,7 @@ namespace FashionStoreIS.Areas.Admin.Controllers
         {
             // Execute aggregation on server, but Take(5) in memory for Oracle 11g compatibility
             var data = await _db.OrderDetails
-                .GroupBy(oi => new { oi.ProductSku.Product.Id, ProductName = oi.ProductSku.Product.Name, ImageUrl = oi.ProductSku.Product.ImageUrl })
+                .GroupBy(oi => new { oi.ProductSku!.Product.Id, ProductName = oi.ProductSku!.Product.Name, ImageUrl = oi.ProductSku!.Product.ImageUrl })
                 .Select(g => new TopProductData
                 {
                     ProductId = g.Key.Id,

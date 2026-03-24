@@ -1,0 +1,88 @@
+@model FashionStoreIS.Models.Order
+@{
+    ViewData["Title"] = "Chi tiết đơn hàng - " + Model.OrderCode;
+}
+
+<div class="container py-5 text-white">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Chi tiết đơn hàng <span class="text-warning">@Model.OrderCode</span></h2>
+        <a href="/Order/MyOrders" class="btn btn-outline-light">&larr; Quay lại danh sách</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card bg-dark text-white border-secondary mb-4">
+                <div class="card-header bg-secondary border-secondary">Thông tin chung</div>
+                <div class="card-body">
+                    <p><strong>Ngày đặt:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</p>
+                    <p><strong>Trạng thái:</strong> 
+                        @switch(Model.Status) {
+                            case FashionStoreIS.Models.OrderStatus.Pending: <span class="badge bg-warning text-dark">Chờ xác nhận</span>; break;
+                            case FashionStoreIS.Models.OrderStatus.Confirmed: <span class="badge bg-info">Đã xác nhận</span>; break;
+                            case FashionStoreIS.Models.OrderStatus.Processing: <span class="badge bg-primary">Đang xử lý</span>; break;
+                            case FashionStoreIS.Models.OrderStatus.Shipped: <span class="badge bg-success">Đang giao hàng</span>; break;
+                            case FashionStoreIS.Models.OrderStatus.Completed: <span class="badge bg-secondary">Đã nhận hàng</span>; break;
+                            case FashionStoreIS.Models.OrderStatus.Cancelled: <span class="badge bg-danger">Đã hủy</span>; break;
+                            default: <span class="badge bg-light text-dark">@Model.Status</span>; break;
+                        }
+                    </p>
+                    <p><strong>Thanh toán:</strong> @(Model.PaymentMethod == FashionStoreIS.Models.PaymentMethod.Cash ? "Tiền mặt (COD)" : "Thẻ / Chuyển khoản")</p>
+                    <hr class="border-secondary" />
+                    <p><strong>Tạm tính:</strong> @Model.SubTotal.ToString("N0") ₫</p>
+                    @if(Model.DiscountAmount > 0)
+                    {
+                        <p><strong>Giảm giá:</strong> -@Model.DiscountAmount.ToString("N0") ₫</p>
+                    }
+                    <p><strong>Tổng cộng:</strong> <span class="text-warning fs-5 fw-bold">@Model.TotalAmount.ToString("N0") ₫</span></p>
+                </div>
+            </div>
+            
+            <div class="card bg-dark text-white border-secondary mb-4">
+                <div class="card-header bg-secondary border-secondary">Giao hàng tới</div>
+                <div class="card-body">
+                    <p><strong>Tên:</strong> @Model.CustomerName</p>
+                    <p><strong>SĐT:</strong> @Model.Phone</p>
+                    <p><strong>Địa chỉ:</strong> @Model.Address</p>
+                    @if(!string.IsNullOrEmpty(Model.Note))
+                    {
+                        <p><strong>Ghi chú:</strong> @Model.Note</p>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card bg-dark text-white border-secondary mb-4">
+                <div class="card-header bg-secondary border-secondary">Chi tiết sản phẩm</div>
+                <div class="card-body p-0">
+                    <table class="table table-dark table-striped mb-0 align-middle">
+                        <thead>
+                            <tr class="text-muted">
+                                <th>Sản phẩm</th>
+                                <th class="text-center">SL</th>
+                                <th class="text-end">Đơn giá</th>
+                                <th class="text-end">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var detail in Model.OrderDetails)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@(detail.Product?.Name ?? "Sản phẩm")</strong><br/>
+                                        @if (detail.ProductSku != null) {
+                                            <small class="text-muted">Màu: @detail.ProductSku.Color | Size: @detail.ProductSku.Size</small>
+                                        }
+                                    </td>
+                                    <td class="text-center">@detail.Quantity</td>
+                                    <td class="text-end">@detail.UnitPrice.ToString("N0") ₫</td>
+                                    <td class="text-end fw-bold text-info">@detail.Subtotal.ToString("N0") ₫</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

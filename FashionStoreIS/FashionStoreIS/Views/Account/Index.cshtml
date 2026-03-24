@@ -7,357 +7,353 @@
 
     // Membership logic
     string rank = "Dream Starter";
-    string rankColor = "text-info";
     if (user != null)
     {
-        if (user.MembershipPoints >= 5000) { rank = "Diamond Master"; rankColor = "text-primary"; }
-        else if (user.MembershipPoints >= 2000) { rank = "Gold Member"; rankColor = "text-warning"; }
-        else if (user.MembershipPoints >= 500) { rank = "Silver Elite"; rankColor = "text-secondary"; }
+        if (user.MembershipPoints >= 5000) { rank = "Diamond Master"; }
+        else if (user.MembershipPoints >= 2000) { rank = "Gold Member"; }
+        else if (user.MembershipPoints >= 500) { rank = "Silver Elite"; }
     }
 }
 
-<div class="container py-5" id="account-page">
-    <div class="row g-4">
+<div class="profile-container container bg-white my-4 shadow-sm" style="max-width: 1200px;">
+    <div class="row g-0 h-100">
         <!-- Sidebar Navigation -->
-        <div class="col-lg-3">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="p-4 text-center border-bottom bg-light">
-                    <div class="position-relative d-inline-block mb-3 profile-avatar-container">
-                        <div class="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center overflow-hidden" style="width: 100px; height: 100px; border: 3px solid #fff;">
-                            @if (!string.IsNullOrEmpty(user?.AvatarUrl))
-                            {
-                                <img src="@user.AvatarUrl" class="w-100 h-100 object-fit-cover" alt="Avatar">
-                            }
-                            else
-                            {
-                                <i class="bi bi-person text-dark fs-1"></i>
-                            }
-                        </div>
-                        <button class="btn btn-sm btn-dark rounded-circle position-absolute bottom-0 end-0 shadow" 
-                                onclick="document.getElementById('avatarInput').click()">
-                            <i class="bi bi-camera-fill"></i>
-                        </button>
-                        <form id="avatarForm" asp-action="UploadAvatar" method="post" enctype="multipart/form-data" class="d-none">
-                            @Html.AntiForgeryToken()
-                            <input type="file" id="avatarInput" name="avatar" onchange="document.getElementById('avatarForm').submit()">
-                        </form>
+        <div class="col-lg-3 sidebar-pane py-4 border-end">
+            <div class="text-center px-4 mb-4">
+                <div class="position-relative d-inline-block mb-3">
+                    <div class="bg-white rounded-circle shadow-sm d-flex align-items-center justify-content-center overflow-hidden mx-auto" style="width: 80px; height: 80px; border: 2px solid #0f3c83;">
+                        @if (!string.IsNullOrEmpty(user?.AvatarUrl))
+                        {
+                            <img src="@user.AvatarUrl" class="w-100 h-100 object-fit-cover" alt="Avatar">
+                        }
+                        else
+                        {
+                            <img src="https://ui-avatars.com/api/?name=@(user?.FullName ?? user?.UserName)&background=random" class="w-100 h-100 object-fit-cover" alt="Avatar">
+                        }
                     </div>
-                    
-                    <h5 class="mb-1 text-dark fw-bold">Xin chào bạn !</h5>
-                    <div class="fw-bold fs-5 mb-1">@(user?.FullName ?? user?.UserName)</div>
-                    <div class="badge bg-light @rankColor border rounded-pill px-3 py-2 small mb-3">
-                        <i class="bi bi-star-fill me-1"></i> Cấp độ @rank
-                    </div>
-                    <p class="text-muted small mb-0">@user?.Email</p>
-                    
-                    <button class="btn btn-link btn-sm text-muted text-decoration-none mt-2" onclick="document.getElementById('avatarInput').click()">
-                        <i class="bi bi-upload me-1"></i> Tải hình ảnh đại diện của bạn
-                    </button>
                 </div>
                 
-                <div class="list-group list-group-flush p-2">
-                    <a href="@Url.Action("Index", "Account", new { tab = "orders" })" 
-                       class="list-group-item list-group-item-action border-0 rounded-3 mb-1 @(activeTab == "orders" ? "active" : "")">
-                        <i class="bi bi-list-task me-2"></i> Đơn hàng của tôi
-                    </a>
-                    <a href="@Url.Action("Index", "Account", new { tab = "address" })" 
-                       class="list-group-item list-group-item-action border-0 rounded-3 mb-1 @(activeTab == "address" ? "active" : "")">
-                        <i class="bi bi-geo-alt me-2"></i> Sổ địa chỉ
-                    </a>
-                    <a href="@Url.Action("Index", "Account", new { tab = "profile" })" 
-                       class="list-group-item list-group-item-action border-0 rounded-3 mb-1 @(activeTab == "profile" ? "active" : "")">
-                        <i class="bi bi-person-vcard me-2"></i> Thông tin của tôi
-                    </a>
-                    <a href="@Url.Action("Index", "Account", new { tab = "membership" })" 
-                       class="list-group-item list-group-item-action border-0 rounded-3 mb-1 @(activeTab == "membership" ? "active" : "")">
-                        <i class="bi bi-gem me-2"></i> Membership
-                    </a>
-                    <a href="@Url.Action("Index", "Account", new { tab = "security" })" 
-                       class="list-group-item list-group-item-action border-0 rounded-3 mb-1 @(activeTab == "security" ? "active" : "")">
-                        <i class="bi bi-lock me-2"></i> Thay đổi mật khẩu
-                    </a>
-                    <hr class="my-2 opacity-10">
-                    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="list-group-item list-group-item-action border-0 rounded-3 text-danger w-100 text-start">
-                            <i class="bi bi-box-arrow-right me-2"></i> Đăng xuất
-                        </button>
-                    </form>
+                <h6 class="mb-1 text-dark fw-bold" style="font-size:15px;">Xin chào bạn!</h6>
+                <div class="fw-bold mb-1 profile-name">@(user?.FullName ?? user?.UserName)</div>
+                <p class="text-muted small mb-2" style="font-size: 13px;">@user?.Email</p>
+                <div class="badge rank-badge px-3 py-1 rounded-pill small mt-1">
+                    Cấp độ @rank
                 </div>
             </div>
+            
+            <hr class="opacity-10 mx-3 mb-3">
+
+            <div class="list-group list-group-flush sidebar-menu">
+                <a href="@Url.Action("Index", "Account", new { tab = "orders" })" 
+                   class="list-group-item list-group-item-action @(activeTab == "orders" ? "active" : "")">
+                    <i class="fa-solid fa-box me-3 menu-icon"></i> Đơn hàng của tôi
+                </a>
+                <a href="@Url.Action("Index", "Account", new { tab = "address" })" 
+                   class="list-group-item list-group-item-action @(activeTab == "address" ? "active" : "")">
+                    <i class="fa-solid fa-location-dot me-3 menu-icon"></i> Địa chỉ giao hàng
+                </a>
+                <a href="@Url.Action("Index", "Account", new { tab = "returns" })" 
+                   class="list-group-item list-group-item-action @(activeTab == "returns" ? "active" : "")">
+                    <i class="fa-solid fa-rotate-left me-3 menu-icon"></i> Trả hàng/Hoàn tiền
+                </a>
+                <a href="@Url.Action("Index", "Account", new { tab = "promotions" })" 
+                   class="list-group-item list-group-item-action d-flex align-items-center @(activeTab == "promotions" ? "active" : "")">
+                    <i class="fa-solid fa-ticket me-3 menu-icon"></i> Khuyến mãi
+                    <span class="badge new-badge ms-auto">New</span>
+                </a>
+                <a href="@Url.Action("Index", "Account", new { tab = "notifications" })" 
+                   class="list-group-item list-group-item-action @(activeTab == "notifications" ? "active" : "")">
+                    <i class="fa-solid fa-bell me-3 menu-icon"></i> Thông báo
+                </a>
+                
+                <hr class="opacity-10 mx-3 mt-4 mb-2">
+                <!-- Add Logout just to be complete, although screenshot cut it out, it's usually at bottom -->
+                <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" class="px-3">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-link text-decoration-none text-muted p-0 w-100 text-start" style="font-size: 14px; padding: 14px 24px !important; margin-left: -5px;">
+                        <i class="fa-solid fa-arrow-right-from-bracket me-3 menu-icon"></i> Đăng xuất
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Hidden old functionality for completeness behind the scenes if needed -->
+            @if(activeTab == "profile" || activeTab == "membership" || activeTab == "security")
+            {
+                 <div class="list-group list-group-flush sidebar-menu mt-4 d-none">
+                     <a href="#" class="list-group-item list-group-item-action active">
+                        <i class="fa-solid fa-gear me-3 menu-icon"></i> Legacy System Route
+                     </a>
+                 </div>
+            }
         </div>
 
         <!-- Main Content Area -->
-        <div class="col-lg-9">
+        <div class="col-lg-9 content-pane p-4 p-md-5 bg-white">
             @if (TempData["Success"] != null)
             {
-                <div class="alert alert-success border-0 shadow-sm rounded-3 mb-4 animate__animated animate__fadeIn">
-                    <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+                <div class="alert alert-success border-0 shadow-sm rounded-0 mb-4 animate__animated animate__fadeIn">
+                    <i class="fa-solid fa-circle-check me-2"></i> @TempData["Success"]
                 </div>
             }
             @if (TempData["Error"] != null)
             {
-                <div class="alert alert-danger border-0 shadow-sm rounded-3 mb-4 animate__animated animate__fadeIn">
-                    <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
+                <div class="alert alert-danger border-0 shadow-sm rounded-0 mb-4 animate__animated animate__fadeIn">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i> @TempData["Error"]
                 </div>
             }
 
-            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
-                @if (activeTab == "orders")
-                {
-                    <div class="mb-4">
-                        <h4 class="fw-bold mb-4">Lịch sử đơn hàng</h4>
-                        
-                        <!-- Order Status Filter Tabs -->
-                        <div class="d-flex flex-wrap gap-2 mb-4 bg-light p-2 rounded-3">
-                            <a href="@Url.Action("Index", new { tab = "orders" })" 
-                               class="btn btn-sm @(string.IsNullOrEmpty(selectedStatus) ? "btn-dark" : "btn-white text-dark shadow-none border-0") rounded-pill px-3">Tất cả</a>
-                            
-                            @foreach (var status in Enum.GetValues<FashionStoreIS.Models.OrderStatus>())
-                            {
-                                var statusStr = status.ToString();
-                                var statusLabel = status switch {
-                                    FashionStoreIS.Models.OrderStatus.Pending => "Đơn mới",
-                                    FashionStoreIS.Models.OrderStatus.Processing => "Đã xác nhận",
-                                    FashionStoreIS.Models.OrderStatus.Shipped => "Đã gửi hàng",
-                                    FashionStoreIS.Models.OrderStatus.Completed => "Đã nhận",
-                                    FashionStoreIS.Models.OrderStatus.Cancelled => "Đã huỷ",
-                                    _ => statusStr
-                                };
-                                <a href="@Url.Action("Index", new { tab = "orders", status = statusStr })" 
-                                   class="btn btn-sm @(selectedStatus == statusStr ? "btn-dark" : "btn-white text-dark shadow-none border-0") rounded-pill px-3">@statusLabel</a>
-                            }
-                        </div>
-                    </div>
-
-                    @if (Model.Count == 0)
-                    {
-                        <div class="text-center py-5">
-                            <div class="mb-4 opacity-75">
-                                <img src="https://cdni.iconscout.com/illustration/premium/thumb/empty-cart-illustration-download-in-svg-png-gif-formats--shopping-ecommerce-pack-delivery-illustrations-4573147.png" 
-                                     alt="Empty Cart" style="width: 200px;">
-                            </div>
-                            <h5 class="fw-bold text-dark">Chưa có đơn hàng nào</h5>
-                            <p class="text-muted small mb-4">Nơi này sẽ giúp xem lại những đơn hàng mà bạn đã đặt,<br>hãy quay lại đây sau khi gửi đơn hàng đầu tiên của mình nhé!</p>
-                            <a href="@Url.Action("Index", "Home")" class="btn btn-dark rounded-pill px-5">Tiếp tục mua sắm</a>
-                        </div>
-                    }
-                    else
-                    {
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="bg-light">
-                                    <tr class="small text-uppercase text-muted">
-                                        <th class="border-0 px-3 py-3">Mã đơn</th>
-                                        <th class="border-0 py-3">Ngày đặt</th>
-                                        <th class="border-0 py-3">Tổng cộng</th>
-                                        <th class="border-0 py-3">Trạng thái</th>
-                                        <th class="border-0 py-3 text-end"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var order in Model)
-                                    {
-                                        <tr>
-                                            <td class="px-3">
-                                                <span class="fw-bold text-dark">#@order.Id</span>
-                                            </td>
-                                            <td class="text-muted small">@order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
-                                            <td class="fw-bold text-dark">@order.TotalAmount.ToString("N0")₫</td>
-                                            <td>
-                                                @{
-                                                    var statusClass = order.Status switch
-                                                    {
-                                                        FashionStoreIS.Models.OrderStatus.Pending => "bg-warning-subtle text-warning-emphasis",
-                                                        FashionStoreIS.Models.OrderStatus.Processing => "bg-info-subtle text-info-emphasis",
-                                                        FashionStoreIS.Models.OrderStatus.Shipped => "bg-primary-subtle text-primary-emphasis",
-                                                        FashionStoreIS.Models.OrderStatus.Completed => "bg-success-subtle text-success-emphasis",
-                                                        FashionStoreIS.Models.OrderStatus.Cancelled => "bg-danger-subtle text-danger-emphasis",
-                                                        _ => "bg-secondary-subtle text-secondary-emphasis"
-                                                    };
-                                                    var statusText = order.Status switch
-                                                    {
-                                                        FashionStoreIS.Models.OrderStatus.Pending => "Chờ xử lý",
-                                                        FashionStoreIS.Models.OrderStatus.Processing => "Đang xử lý",
-                                                        FashionStoreIS.Models.OrderStatus.Shipped => "Đang giao",
-                                                        FashionStoreIS.Models.OrderStatus.Completed => "Hoàn thành",
-                                                        FashionStoreIS.Models.OrderStatus.Cancelled => "Đã hủy",
-                                                        _ => order.Status.ToString()
-                                                    };
-                                                }
-                                                <span class="badge @statusClass rounded-pill px-3">@statusText</span>
-                                            </td>
-                                            <td class="text-end text-nowrap">
-                                                <a href="@Url.Action("OrderDetails", "Account", new { id = order.Id })" 
-                                                   class="btn btn-sm btn-outline-dark rounded-pill px-3">Chi tiết</a>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                    }
-                }
-                else if (activeTab == "profile")
-                {
-                    <h4 class="fw-bold mb-4">Thông tin của tôi</h4>
-                    <form asp-action="UpdateProfile" method="post">
-                        @Html.AntiForgeryToken()
-                        <div class="row g-4">
-                            <div class="col-md-12">
-                                <label class="form-label small text-muted text-uppercase fw-bold">Họ và tên</label>
-                                <input type="text" name="fullName" class="form-control form-control-lg border-0 bg-light rounded-3" 
-                                       placeholder="Nhập họ tên đầy đủ" value="@user?.FullName">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small text-muted text-uppercase fw-bold">Email</label>
-                                <input type="email" class="form-control form-control-lg border-0 bg-light rounded-3" 
-                                       value="@user?.Email" disabled>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small text-muted text-uppercase fw-bold">Số điện thoại</label>
-                                <input type="text" name="phoneNumber" class="form-control form-control-lg border-0 bg-light rounded-3" 
-                                       placeholder="Nhập số điện thoại" value="@user?.PhoneNumber">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small text-muted text-uppercase fw-bold">Ngày sinh</label>
-                                <input type="date" name="dob" class="form-control form-control-lg border-0 bg-light rounded-3" 
-                                       value="@(user?.DateOfBirth?.ToString("yyyy-MM-dd"))">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small text-muted text-uppercase fw-bold">Giới tính</label>
-                                <select name="gender" class="form-select form-select-lg border-0 bg-light rounded-3">
-                                    <option value="" selected="@(user?.Gender == null)">Chưa chọn</option>
-                                    <option value="Male" selected="@(user?.Gender == "Male")">Nam</option>
-                                    <option value="Female" selected="@(user?.Gender == "Female")">Nữ</option>
-                                    <option value="Other" selected="@(user?.Gender == "Other")">Khác</option>
-                                </select>
-                            </div>
-                            <div class="col-12 mt-4">
-                                <button type="submit" class="btn btn-dark btn-lg w-100 rounded-4 shadow-sm py-3 fw-bold">Cập nhật thông tin</button>
-                            </div>
-                        </div>
-                    </form>
-                }
-                else if (activeTab == "address")
-                {
-                    <h4 class="fw-bold mb-4">Sổ địa chỉ</h4>
-                    <div class="text-center py-5">
-                        <i class="bi bi-geo-alt fs-1 text-muted opacity-25"></i>
-                        <p class="text-muted mt-3">Tính năng nâng cao. Cho phép bạn lưu nhiều địa chỉ nhận hàng để tiện cho việc mua sắm lần sau.</p>
-                        <button class="btn btn-outline-dark rounded-pill px-4 mt-2">Thêm địa chỉ mới</button>
-                    </div>
-                }
-                else if (activeTab == "membership" || activeTab == "level")
-                {
-                    <h4 class="fw-bold mb-4">Membership Program</h4>
-                    <div class="p-4 bg-light rounded-4 border-start border-primary border-5 mb-4">
-                        <div class="row align-items-center">
-                            <div class="col-md-8">
-                                <h5 class="fw-bold mb-1">Hạng thành viên: @rank</h5>
-                                <p class="text-muted mb-0 small">Bạn hiện có <strong>@user?.MembershipPoints</strong> điểm tích lũy.</p>
-                            </div>
-                            <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                                <div class="badge bg-primary rounded-pill px-4 py-2">Xếp hạng: #124</div>
-                            </div>
-                        </div>
-                    </div>
+            @if (activeTab == "orders")
+            {
+                <div class="mb-5">
+                    <h3 class="fw-bold text-dark mb-2" style="color: #0c1e36;">Lịch sử đơn hàng</h3>
+                    <p class="text-muted small mb-4" style="font-size: 14px;">Quản lý và theo dõi tất cả đơn hàng của bạn</p>
                     
+                    <!-- Text Tab Navigation -->
+                    <div class="d-flex flex-wrap status-tabs align-items-center border-bottom pb-3 gap-0">
+                        <a href="@Url.Action("Index", new { tab = "orders" })" 
+                           class="status-tab @(string.IsNullOrEmpty(selectedStatus) ? "active" : "")">Tất cả</a>
+                        
+                        <a href="@Url.Action("Index", new { tab = "orders", status = "Pending" })" 
+                           class="status-tab @(selectedStatus == "Pending" ? "active" : "")">Chờ xác nhận</a>
+                        
+                        <a href="@Url.Action("Index", new { tab = "orders", status = "Confirmed" })" 
+                           class="status-tab @(selectedStatus == "Confirmed" ? "active" : "")">Đã xác nhận</a>
+                        
+                        <a href="@Url.Action("Index", new { tab = "orders", status = "Shipped" })" 
+                           class="status-tab @(selectedStatus == "Shipped" ? "active" : "")">Đang giao hàng</a>
+                        
+                        <a href="@Url.Action("Index", new { tab = "orders", status = "Completed" })" 
+                           class="status-tab @(selectedStatus == "Completed" ? "active" : "")">Đã nhận hàng</a>
+                        
+                        <a href="@Url.Action("Index", new { tab = "orders", status = "Cancelled" })" 
+                           class="status-tab @(selectedStatus == "Cancelled" ? "active" : "")">Đã hủy</a>
+                    </div>
+                </div>
+
+                @if (Model == null || Model.Count == 0)
+                {
+                    <div class="empty-state border rounded-4 text-center py-5 px-3 mx-auto mt-4 w-100 shadow-sm" style="border-color: #eaeaea !important;">
+                        <div class="empty-icon-circle mx-auto mb-4 d-flex align-items-center justify-content-center mt-3">
+                            <i class="fa-solid fa-bag-shopping profile-theme-icon" style="font-size: 24px;"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3" style="color: #0c1e36;">Chưa có đơn hàng nào</h5>
+                        <p class="text-muted small mb-5 lh-lg mx-auto" style="max-width: 380px;">Nơi này sẽ giúp xem lại những đơn hàng mà bạn đã đặt,<br/>hãy quay lại đây sau khi đặt đơn hàng đầu tiên<br/>của mình nhé!</p>
+                        <a href="@Url.Action("Index", "Home")" class="btn btn-theme-primary px-4 py-2 mb-3 fw-medium" style="font-size: 14px;">Tiếp tục mua sắm &rarr;</a>
+                    </div>
+                }
+                else
+                {
                     <div class="table-responsive">
-                        <table class="table table-borderless small">
-                            <thead>
-                                <tr class="text-muted">
-                                    <th>Cấp độ</th>
-                                    <th>Điều kiện (Điểm)</th>
-                                    <th>Ưu đãi</th>
+                        <table class="table table-hover align-middle">
+                            <thead class="bg-light">
+                                <tr class="small text-uppercase text-muted">
+                                    <th class="border-0 px-3 py-3">Mã đơn</th>
+                                    <th class="border-0 py-3">Ngày đặt</th>
+                                    <th class="border-0 py-3">Tổng cộng</th>
+                                    <th class="border-0 py-3">Trạng thái</th>
+                                    <th class="border-0 py-3 text-end"></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr class="@(rank == "Dream Starter" ? "fw-bold" : "")">
-                                    <td>Dream Starter</td>
-                                    <td>0+</td>
-                                    <td>Tích lũy 1%</td>
-                                </tr>
-                                <tr class="@(rank == "Silver Elite" ? "fw-bold" : "")">
-                                    <td>Silver Elite</td>
-                                    <td>500+</td>
-                                    <td>Tích lũy 3%, Quà sinh nhật</td>
-                                </tr>
-                                <tr class="@(rank == "Gold Member" ? "fw-bold" : "")">
-                                    <td>Gold Member</td>
-                                    <td>2,000+</td>
-                                    <td>Tích lũy 5%, Voucher 10% hàng tháng</td>
-                                </tr>
-                                <tr class="@(rank == "Diamond Master" ? "fw-bold" : "")">
-                                    <td>Diamond Master</td>
-                                    <td>5,000+</td>
-                                    <td>Tích lũy 10%, Quà tặng đặc biệt, CSKH VIP</td>
-                                </tr>
+                                @foreach (var order in Model)
+                                {
+                                    <tr>
+                                        <td class="px-3">
+                                            <span class="fw-bold text-dark">#@order.Id</span>
+                                        </td>
+                                        <td class="text-muted small">@order.CreatedAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td class="fw-bold text-dark">@order.TotalAmount.ToString("N0")₫</td>
+                                        <td>
+                                            @{
+                                                var statusClass = order.Status switch
+                                                {
+                                                    FashionStoreIS.Models.OrderStatus.Pending => "bg-warning-subtle text-warning-emphasis",
+                                                    FashionStoreIS.Models.OrderStatus.Processing => "bg-info-subtle text-info-emphasis",
+                                                    FashionStoreIS.Models.OrderStatus.Shipped => "bg-primary-subtle text-primary-emphasis",
+                                                    FashionStoreIS.Models.OrderStatus.Completed => "bg-success-subtle text-success-emphasis",
+                                                    FashionStoreIS.Models.OrderStatus.Cancelled => "bg-danger-subtle text-danger-emphasis",
+                                                    _ => "bg-secondary-subtle text-secondary-emphasis"
+                                                };
+                                                var statusText = order.Status switch
+                                                {
+                                                    FashionStoreIS.Models.OrderStatus.Pending => "Chờ xác nhận",
+                                                    FashionStoreIS.Models.OrderStatus.Confirmed => "Đã xác nhận",
+                                                    FashionStoreIS.Models.OrderStatus.Processing => "Đang xử lý",
+                                                    FashionStoreIS.Models.OrderStatus.Shipped => "Đang giao hàng",
+                                                    FashionStoreIS.Models.OrderStatus.Completed => "Đã nhận hàng",
+                                                    FashionStoreIS.Models.OrderStatus.Cancelled => "Đã hủy",
+                                                    _ => order.Status.ToString()
+                                                };
+                                            }
+                                            <span class="badge @statusClass rounded-pill px-3">@statusText</span>
+                                        </td>
+                                        <td class="text-end text-nowrap">
+                                            <div class="d-flex justify-content-end gap-2">
+                                                <a href="@Url.Action("OrderDetails", "Account", new { id = order.Id })" 
+                                                   class="btn btn-sm btn-outline-dark px-3">Chi tiết</a>
+                                                
+                                                @if (order.Status == FashionStoreIS.Models.OrderStatus.Pending)
+                                                {
+                                                    <form asp-action="CancelOrder" asp-controller="Account" method="post" class="m-0" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');">
+                                                        @Html.AntiForgeryToken()
+                                                        <input type="hidden" name="id" value="@order.Id" />
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger px-3">Hủy đơn</button>
+                                                    </form>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
                             </tbody>
                         </table>
                     </div>
                 }
-                else if (activeTab == "security")
-                {
-                    <h4 class="fw-bold mb-4">Thay đổi mật khẩu</h4>
-                    <form asp-action="ChangePassword" method="post" class="row g-4">
-                        @Html.AntiForgeryToken()
-                        <div class="col-12">
-                            <label class="form-label small text-muted text-uppercase fw-bold">Mật khẩu hiện tại</label>
-                            <input type="password" name="currentPassword" class="form-control form-control-lg border-0 bg-light rounded-3" required>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label small text-muted text-uppercase fw-bold">Mật khẩu mới</label>
-                            <input type="password" name="newPassword" class="form-control form-control-lg border-0 bg-light rounded-3" required>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label small text-muted text-uppercase fw-bold">Xác nhận mật khẩu mới</label>
-                            <input type="password" name="confirmPassword" class="form-control form-control-lg border-0 bg-light rounded-3" required>
-                        </div>
-                        <div class="col-12">
-                            <button type="submit" class="btn btn-dark btn-lg w-100 rounded-4 py-3 fw-bold">Cập nhật mật khẩu</button>
-                        </div>
-                    </form>
-                }
-            </div>
+            }
+            else
+            {
+                <div class="empty-state border rounded-4 text-center py-5 px-3 mx-auto mt-4 w-100 shadow-sm" style="border-color: #eaeaea !important;">
+                    <div class="empty-icon-circle mx-auto mb-4 d-flex align-items-center justify-content-center mt-3">
+                        <i class="fa-solid fa-clock-rotate-left profile-theme-icon" style="font-size: 24px;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3" style="color: #0c1e36;">Tính năng đang phát triển</h5>
+                    <p class="text-muted small mb-5 lh-lg mx-auto" style="max-width: 350px;">Mục này hiện đang được nâng cấp để mang lại trải nghiệm tuyệt vời nhất cho bạn.</p>
+                </div>
+            }
         </div>
     </div>
 </div>
 
 <style>
-    body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; }
-    .list-group-item {
-        padding: 0.9rem 1.2rem;
+    body { 
+        background-color: #f8f9fa; /* slightly lighter gray to match image bg */
+        font-family: 'Inter', sans-serif; 
+    }
+    
+    .profile-container {
+        min-height: 80vh;
+        border-radius: 8px; /* Slightly more rounded */
+    }
+    
+    .sidebar-pane {
+        background-color: #fafbfc;
+        border-top-left-radius: 8px;
+        border-bottom-left-radius: 8px;
+    }
+    
+    .content-pane {
+        border-top-right-radius: 8px;
+        border-bottom-right-radius: 8px;
+    }
+
+    .profile-name {
+        color: #3b60b1;
+        font-size: 15px;
+        letter-spacing: 0.2px;
+    }
+
+    .rank-badge {
+        background-color: #0f3c83;
+        color: white;
+        font-weight: 500;
+        letter-spacing: 0.2px;
+        font-size: 11px;
+    }
+
+    .sidebar-menu .list-group-item {
+        background-color: transparent;
+        border: none;
+        padding: 13px 24px;
+        color: #333;
+        font-size: 14px;
         font-weight: 500;
         transition: all 0.2s ease;
-        font-size: 0.95rem;
-        border: none !important;
     }
-    .list-group-item.active {
-        background-color: #000 !important;
-        color: #fff !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+    .sidebar-menu .list-group-item:hover {
+        background-color: #f1f3f8;
+        color: #0f3c83;
     }
-    .list-group-item:not(.active):hover {
-        background-color: #f1f1f1;
-        transform: translateX(5px);
+
+    .sidebar-menu .list-group-item.active {
+        color: #0c1e36;
+        background-color: transparent !important;
+        font-weight: 700;
+        /* No right border, the image doesn't show an active indicator on the right */
     }
-    .form-control:focus, .form-select:focus {
-        background-color: #fff;
-        box-shadow: 0 0 0 0.25rem rgba(0,0,0,0.05);
-        border: 1px solid #ddd !important;
+
+    .sidebar-menu .menu-icon {
+        color: #0f3c83; /* Matching the dark blue color from the image */
+        font-size: 16px;
     }
-    .badge { letter-spacing: 0.5px; }
-    .table thead th { font-weight: 700; font-size: 0.7rem; }
     
+    .sidebar-menu .list-group-item.active .menu-icon {
+        color: #0f3c83;
+    }
+
+    .new-badge {
+        background-color: #0f3c83;
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+
+    /* Tab Navigation */
+    .status-tabs .status-tab {
+        color: #6c757d;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 12px 0;
+        flex: 1;
+        text-align: center;
+        transition: all 0.2s ease;
+        border-bottom: 2px solid transparent; /* default transparent border */
+        margin-bottom: -1px; /* Overlap border-bottom */
+    }
+
+    .status-tabs .status-tab:hover {
+        color: #0c1e36;
+    }
+
+    .status-tabs .status-tab.active {
+        color: #0c1e36;
+        border: 1px solid #c2cde7; /* The blue rectangular border */
+        /* Make it look like a floating tab with a border */
+        border-radius: 2px;
+        font-weight: 600;
+        background-color: transparent;
+        border-bottom: 1px solid #c2cde7;
+        padding: 9px 0; /* Add slight padding reduction to compensate border sizes */
+    }
+
+    /* Empty State */
+    .empty-state {
+        border-color: #eaebec !important; /* Very soft border */
+        background-color: #fff;
+    }
+
+    .empty-icon-circle {
+        width: 65px;
+        height: 65px;
+        background-color: #e5eef9; /* Light blue */
+        border-radius: 50%;
+    }
+
+    .profile-theme-icon {
+        color: #0f3c83;
+    }
+
+    .btn-theme-primary {
+        background-color: #0f3c83;
+        color: #fff;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+    }
+
+    .btn-theme-primary:hover {
+        background-color: #0a295c;
+        color: #fff;
+    }
+
     /* Animation */
     .animate__fadeIn { animation-duration: 0.5s; }
-    
-    .btn-white { background-color: transparent; }
-    .btn-white:hover { background-color: #eee; }
-
-    /* Avatar hover effect */
-    .profile-avatar-container:hover .btn-dark {
-        transform: scale(1.1);
-    }
 </style>

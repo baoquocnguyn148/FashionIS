@@ -73,7 +73,7 @@ namespace FashionStoreIS.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Product model, IFormFile? imageFile, IFormFileCollection? galleryFiles)
+        public async Task<IActionResult> Create(Product model, IFormFile? imageFile, List<IFormFile>? galleryFiles)
         {
             if (imageFile != null && imageFile.Length > 0)
                 model.ImageUrl = await SaveImage(imageFile);
@@ -134,7 +134,7 @@ namespace FashionStoreIS.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Product model, IFormFile? imageFile, IFormFileCollection? galleryFiles)
+        public async Task<IActionResult> Edit(Product model, IFormFile? imageFile, List<IFormFile>? galleryFiles)
         {
             var existing = (await _db.Products
                 .Include(p => p.Images)

@@ -1,7 +1,6 @@
 @model FashionStoreIS.Models.Order
 @{
     ViewData["Title"] = "Chi tiết Đơn hàng #" + Model.Id;
-    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
 
 <div class="admin-actions-top" style="margin-bottom: 20px; display: flex; justify-content: space-between;">
@@ -23,10 +22,11 @@
                     var statusClass = Model.Status.ToString().ToLower();
                     var statusName = Model.Status switch
                     {
-                        FashionStoreIS.Models.OrderStatus.Pending => "Chờ xử lý",
+                        FashionStoreIS.Models.OrderStatus.Pending => "Chờ xác nhận",
+                        FashionStoreIS.Models.OrderStatus.Confirmed => "Đã xác nhận",
                         FashionStoreIS.Models.OrderStatus.Processing => "Đang xử lý",
-                        FashionStoreIS.Models.OrderStatus.Shipped => "Đã giao hàng",
-                        FashionStoreIS.Models.OrderStatus.Completed => "Hoàn thành",
+                        FashionStoreIS.Models.OrderStatus.Shipped => "Đang giao hàng",
+                        FashionStoreIS.Models.OrderStatus.Completed => "Đã nhận hàng",
                         FashionStoreIS.Models.OrderStatus.Cancelled => "Đã hủy",
                         _ => Model.Status.ToString()
                     };
@@ -57,9 +57,10 @@
             <form method="post" action="/Admin/Order/UpdateStatus/@Model.Id" class="status-update-form">
                 @Html.AntiForgeryToken()
                 <select name="status" class="form-control" style="background: #1f2937; border-color: #374151; color: #fff;">
-                    <option value="Pending" selected="@(Model.Status == FashionStoreIS.Models.OrderStatus.Pending ? "selected" : null)">Chờ xử lý</option>
+                    <option value="Pending" selected="@(Model.Status == FashionStoreIS.Models.OrderStatus.Pending ? "selected" : null)">Chờ xác nhận</option>
+                    <option value="Confirmed" selected="@(Model.Status == FashionStoreIS.Models.OrderStatus.Confirmed ? "selected" : null)">Đã xác nhận</option>
                     <option value="Processing" selected="@(Model.Status == FashionStoreIS.Models.OrderStatus.Processing ? "selected" : null)">Đang xử lý</option>
-                    <option value="Shipped" selected="@(Model.Status == FashionStoreIS.Models.OrderStatus.Shipped ? "selected" : null)">Đã giao hàng</option>
+                    <option value="Shipped" selected="@(Model.Status == FashionStoreIS.Models.OrderStatus.Shipped ? "selected" : null)">Đang giao hàng</option>
                     <option value="Completed" selected="@(Model.Status == FashionStoreIS.Models.OrderStatus.Completed ? "selected" : null)">Đã nhận hàng</option>
                     <option value="Cancelled" selected="@(Model.Status == FashionStoreIS.Models.OrderStatus.Cancelled ? "selected" : null)">Đã hủy</option>
                 </select>

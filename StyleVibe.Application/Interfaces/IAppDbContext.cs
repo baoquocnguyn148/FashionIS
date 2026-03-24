@@ -19,7 +19,9 @@ public interface IAppDbContext
     DbSet<PurchaseOrder> PurchaseOrders { get; }
     DbSet<PurchaseOrderDetail> PurchaseOrderDetails { get; }
     DbSet<LoyaltyTransaction> LoyaltyTransactions { get; }
+    DbSet<Voucher> Vouchers { get; }
 
+    Microsoft.EntityFrameworkCore.ChangeTracking.ChangeTracker ChangeTracker { get; }
     Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
 }
 

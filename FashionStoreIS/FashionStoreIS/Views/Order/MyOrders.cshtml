@@ -1,0 +1,63 @@
+@model IEnumerable<FashionStoreIS.Models.Order>
+@{
+    ViewData["Title"] = "Đơn hàng của tôi";
+}
+
+<div class="container py-5">
+    <h2 class="mb-4 text-white">Đơn hàng của tôi</h2>
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info bg-dark text-info border-secondary">Bạn chưa có đơn đặt hàng nào.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-dark table-hover align-middle">
+                <thead>
+                    <tr class="text-muted">
+                        <th>Mã Đơn</th>
+                        <th>Ngày Đặt</th>
+                        <th>Trạng Thái</th>
+                        <th>Hình Thức Thanh Toán</th>
+                        <th class="text-end">Tổng Tiền</th>
+                        <th class="text-center">Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model)
+                    {
+                        <tr>
+                            <td><strong>@order.OrderCode</strong></td>
+                            <td>@order.CreatedAt.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @switch(order.Status) {
+                                    case FashionStoreIS.Models.OrderStatus.Pending: <span class="badge bg-warning text-dark">Chờ xác nhận</span>; break;
+                                    case FashionStoreIS.Models.OrderStatus.Confirmed: <span class="badge bg-info">Đã xác nhận</span>; break;
+                                    case FashionStoreIS.Models.OrderStatus.Processing: <span class="badge bg-primary">Đang xử lý</span>; break;
+                                    case FashionStoreIS.Models.OrderStatus.Shipped: <span class="badge bg-success">Đang giao hàng</span>; break;
+                                    case FashionStoreIS.Models.OrderStatus.Completed: <span class="badge bg-secondary">Đã nhận hàng</span>; break;
+                                    case FashionStoreIS.Models.OrderStatus.Cancelled: <span class="badge bg-danger">Đã hủy</span>; break;
+                                    default: <span class="badge bg-light text-dark">@order.Status</span>; break;
+                                }
+                            </td>
+                            <td>
+                                @if (order.PaymentMethod == FashionStoreIS.Models.PaymentMethod.Cash)
+                                {
+                                    <span>Thanh toán khi nhận hàng (COD)</span>
+                                }
+                                else
+                                {
+                                    <span>Chuyển khoản / Thẻ</span>
+                                }
+                            </td>
+                            <td class="text-end text-warning fw-bold">@order.TotalAmount.ToString("N0") ₫</td>
+                            <td class="text-center">
+                                <a href="/Order/Details/@order.Id" class="btn btn-sm btn-outline-light">Chi Tiết</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

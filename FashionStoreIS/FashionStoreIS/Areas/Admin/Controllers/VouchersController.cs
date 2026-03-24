@@ -41,6 +41,7 @@ namespace FashionStoreIS.Areas.Admin.Controllers
                 }
                 else
                 {
+                    model.CreatedAt = DateTime.Now;
                     _db.Vouchers.Add(model);
                 }
                 await _db.SaveChangesAsync();

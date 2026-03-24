@@ -1,3 +1,4 @@
+// FILE: d:\FashionStoreIS\FashionStoreIS\FashionStoreIS\Controllers\CheckoutController.cs
 using FashionStoreIS.Data;
 using FashionStoreIS.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -14,8 +15,9 @@ namespace FashionStoreIS.Controllers
         private const string CART_COOKIE_NAME = "BNStore_Cart";
         private static string GenerateOrderCode()
         {
+            // Max length is 20 chars (BN + 12 chars timestamp + 6 chars random)
             var ts = DateTime.UtcNow.ToString("yyMMddHHmmss");
-            var rnd = Random.Shared.Next(1000, 9999);
+            var rnd = Random.Shared.Next(100000, 999999);
             return $"BN{ts}{rnd}";
         }
 
@@ -39,186 +41,218 @@ namespace FashionStoreIS.Controllers
         {
             if (string.IsNullOrEmpty(code)) return Json(new { success = false, message = "Vui lòng nhập mã." });
 
-            // Never trust totals from client; compute from DB-backed cart state
             var cart = await GetCartItemsHydratedAsync();
             if (cart.Count == 0) return Json(new { success = false, message = "Giỏ hàng trống." });
             var subtotal = cart.Sum(i => i.Quantity * i.Price);
 
-            var vouchers = await _db.Vouchers
-                .Where(v => v.Code == code && v.IsActive && v.ExpiryDate >= DateTime.Now)
-                .ToListAsync();
+            var voucher = await _db.Vouchers
+                .FirstOrDefaultAsync(v => v.Code == code && v.IsActive && v.ExpiryDate >= DateTime.Now);
             
-            var voucher = vouchers.FirstOrDefault();
-
             if (voucher == null) return Json(new { success = false, message = "Mã giảm giá không tồn tại hoặc đã hết hạn." });
             if (subtotal < voucher.MinOrderAmount) 
                 return Json(new { success = false, message = $"Đơn hàng tối thiểu {voucher.MinOrderAmount:N0} VND để sử dụng mã này." });
+            
+            // Check usage limit
+            if (voucher.UsedCount >= voucher.MaxUsageCount)
+                return Json(new { success = false, message = "Mã giảm giá này đã hết lượt sử dụng." });
 
             return Json(new { success = true, discount = voucher.DiscountAmount, code = voucher.Code });
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> ProcessOrder(string customerName, string address, string phone, string? voucherCode, string? note)
+        public async Task<IActionResult> ProcessOrder(
+            string customerName, string address, string phone, 
+            string? voucherCode, string? note)
         {
-            var cart = await GetCartItemsHydratedAsync();
-            if (cart.Count == 0)
-            {
-                TempData["Error"] = "Giỏ hàng của bạn đang trống.";
-                return RedirectToAction("Index", "Home");
-            }
-
-            // 1. Basic Validation
-            if (string.IsNullOrWhiteSpace(customerName) || string.IsNullOrWhiteSpace(address) || string.IsNullOrWhiteSpace(phone))
+            // BƯỚC 1: Validate input
+            if (string.IsNullOrWhiteSpace(customerName) || 
+                string.IsNullOrWhiteSpace(phone) || 
+                string.IsNullOrWhiteSpace(address))
             {
                 TempData["Error"] = "Vui lòng điền đầy đủ thông tin giao hàng.";
                 return RedirectToAction("Index");
             }
 
-            // 2. Fetch all necessary data in one go to minimize DB roundtrips
-            var skuIds = cart.Where(i => i.ProductSkuId.HasValue).Select(i => i.ProductSkuId!.Value).Distinct().ToList();
-            var productIds = cart.Select(i => i.ProductId).Distinct().ToList();
+            // BƯỚC 2: Lấy cart
+            var cart = await GetCartItemsHydratedAsync();
+            if (cart.Count == 0)
+            {
+                TempData["Error"] = "Giỏ hàng trống.";
+                return RedirectToAction("Index", "Home");
+            }
 
-            var skus = await _db.ProductSkus
-                .Include(s => s.Product)
-                .Include(s => s.Inventories)
-                .Where(s => skuIds.Contains(s.Id))
-                .ToListAsync();
-
-            var products = await _db.Products
-                .Where(p => productIds.Contains(p.Id))
-                .ToListAsync();
-
+            // BƯỚC 3: Lấy store
             var store = await _db.Stores
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.Id)
                 .FirstOrDefaultAsync();
-
             if (store == null)
             {
-                TempData["Error"] = "Hệ thống đang bảo trì, vui lòng quay lại sau (Thiếu thông tin cửa hàng).";
+                TempData["Error"] = "Hệ thống đang bảo trì. Vui lòng thử lại.";
                 return RedirectToAction("Index");
             }
 
-            // 3. Start Transaction
             using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
-                decimal subtotal = 0;
-                decimal discount = 0;
-
-                // Create Order Object
+                // BƯỚC 4: Tạo Order với tất cả field có giá trị mặc định
                 var order = new Order
                 {
-                    OrderCode = GenerateOrderCode(),
-                    CustomerName = customerName.Trim(),
-                    Address = address.Trim(),
-                    Phone = phone.Trim(),
-                    Note = note?.Trim(),
-                    Status = OrderStatus.Pending,
-                    PaymentMethod = PaymentMethod.Cash,
-                    PaymentStatus = PaymentStatus.Unpaid,
-                    StoreId = store.Id,
-                    CreatedAt = DateTime.Now
+                    OrderCode      = GenerateOrderCode(),
+                    CustomerName   = customerName.Trim(),
+                    Phone          = phone.Trim(),
+                    Address        = address.Trim(),
+                    Note           = string.IsNullOrWhiteSpace(note) ? null : note.Trim(),
+                    Status         = OrderStatus.Pending,
+                    PaymentMethod  = PaymentMethod.Cash,
+                    PaymentStatus  = PaymentStatus.Unpaid,
+                    SubTotal       = 0,
+                    DiscountAmount = 0,
+                    TotalAmount    = 0,
+                    PointsEarned   = 0,
+                    StoreId        = store.Id,
+                    CreatedAt      = DateTime.Now,
+                    IsDeleted      = false,
+                    UserId         = null,
+                    CustomerId     = null,
+                    VoucherId      = null
                 };
 
-                // Add User ID if logged in
+                // Set UserId nếu đã login
                 if (User.Identity?.IsAuthenticated == true)
                 {
-                    var user = await _userManager.FindByNameAsync(User.Identity.Name!);
-                    order.UserId = user?.Id;
+                    var currentUser = await _userManager.GetUserAsync(User);
+                    order.UserId = currentUser?.Id;
                 }
 
                 _db.Orders.Add(order);
-                await _db.SaveChangesAsync(); // Get Order ID
+                await _db.SaveChangesAsync();
 
-                // 4. Process Line Items and Stock
+                // BƯỚC 5: Load products và skus từ DB
+                var productIds = cart.Select(i => i.ProductId).Distinct().ToList();
+                var skuIds = cart
+                    .Where(i => i.ProductSkuId.HasValue && i.ProductSkuId.Value > 0)
+                    .Select(i => i.ProductSkuId!.Value)
+                    .Distinct()
+                    .ToList();
+
+                var products = await _db.Products
+                    .Include(p => p.Skus)
+                    .Where(p => productIds.Contains(p.Id))
+                    .ToListAsync();
+
+                var skus = skuIds.Any()
+                    ? await _db.ProductSkus
+                        .Include(s => s.Product)
+                        .Where(s => skuIds.Contains(s.Id))
+                        .ToListAsync()
+                    : new List<ProductSku>();
+
+                decimal subtotal = 0;
+
+                // BƯỚC 6: Tạo OrderDetail cho từng item
                 foreach (var item in cart)
                 {
-                    decimal unitPrice = 0;
+                    var product = products.FirstOrDefault(p => p.Id == item.ProductId);
+                    if (product == null || !product.IsActive)
+                        throw new Exception($"Sản phẩm không còn khả dụng. Vui lòng làm mới giỏ hàng.");
+
+                    decimal unitPrice;
                     var orderDetail = new OrderDetail
                     {
-                        OrderId = order.Id,
-                        Quantity = item.Quantity,
-                        CreatedAt = DateTime.Now
+                        OrderId         = order.Id,
+                        Quantity        = item.Quantity,
+                        DiscountPercent = 0,
+                        CreatedAt       = DateTime.Now,
+                        IsDeleted       = false
                     };
 
                     if (item.ProductSkuId.HasValue && item.ProductSkuId.Value > 0)
                     {
+                        // Sản phẩm CÓ SKU
                         var sku = skus.FirstOrDefault(s => s.Id == item.ProductSkuId.Value);
-                        if (sku == null || sku.Product == null) 
-                            throw new Exception($"Sản phẩm biến thể (ID: {item.ProductSkuId}) không tồn tại trong hệ thống. Vui lòng làm mới giỏ hàng.");
+                        if (sku == null)
+                            throw new Exception($"Biến thể sản phẩm không tồn tại. Vui lòng làm mới giỏ hàng.");
 
-                        // Stock Check & Deduction
                         if (sku.Stock < item.Quantity)
-                            throw new Exception($"Sản phẩm {sku.Product.Name} ({sku.Size}/{sku.Color}) không đủ hàng trong kho.");
+                            throw new Exception($"'{product.Name}' ({sku.Size}/{sku.Color}) chỉ còn {sku.Stock} sản phẩm.");
 
+                        // Trừ stock SKU
                         sku.Stock -= item.Quantity;
-                        sku.Product.Stock -= item.Quantity; // Keep aggregate stock in sync
+                        // Sync Product.Stock = tổng tất cả SKU còn lại
+                        product.Stock = product.Skus.Sum(s => s.Stock);
 
-                        unitPrice = sku.PriceOverride > 0 ? sku.PriceOverride.Value : sku.Product.Price;
+                        unitPrice = (sku.PriceOverride.HasValue && sku.PriceOverride.Value > 0)
+                            ? sku.PriceOverride.Value
+                            : sku.SellingPrice;
+
                         orderDetail.ProductSkuId = sku.Id;
-                        orderDetail.ProductId = sku.ProductId;
+                        orderDetail.ProductId    = product.Id;
                     }
                     else
                     {
-                        var product = products.FirstOrDefault(p => p.Id == item.ProductId);
-                        if (product == null) 
-                            throw new Exception($"Sản phẩm (ID: {item.ProductId}) không tồn tại trong hệ thống. Vui lòng làm mới giỏ hàng.");
-
+                        // Sản phẩm KHÔNG CÓ SKU
                         if (product.Stock < item.Quantity)
-                            throw new Exception($"Sản phẩm {product.Name} không đủ hàng trong kho.");
+                            throw new Exception($"'{product.Name}' không đủ hàng trong kho.");
 
                         product.Stock -= item.Quantity;
                         unitPrice = product.Price;
-                        orderDetail.ProductId = product.Id;
-                        orderDetail.ProductSkuId = null; // Explicitly set to null for simple products
+
+                        // ProductSkuId = null (đã nullable)
+                        orderDetail.ProductSkuId = null;
+                        orderDetail.ProductId    = product.Id;
                     }
 
                     orderDetail.UnitPrice = unitPrice;
-                    orderDetail.Subtotal = unitPrice * item.Quantity;
-                    
+                    orderDetail.Subtotal  = unitPrice * item.Quantity;
                     subtotal += orderDetail.Subtotal;
+
                     _db.OrderDetails.Add(orderDetail);
                 }
 
-                // 5. Handle Voucher
-                if (!string.IsNullOrEmpty(voucherCode))
+                // BƯỚC 7: Xử lý voucher
+                decimal discount = 0;
+                if (!string.IsNullOrWhiteSpace(voucherCode))
                 {
                     var voucher = await _db.Vouchers
-                        .FirstOrDefaultAsync(v => v.Code == voucherCode && v.IsActive && v.ExpiryDate >= DateTime.Now);
+                        .FirstOrDefaultAsync(v =>
+                            v.Code == voucherCode &&
+                            v.IsActive &&
+                            v.ExpiryDate >= DateTime.Now);
 
                     if (voucher != null && subtotal >= voucher.MinOrderAmount)
                     {
-                        discount = voucher.DiscountAmount;
+                        discount        = voucher.DiscountAmount;
                         order.VoucherId = voucher.Id;
+                        voucher.UsedCount++;
                     }
                 }
 
-                // 6. Finalize Totals
-                order.SubTotal = subtotal;
+                // BƯỚC 8: Cập nhật tổng tiền
+                order.SubTotal       = subtotal;
                 order.DiscountAmount = discount;
-                order.TotalAmount = Math.Max(0, subtotal - discount);
+                order.TotalAmount    = Math.Max(0, subtotal - discount);
+                order.PointsEarned   = (int)(order.TotalAmount / 100000);
 
                 await _db.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // 7. Success - Clear Cookie and Redirect
+                // Xóa cookie giỏ hàng
                 Response.Cookies.Delete(CART_COOKIE_NAME);
+
                 return View("OrderSuccess", order);
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                
-                string detailedError = ex.Message;
-                if (ex.InnerException != null)
-                {
-                    detailedError += " | Inner: " + ex.InnerException.Message;
-                }
 
-                Console.WriteLine($"[ORDER_ERROR] {detailedError}");
-                TempData["Error"] = "Lỗi hệ thống: " + detailedError;
+                var errorMsg = ex.Message;
+                if (ex.InnerException != null)
+                    errorMsg += " | Inner: " + ex.InnerException.Message;
+
+                Console.WriteLine($"[CHECKOUT_ERROR] {errorMsg}");
+                TempData["Error"] = "Lỗi hệ thống: " + errorMsg;
                 return RedirectToAction("Index");
             }
         }

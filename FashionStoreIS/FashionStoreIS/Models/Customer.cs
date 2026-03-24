@@ -16,6 +16,6 @@ namespace FashionStoreIS.Models
         public virtual ApplicationUser? User { get; set; }
         public DateTime JoinDate { get; set; } = DateTime.Now;
 
-        public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+        // Removed Orders navigation to avoid shadow FK conflict with ApplicationUser.Orders
     }
 }

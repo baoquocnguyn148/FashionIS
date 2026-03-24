@@ -98,7 +98,7 @@ public class AdminInventoryController : Controller
             return View(model);
         }
 
-        using var transaction = await _context.SaveChangesAsync(cancellationToken) > 0 ? null : null; // EF Core SaveChanges is atomic
+        await _context.SaveChangesAsync(cancellationToken);
 
         var adjustment = new StockAdjustment
         {

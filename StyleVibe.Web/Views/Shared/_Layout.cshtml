@@ -35,6 +35,10 @@
                 <nav>
                     <ul class="header-nav-links d-none d-lg-flex">
                         <li><a asp-controller="Products" asp-action="Index">Sản phẩm</a></li>
+                        @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                        {
+                            <li><a asp-controller="Pos" asp-action="Index" style="color:var(--sv-danger); font-weight:700">POS</a></li>
+                        }
                         <li><a asp-controller="Products" asp-action="Index" asp-route-categoryId="1">Áo</a></li>
                         <li><a asp-controller="Products" asp-action="Index" asp-route-categoryId="2">Quần</a></li>
                         <li><a asp-controller="Products" asp-action="Index" asp-route-categoryId="5">Phụ kiện</a></li>
@@ -110,6 +114,10 @@
         <ul>
             <li><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
             <li><a asp-controller="Products" asp-action="Index">Tất cả sản phẩm</a></li>
+            @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+            {
+                <li><a asp-controller="Pos" asp-action="Index" style="color:var(--sv-danger); font-weight:700">🏧 Bán tại quầy (POS)</a></li>
+            }
             <li><a asp-controller="Products" asp-action="Index" asp-route-categoryId="1">Áo</a></li>
             <li><a asp-controller="Products" asp-action="Index" asp-route-categoryId="2">Quần</a></li>
             <li><a asp-controller="Products" asp-action="Index" asp-route-categoryId="3">Váy</a></li>
@@ -187,7 +195,10 @@
                     <ul>
                         <li><a href="#">StyleVibe Quận 1</a></li>
                         <li><a href="#">StyleVibe Bình Thạnh</a></li>
-                        <li><a href="#">StyleVibe Thủ Đức</a></li>
+                        @if (User.IsInRole("Admin") || User.IsInRole("Staff"))
+                        {
+                            <li><a asp-controller="Pos" asp-action="Index">Bán tại quầy (POS)</a></li>
+                        }
                         <li><a asp-controller="Admin" asp-action="Dashboard">Quản trị</a></li>
                     </ul>
                 </div>

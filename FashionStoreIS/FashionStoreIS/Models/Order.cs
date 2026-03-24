@@ -1,3 +1,4 @@
+// FILE: d:\FashionStoreIS\FashionStoreIS\FashionStoreIS\Models\Order.cs
 using System;
 using System.Collections.Generic;
 
@@ -9,10 +10,10 @@ namespace FashionStoreIS.Models
         public OrderStatus Status { get; set; } = OrderStatus.Pending;
         public PaymentMethod PaymentMethod { get; set; }
         public PaymentStatus PaymentStatus { get; set; } = PaymentStatus.Unpaid;
-        public decimal SubTotal { get; set; }
-        public decimal DiscountAmount { get; set; }
-        public decimal TotalAmount { get; set; }
-        public int PointsEarned { get; set; }
+        public decimal SubTotal { get; set; } = 0;
+        public decimal DiscountAmount { get; set; } = 0;
+        public decimal TotalAmount { get; set; } = 0;
+        public int PointsEarned { get; set; } = 0;
         public string? Note { get; set; }
  
         public int? VoucherId { get; set; }

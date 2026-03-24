@@ -1,0 +1,340 @@
+@{
+    ViewData["Title"] = "Bán hàng tại quầy (POS)";
+    var stores = ViewBag.Stores as IEnumerable<FashionStoreIS.Models.Store> ?? [];
+}
+
+<div class="stat-grid" style="grid-template-columns: 1fr; margin-bottom: 20px;">
+    <div class="stat-card" style="padding: 15px 24px;">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <i class="fa-solid fa-cash-register text-accent" style="font-size: 24px; color: var(--admin-accent);"></i>
+                <h2 style="font-size: 20px; font-weight: 700; margin: 0;">POS SYSTEM</h2>
+            </div>
+            <div class="d-flex gap-3 align-items-center">
+                <label class="form-label" style="margin: 0; white-space: nowrap;">Cửa hàng:</label>
+                <select id="storeSelect" class="form-control" style="width: 220px; margin-bottom: 0;">
+                    @foreach (var store in stores)
+                    {
+                        <option value="@store.Id">@store.Name</option>
+                    }
+                </select>
+                <div style="position: relative; width: 350px;">
+                    <input type="text" id="skuSearch" class="form-control" placeholder="🔍 Tìm sản phẩm (Tên hoặc SKU)..." style="margin-bottom: 0;" autocomplete="off">
+                    <ul id="searchResult" class="dropdown-menu-custom"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row" style="display: flex; gap: 24px; margin: 0;">
+    <!-- Bảng sản phẩm -->
+    <div style="flex: 2; min-width: 0;">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <div class="admin-card-title">DANH SÁCH SẢN PHẨM TRONG GIỎ</div>
+                <div id="totalItemCount" class="badge badge-green">0 Món</div>
+            </div>
+            <div style="min-height: 400px; max-height: 600px; overflow-y: auto;">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th style="text-align: center;">Số lượng</th>
+                            <th style="text-align: right;">Đơn giá</th>
+                            <th style="text-align: center;">Giảm (%)</th>
+                            <th style="text-align: right;">Thành tiền</th>
+                            <th style="text-align: center;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="cartTableBody">
+                        <!-- Sản phẩm sẽ được thêm ở đây -->
+                    </tbody>
+                </table>
+                <div id="emptyCart" style="padding: 100px 0; text-align: center; color: var(--admin-muted);">
+                    <i class="fa-solid fa-cart-plus" style="font-size: 48px; margin-bottom: 15px; opacity: 0.2;"></i>
+                    <p>Chưa có sản phẩm nào. Hãy tìm kiếm để thêm vào giỏ.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thanh toán -->
+    <div style="flex: 1; min-width: 350px;">
+        <div class="admin-card">
+            <div class="admin-card-header">
+                <div class="admin-card-title">THÔNG TIN THANH TOÁN</div>
+            </div>
+            <div style="padding: 24px;">
+                <form id="posCheckoutForm" method="post" asp-action="Checkout">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="storeId" id="hiddenStoreId">
+                    <div id="hiddenCartItems"></div>
+
+                    <div class="form-group">
+                        <label class="form-label">Tên khách hàng</label>
+                        <input type="text" name="customerName" id="customerName" class="form-control" placeholder="Khách vãng lai">
+                    </div>
+
+                    <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                        <div>
+                            <label class="form-label">Số điện thoại</label>
+                            <input type="text" name="phone" id="customerPhone" class="form-control" placeholder="09xxx">
+                        </div>
+                        <div>
+                            <label class="form-label">Phương thức</label>
+                            <select name="paymentMethod" class="form-control">
+                                <option value="1">Tiền mặt</option>
+                                <option value="2">Chuyển khoản</option>
+                                <option value="3">Ví điện tử</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Ghi chú đơn hàng</label>
+                        <textarea name="note" class="form-control" placeholder="..." style="min-height: 60px;"></textarea>
+                    </div>
+
+                    <div style="background: rgba(255,255,255,0.03); padding: 20px; border-radius: 4px; border: 1px dashed var(--admin-border);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px;">
+                            <span style="color: var(--admin-muted);">Tạm tính:</span>
+                            <span id="subtotal">0₫</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 14px;">
+                            <span style="color: var(--admin-muted);">Giảm giá:</span>
+                            <span style="color: var(--admin-red);">-0₫</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--admin-border); padding-top: 15px;">
+                            <span style="font-weight: 700; font-size: 16px;">TỔNG CỘNG:</span>
+                            <span id="totalAmount" style="font-size: 24px; font-weight: 900; color: var(--admin-green);">0₫</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="checkoutBtn" class="btn-admin btn-primary" style="width: 100%; justify-content: center; height: 50px; font-size: 14px; margin-top: 24px;" disabled>
+                        XÁC NHẬN THANH TOÁN (F9)
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dropdown-menu-custom {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--admin-card);
+        border: 1px solid var(--admin-border);
+        border-radius: 4px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        z-index: 1000;
+        display: none;
+        max-height: 400px;
+        overflow-y: auto;
+        padding: 8px 0;
+        list-style: none;
+        margin-top: 5px;
+    }
+    .dropdown-item-custom {
+        padding: 12px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .dropdown-item-custom:hover {
+        background: rgba(139, 92, 246, 0.1);
+    }
+    .dropdown-item-custom:last-child { border-bottom: none; }
+    
+    .qty-btn {
+        width: 28px;
+        height: 28px;
+        background: var(--admin-border);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #fff;
+        border-radius: 4px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+    .qty-btn:hover { background: var(--admin-accent); }
+    
+    .text-accent { color: var(--admin-accent); }
+    .row { display: flex; flex-wrap: wrap; }
+</style>
+
+@section Scripts {
+    <script>
+        let cart = [];
+        const storeSelect = document.getElementById('storeSelect');
+        const skuSearch = document.getElementById('skuSearch');
+        const searchResult = document.getElementById('searchResult');
+        const cartTableBody = document.getElementById('cartTableBody');
+        const emptyCart = document.getElementById('emptyCart');
+        const subtotalEl = document.getElementById('subtotal');
+        const totalAmountEl = document.getElementById('totalAmount');
+        const totalItemCount = document.getElementById('totalItemCount');
+        const checkoutBtn = document.getElementById('checkoutBtn');
+
+        function fmtVND(n) { return new Intl.NumberFormat('vi-VN').format(n) + '₫'; }
+
+        skuSearch.addEventListener('input', async (e) => {
+            const q = e.target.value;
+            if (q.length < 2) { searchResult.style.display = 'none'; return; }
+
+            const response = await fetch(`/Admin/Pos/SearchSku?q=${encodeURIComponent(q)}&storeId=${storeSelect.value}`);
+            const data = await response.json();
+
+            if (data.length > 0) {
+                searchResult.innerHTML = data.map(item => `
+                    <li class="dropdown-item-custom" onclick="addToCart(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 700; color: #fff;">${item.skuCode}</div>
+                            <div style="font-size: 12px; color: var(--admin-muted);">${item.productName} (${item.size}/${item.color})</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="color: var(--admin-green); font-weight: 700;">${fmtVND(item.sellingPrice)}</div>
+                            <div style="font-size: 11px;" class="${item.stock > 0 ? 'text-accent' : 'badge-red'}">Kho: ${item.stock}</div>
+                        </div>
+                    </li>
+                `).join('');
+                searchResult.style.display = 'block';
+            } else {
+                searchResult.style.display = 'none';
+            }
+        });
+
+        function addToCart(item) {
+            if (item.stock <= 0) { alert('Sản phẩm đã hết hàng tại chi nhánh này.'); return; }
+
+            const existing = cart.find(i => i.id === item.id);
+            if (existing) {
+                if (existing.qty >= item.stock) { alert('Vượt quá tồn kho thực tế.'); return; }
+                existing.qty++;
+            } else {
+                cart.push({ ...item, qty: 1, discount: 0 });
+            }
+
+            skuSearch.value = '';
+            searchResult.style.display = 'none';
+            renderCart();
+        }
+
+        function updateQty(id, delta) {
+            const item = cart.find(i => i.id === id);
+            if (!item) return;
+
+            const newQty = item.qty + delta;
+            if (newQty < 1) { removeFromCart(id); return; }
+            if (newQty > item.stock) { alert('Vượt quá tồn kho thực tế.'); return; }
+
+            item.qty = newQty;
+            renderCart();
+        }
+
+        function updateDiscount(id, val) {
+            const item = cart.find(i => i.id === id);
+            if (!item) return;
+            item.discount = Math.min(100, Math.max(0, parseInt(val) || 0));
+            renderCart();
+        }
+
+        function removeFromCart(id) {
+            cart = cart.filter(i => i.id !== id);
+            renderCart();
+        }
+
+        function renderCart() {
+            if (cart.length === 0) {
+                cartTableBody.innerHTML = '';
+                emptyCart.style.display = 'block';
+                subtotalEl.textContent = '0₫';
+                totalAmountEl.textContent = '0₫';
+                totalItemCount.textContent = '0 Món';
+                checkoutBtn.disabled = true;
+                return;
+            }
+
+            emptyCart.style.display = 'none';
+            checkoutBtn.disabled = false;
+
+            let totalQty = 0;
+            let subtotal = 0;
+
+            cartTableBody.innerHTML = cart.map(item => {
+                const lineTotal = item.sellingPrice * item.qty * (1 - item.discount / 100);
+                totalQty += item.qty;
+                subtotal += lineTotal;
+
+                return `
+                    <tr>
+                        <td>
+                            <div style="font-weight: 700; color: var(--admin-accent);">${item.skuCode}</div>
+                            <div style="font-size: 11px; color: var(--admin-muted);">${item.productName}</div>
+                        </td>
+                        <td style="text-align: center;">
+                            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                <button type="button" class="qty-btn" onclick="updateQty(${item.id}, -1)">-</button>
+                                <span style="font-weight: 700; min-width: 25px;">${item.qty}</span>
+                                <button type="button" class="qty-btn" onclick="updateQty(${item.id}, 1)">+</button>
+                            </div>
+                        </td>
+                        <td style="text-align: right;">${fmtVND(item.sellingPrice)}</td>
+                        <td style="text-align: center;">
+                            <input type="number" class="form-control" style="width: 60px; text-align: center; margin: 0 auto; padding: 4px;" 
+                                value="${item.discount}" onchange="updateDiscount(${item.id}, this.value)">
+                        </td>
+                        <td style="text-align: right; font-weight: 700; color: var(--admin-green);">${fmtVND(lineTotal)}</td>
+                        <td style="text-align: center;">
+                            <button type="button" style="background:none; border:none; color: var(--admin-red); cursor:pointer;" onclick="removeFromCart(${item.id})">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            subtotalEl.textContent = fmtVND(subtotal);
+            totalAmountEl.textContent = fmtVND(subtotal);
+            totalItemCount.textContent = cart.length + ' Món';
+
+            document.getElementById('hiddenStoreId').value = storeSelect.value;
+            document.getElementById('hiddenCartItems').innerHTML = cart.map(item => `
+                <input type="hidden" name="skuIds" value="${item.id}">
+                <input type="hidden" name="quantities" value="${item.qty}">
+                <input type="hidden" name="discounts" value="${item.discount}">
+            `).join('');
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!skuSearch.contains(e.target) && !searchResult.contains(e.target)) {
+                searchResult.style.display = 'none';
+            }
+        });
+
+        // Phím tắt F9 để thanh toán nhanh
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F9' && !checkoutBtn.disabled) {
+                e.preventDefault();
+                document.getElementById('posCheckoutForm').submit();
+            }
+        });
+
+        storeSelect.addEventListener('change', () => {
+            if (cart.length > 0) {
+                if(confirm('Thay đổi chi nhánh sẽ làm mới giỏ hàng. Tiếp tục?')) {
+                    cart = [];
+                    renderCart();
+                }
+            }
+        });
+    </script>
+}

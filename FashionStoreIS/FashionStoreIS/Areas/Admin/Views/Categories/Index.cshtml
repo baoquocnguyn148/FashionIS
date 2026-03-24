@@ -1,7 +1,6 @@
 @model List<Category>
 @{
     ViewData["Title"] = "Quản lý Danh mục";
-    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
     
     // Helper function to render categories recursively
     void RenderCategory(Category cat, int level = 0)

@@ -52,14 +52,42 @@
 
             <!-- Right: Icons -->
             <div class="header-right">
-                <div class="d-none d-md-flex align-items-center gap-2">
-                    <input id="headerSearchInput" class="form-control form-control-sm" type="search" placeholder="Tìm sản phẩm..." />
-                    <button id="headerSearchBtn" type="button" class="header-icon-btn" aria-label="Tìm kiếm">
+                <div class="d-none d-md-flex align-items-center gap-2 search-wrapper">
+                    <input id="headerSearchInput" class="form-control form-control-sm search-input" type="search" placeholder="Tìm sản phẩm..." />
+                    <button id="headerSearchBtn" type="button" class="header-icon-btn search-toggle-btn" aria-label="Tìm kiếm">
                         <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
                         </svg>
                     </button>
                 </div>
+                
+                <style>
+                    .search-wrapper {
+                        position: relative;
+                        display: flex;
+                        align-items: center;
+                    }
+                    .search-input {
+                        width: 0;
+                        padding: 0;
+                        border: none;
+                        overflow: hidden;
+                        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                        opacity: 0;
+                        background: rgba(0,0,0,0.03);
+                        border-radius: 20px;
+                    }
+                    .search-input.active {
+                        width: 240px;
+                        padding: 6px 15px;
+                        border: 1px solid #ddd;
+                        opacity: 1;
+                        margin-right: 10px;
+                    }
+                    .search-toggle-btn {
+                        z-index: 2;
+                    }
+                </style>
                 <button type="button" class="header-cart-btn" id="openCart" aria-label="Giỏ hàng" onclick="showCart()">
                     <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                         <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/>
@@ -133,12 +161,34 @@
             <span class="drawer-title">MENU</span>
             <button class="close-drawer-btn" id="closeDrawerBtn">✕</button>
         </div>
+        
+        <!-- Mobile Search Bar -->
+        <div class="p-3 border-bottom d-md-none">
+            <div class="input-group">
+                <input type="search" id="mobileSearchInput" class="form-control form-control-sm border-end-0" placeholder="Tìm sản phẩm..." style="border-radius: 20px 0 0 20px; font-size: 14px;" />
+                <button class="btn border border-start-0" type="button" id="mobileSearchBtn" style="border-radius: 0 20px 20px 0; background: white;">
+                    <i class="fas fa-search text-muted"></i>
+                </button>
+            </div>
+        </div>
+        
         <ul class="drawer-menu">
             <li><a href="/" class="menu-link">TRANG CHỦ</a></li>
-            <li><a href="/Product/List" class="menu-link">SẢN PHẨM</a></li>
-            <li><a href="/Product/List?cat=tops" class="menu-link">ÁO</a></li>
-            <li><a href="/Product/List?cat=pants" class="menu-link">QUẦN</a></li>
-            <li><a href="/Product/List?cat=accessories" class="menu-link">PHỤ KIỆN</a></li>
+            <li class="has-submenu">
+                <div class="menu-link d-flex justify-content-between align-items-center" onclick="toggleMobileSubmenu(this)" style="cursor: pointer;">
+                    <span>SẢN PHẨM</span>
+                    <i class="fas fa-chevron-down submenu-icon" style="transition: transform 0.3s; font-size: 14px;"></i>
+                </div>
+                <ul class="drawer-submenu" style="display: none; padding-left: 0; list-style: none; margin: 0; background-color: #fcfcfc;">
+                    <li><a href="/Product/List" class="menu-link" style="font-size: 13px; padding: 12px 30px; border-bottom: 1px solid #f0f0f0;">TẤT CẢ SẢN PHẨM</a></li>
+                    <li><a href="/Product/List?cat=tops" class="menu-link" style="font-size: 13px; padding: 12px 30px; border-bottom: 1px solid #f0f0f0;">ÁO</a></li>
+                    <li><a href="/Product/List?cat=pants" class="menu-link" style="font-size: 13px; padding: 12px 30px; border-bottom: 1px solid #f0f0f0;">QUẦN</a></li>
+                    <li><a href="/Product/List?cat=outerwear" class="menu-link" style="font-size: 13px; padding: 12px 30px; border-bottom: 1px solid #f0f0f0;">ÁO KHOÁC</a></li>
+                    <li><a href="/Product/List?cat=footwear" class="menu-link" style="font-size: 13px; padding: 12px 30px; border-bottom: 1px solid #f0f0f0;">GIÀY & DÉP</a></li>
+                    <li><a href="/Product/List?cat=dresses" class="menu-link" style="font-size: 13px; padding: 12px 30px; border-bottom: 1px solid #f0f0f0;">VÁY & ĐẦM</a></li>
+                    <li><a href="/Product/List?cat=accessories" class="menu-link" style="font-size: 13px; padding: 12px 30px;">PHỤ KIỆN</a></li>
+                </ul>
+            </li>
             @if (User.Identity?.IsAuthenticated == true)
             {
                 <li><a href="/Account" class="menu-link">TÀI KHOẢN</a></li>
@@ -147,18 +197,27 @@
                     <li><a href="/Admin/Dashboard" class="menu-link" style="color:var(--sv-gray-text)">QUẢN TRỊ</a></li>
                 }
                 <li>
-                    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" id="logoutForm">
+                    <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post" id="logoutFormDrawer">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="menu-link" style="background:none; border:none; width:100%; text-align:left; cursor:pointer;">ĐĂNG XUẤT</button>
                     </form>
                 </li>
             }
-            else
-            {
-                <li><a href="/Identity/Account/Login" class="menu-link">ĐĂNG NHẬP</a></li>
-                <li><a href="/Identity/Account/Register" class="menu-link">ĐĂNG KÝ</a></li>
-            }
         </ul>
+        <script>
+            function toggleMobileSubmenu(element) {
+                var submenu = element.nextElementSibling;
+                var icon = element.querySelector('.submenu-icon');
+                if (submenu.style.display === "none" || submenu.style.display === "") {
+                    // jQuery slideDown equivalent for smooth transition if needed, but display block is fine for now
+                    submenu.style.display = "block";
+                    icon.style.transform = "rotate(180deg)";
+                } else {
+                    submenu.style.display = "none";
+                    icon.style.transform = "rotate(0deg)";
+                }
+            }
+        </script>
     </div>
 
     <!-- ── Cart Drawer ───────────────────────────── -->
@@ -429,6 +488,9 @@
                         <li><a href="/Product/List">Tất cả sản phẩm</a></li>
                         <li><a href="/Product/List?cat=tops">Áo</a></li>
                         <li><a href="/Product/List?cat=pants">Quần</a></li>
+                        <li><a href="/Product/List?cat=outerwear">Áo khoác</a></li>
+                        <li><a href="/Product/List?cat=footwear">Giày & Dép</a></li>
+                        <li><a href="/Product/List?cat=dresses">Váy & Đầm</a></li>
                         <li><a href="/Product/List?cat=accessories">Phụ kiện</a></li>
                     </ul>
                 </div>
@@ -464,33 +526,78 @@
     <!-- CART SCRIPT - NO blur -->
     <script>
         $(document).ready(function() {
+            // Search toggle
+            $('#headerSearchBtn').on('click', function(e) {
+                const $input = $('#headerSearchInput');
+                if ($input.val().trim() !== "" && $input.hasClass('active')) {
+                    // If there's text and it's active, perform search
+                    window.location.href = '/Product/List?q=' + encodeURIComponent($input.val().trim());
+                } else {
+                    // Otherwise just toggle
+                    $input.toggleClass('active');
+                    if ($input.hasClass('active')) {
+                        $input.focus();
+                    }
+                }
+            });
+
+            // Close search when clicking outside
+            $(document).on('click', function(e) {
+                if (!$(e.target).closest('.search-wrapper').length) {
+                    $('#headerSearchInput').removeClass('active');
+                }
+            });
+
+            // Enter key to search
+            $('#headerSearchInput').on('keypress', function(e) {
+                if (e.which === 13) {
+                    const val = $(this).val().trim();
+                    if (val !== "") {
+                        window.location.href = '/Product/List?q=' + encodeURIComponent(val);
+                    }
+                }
+            });
+
+            // Mobile Search
+            function executeMobileSearch() {
+                const val = $('#mobileSearchInput').val().trim();
+                if (val !== "") {
+                    window.location.href = '/Product/List?q=' + encodeURIComponent(val);
+                }
+            }
+            $('#mobileSearchBtn').on('click', executeMobileSearch);
+            $('#mobileSearchInput').on('keypress', function(e) {
+                if (e.which === 13) executeMobileSearch();
+            });
+
             const $drawer = $('#cartDrawer');
             const $content = $('#cartContent');
             
-            // Open cart
-            $('#openCart').on('click', function() {
-                $drawer.addClass('open');
-                $('body').css('overflow', 'hidden');
-                loadCartContent();
-            });
-            
-            // Load cart content function
-            function loadCartContent() {
-                $.get('/Cart/GetCartDrawer', function(data) {
-                    $content.html(data);
-                    updateCartCount();
-                }).fail(function() {
-                    $content.html('<div class="cart-empty"><div class="cart-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4Z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></div><div class="cart-empty-text">Giỏ hàng trống</div><a href="/Product/List" class="continue-shopping">Tiếp tục mua sắm</a></div>');
-                });
-            }
-            
-            // Update cart count badge
-            function updateCartCount() {
+            // Define global functions for other pages to call
+            window.updateCartCount = function() {
                 $.get('/Cart/GetCartCount', function(data) {
                     const count = data.count || 0;
                     $('#cartBadge').text(count).toggle(count > 0);
                 });
-            }
+            };
+            
+            window.loadCartContent = function() {
+                $.get('/Cart/GetCartDrawer', function(data) {
+                    $content.html(data);
+                    window.updateCartCount();
+                }).fail(function() {
+                    $content.html('<div class="cart-empty"><div class="cart-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4Z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg></div><div class="cart-empty-text">Giỏ hàng trống</div><a href="/Product/List" class="continue-shopping">Tiếp tục mua sắm</a></div>');
+                });
+            };
+
+            window.showCart = function() {
+                $drawer.addClass('open');
+                $('body').css('overflow', 'hidden');
+                window.loadCartContent();
+            };
+
+            // Event listeners
+            $('#openCart').on('click', window.showCart);
             
             // Update quantity (+/-)
             $(document).on('click', '.qty-btn', function() {

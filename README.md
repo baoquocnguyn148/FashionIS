@@ -1,162 +1,86 @@
-# StyleVibe Fashion MIS
+# 🌟 BN STORE - FashionStoreIS E-Commerce System
 
-Hệ thống thông tin quản lý tích hợp toàn diện cho chuỗi bán lẻ thời trang StyleVibe.
+BN STORE (FashionStoreIS) là một hệ thống thương mại điện tử chuyên biệt được xây dựng trên nền tảng **ASP.NET Core MVC** (.NET 8.0). Dự án vận dụng kiến trúc **Clean Code & Monolith Optimization**, đi kèm giao diện phong cách Minimalism tối giản, tập trung tuyệt đối vào trải nghiệm thị giác và trải nghiệm mua sắm của Khách hàng.
 
-## 🏗️ Kiến trúc
-
-Dự án được xây dựng theo **Clean Architecture** với 4 lớp:
-
-- **StyleVibe.Domain**: Entities, Enums, Interfaces (Core domain)
-- **StyleVibe.Application**: Services, DTOs, Business Logic
-- **StyleVibe.Infrastructure**: DbContext, Repositories, External Services
-- **StyleVibe.Web**: Controllers, Views, Presentation Layer
-
-## 📦 Công nghệ sử dụng
-
-- **.NET 10.0** (ASP.NET Core MVC)
-- **Entity Framework Core 10.0.4**
-- **Oracle DB** (đang dùng trong source hiện tại)
-- **Bootstrap 5.3**
-- **Python FastAPI** (DSS/ML Service - đang phát triển)
-
-## ✅ Đã hoàn thành
-
-### 1. Kiến trúc & Database
-- ✅ Clean Architecture với 4 projects
-- ✅ Domain Entities đầy đủ (Stores, Products, Orders, Inventory, Customers, Employees, Loyalty, PurchaseOrders)
-- ✅ DbContext với EF Core configuration
-- ✅ Enums (OrderStatus, PaymentMethod, CustomerTier, StockAdjustmentReason)
-
-### 2. UI Theme
-- ✅ Custom CSS theme theo phong cách fashion e-commerce (đen/trắng/xám với accent đỏ)
-- ✅ Responsive layout với Bootstrap 5
-- ✅ Navigation menu với dropdown cho Admin
-
-### 3. User Storefront
-- ✅ **Products Controller & Views**: Browse products, filter by category, product details
-- ✅ **Cart Controller**: Shopping cart với sessionStorage
-- ✅ **Product Service**: Get products, categories, SKUs
-
-### 4. POS Module
-- ✅ **POS Controller**: Màn hình bán hàng tại quầy
-- ✅ **POS Service**: Tạo đơn hàng, cập nhật tồn kho, tích điểm loyalty
-- ✅ Flow: Chọn cửa hàng → Thêm SKU vào giỏ → Thanh toán → Tự động trừ tồn kho
-
-### 5. Admin Dashboard
-- ✅ **Admin Dashboard**: KPI cards (Tổng sản phẩm, đơn hàng, khách hàng, doanh thu)
-- ✅ Doanh thu tháng này vs tháng trước
-- ✅ Top 10 sản phẩm bán chạy
-- ✅ Quick actions links
-
-## 🚧 Đang phát triển / Cần làm tiếp
-
-### 1. Admin CRUD Modules
-- [ ] **AdminProductsController**: CRUD sản phẩm, SKUs
-- [ ] **AdminOrdersController**: Xem danh sách đơn hàng, chi tiết, filter
-- [ ] **AdminInventoryController**: Quản lý tồn kho, stock adjustments
-- [ ] **AdminCustomersController**: Quản lý khách hàng, loyalty points
-- [ ] **AdminEmployeesController**: Quản lý nhân viên
-
-### 2. MIS Reports
-- [ ] Tích hợp SQL Views (`vw_DailyRevenue`, `vw_ProductSales`, `vw_MonthlySummary`)
-- [ ] Export Excel/PDF (ClosedXML, QuestPDF)
-- [ ] Charts với ApexCharts.js
-
-### 3. DSS / ML Service (Python FastAPI)
-- [ ] `/forecast/sales` - Dự báo doanh thu (Prophet)
-- [ ] `/forecast/demand` - Dự báo nhu cầu per SKU (XGBoost)
-- [ ] `/analysis/rfm` - Phân tích RFM khách hàng (scikit-learn)
-- [ ] `/dss/restock` - Gợi ý đặt hàng (ROP formula)
-- [ ] `/simulation/price-change` - What-if price simulation
-- [ ] `/dss/auto-decisions` - Top 5 gợi ý hành động tự động
-
-### 4. Database Setup
-- [ ] EF Core Migrations
-- [ ] Seed data (Stores, Categories, Products, SKUs, Inventory)
-- [ ] SQL Views creation script
-
-## 🚀 Hướng dẫn chạy
-
-### Prerequisites
-- .NET SDK 10.0+
-- SQL Server (LocalDB hoặc SQL Server Express)
-- Visual Studio 2022 hoặc VS Code
-
-### Setup Database (Oracle)
-
-1. Thiết lập connection string (khuyến nghị dùng biến môi trường để tránh hardcode mật khẩu):
-
-- **Windows PowerShell**:
-
-```powershell
-$env:ORACLE_CONNECTION_STRING="User Id=...;Password=...;Data Source=localhost:1521/XE"
-```
-
-2. Hoặc set trong `appsettings.Development.json` / `appsettings.json` (không nên commit mật khẩu).
-
-Ví dụ (không chứa mật khẩu thật):
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "User Id=...;Password=...;Data Source=localhost:1521/XE"
-  }
-}
-```
-
-3. Tạo migration và update database:
-```powershell
-cd StyleVibe.Infrastructure
-dotnet ef migrations add InitialCreate --startup-project ../StyleVibe.Web
-dotnet ef database update --startup-project ../StyleVibe.Web
-```
-
-4. Seed dữ liệu demo:
-```powershell
-# Oracle seed script: StyleVibe.Web/Data/SeedData.oracle.sql
-```
-
-### Chạy ứng dụng
-
-```powershell
-cd StyleVibe.Web
-dotnet run
-```
-
-Truy cập: `https://localhost:5001` hoặc `http://localhost:5000`
-
-## 📁 Cấu trúc thư mục
-
-```
-StyleVibe/
-├── StyleVibe.Domain/          # Core domain entities & enums
-│   ├── Entities/
-│   ├── Enums/
-│   └── Common/
-├── StyleVibe.Application/      # Business logic & services
-│   ├── Interfaces/
-│   └── Services/
-├── StyleVibe.Infrastructure/   # Data access & external services
-│   └── Data/
-└── StyleVibe.Web/              # Presentation layer
-    ├── Controllers/
-    ├── Views/
-    └── wwwroot/
-```
-
-## 📝 Notes
-
-- **POS Module**: Hiện tại dùng SKU Id để demo. Có thể cải tiến với autocomplete/search sản phẩm.
-- **Cart**: Dùng sessionStorage cho demo. Production nên dùng database hoặc Redis.
-- **DSS Service**: Sẽ chạy độc lập trên port 8000, giao tiếp với .NET qua HTTP REST API.
-
-## 👥 Tác giả
-
-- **Môn học**: ITE1129E – Hệ thống thông tin quản lý
-- **Giảng viên**: Trần Thành Công
-- **Lớp**: B01E – HK2B 2025-2026
+Hệ thống được thiết kế để giải quyết trọn vẹn vòng đời mua sắm: Từ khi duyệt danh mục (Mega Catalog), xem chi tiết sản phẩm, quản lý Giỏ hàng, Đặt hàng chống xuất trùng (Concurrency Control), đến tự động hóa quản trị Tồn kho và Voucher.
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: 2026
+## 📸 Giao diện màn hình chính (Screenshots)
+
+### 1. Hero Banner Trang Chủ (Minimalist Homepage)
+Sử dụng AI-Generated Graphics cùng Navigation Bar trong suốt mang lại cảm giác thời trang cao cấp. 
+<br>
+![Homepage Hero](file:///C:/Users/usr/.gemini/antigravity/brain/f7ad382d-e3ef-4f16-8b5c-ee40b9706cd9/homepage_hero_banner_1774329206287.png)
+
+### 2. Danh Mục Sản Phẩm (Mega Catalog Grid)
+Product Grid 4-cột, khoảng cách viền tiêu chuẩn. Thanh Sort/Filter dạng Sticky-top dính trơn tru. Bộ lọc hoạt động bằng Ajax siêu tốc độ, không phải reload toàn trang.
+<br>
+![Product List Grid](file:///C:/Users/usr/.gemini/antigravity/brain/f7ad382d-e3ef-4f16-8b5c-ee40b9706cd9/product_list_grid_1774329367185.png)
+
+### 3. Trang Chi Tiết Sản Phẩm (Product Detail Page)
+Hỗ trợ đầy đủ biến thể Màu sắc & Kích cỡ (Color/Size). Tích hợp thuật toán chặn đúp chuột (JS Loading Spinner) để ngăn User vô tình tạo spam trong giỏ hàng.
+<br>
+![Product Detail](file:///C:/Users/usr/.gemini/antigravity/brain/f7ad382d-e3ef-4f16-8b5c-ee40b9706cd9/product_detail_page_1774329437053.png)
+
+### 4. Thành viên & Bảo mật (User Security Identity)
+Xây dựng trên nền tảng ASP.NET Identity tương thích 100% với Oracle 11g. Tích hợp lớp "Trạm kiểm soát" bảo mật (Magic Bytes Validation) kiểm tra mã Hex để chặn mã độc ngụy trang ảnh trong quá trình đổi Avatar.
+<br>
+![Login Page Redirect](file:///C:/Users/usr/.gemini/antigravity/brain/f7ad382d-e3ef-4f16-8b5c-ee40b9706cd9/login_page_redirect_1774329485101.png)
+
+---
+
+## 🚀 Các Tính Năng Kỹ Thuật Nổi Bật (Key Features)
+
+### 1. Giao diện Cửa Hàng Hiện Đại (Storefront UI/UX)
+- **Thiết kế Tối Giản (Minimalism)**: Product Grid mượt mà 4-cột, kết hợp ảnh Placeholder độ phân giải cao do AI Generate.
+- **Mobile-First Navigation**: Hamburger Drawer Menu với Submenu Drop-down (Accordion) tích hợp Search ẩn tinh tế.
+- **Bộ Lọc Động (Dynamic Filtering)**: Filter đa chiều (Category, Giá, Keyword) + Phân trang Ajax xịn xò.
+- **Bảng Điều Khiển Khách Hàng (User Profile)**: Redesign lại UI ngang chuyên nghiệp giống Shopee/Lazada với tính năng **Người dùng tự thao tác Hủy đơn**.
+
+### 2. Xử Lý Luồng Nghiệp Vụ Chặt Chẽ (Business Logic)
+- **Tránh Xung Đột Thanh Toán (Optimistic Concurrency)**: Sử dụng kỹ thuật cấp phát Byte `RowVersion` cho bảng `ProductSkus` để chốt chặn Race Condition (2 khách mua cùng 1 áo cuối cùng vào cùng 1 mini-sec).
+- **Phục hồi Tài Nguyên (Resource Restoration)**: Tích hợp thuật toán nhả Tồn kho (`Stock`) và Lượt áp Voucher tự động ngay khi khách hàng chủ động bấm lệnh Hủy Đơn trên Profile (đối với hàng Pending).
+- **Phân Khối Ảnh An Toàn (Magic Bytes Validation)**: Cơ chế quét trực tiếp cấu trúc Hex Headers (khối 12 byte đầu) của Tệp upload để phân biệt chính xác ảnh thật (JPG/PNG/WEBP) và tệp tin mã độc ngụy trang.
+
+### 3. Ngõ ra Trung Tâm Dữ Liệu (Data Warehouse Endpoint)
+- Xây dựng DB riêng biệt cho Hệ phân tích (`analytics.db` - SQLite) bằng kiến trúc **Star Schema** (Fact & Dimensions). Đoạn mã ngầm (Worker/HostedService/Cronjob) sẽ tự động đồng bộ (ETL Data) từ Oracle qua SQLite phục vụ PowerBI.
+
+---
+
+## 🛠 Nền Tảng Công Nghệ (Tech Stack)
+- **Framework:** .NET 8.0, ASP.NET Core MVC
+- **Database Chính (OLTP):** Oracle 11g Express Edition / Enterprise (Oracle.EntityFrameworkCore)
+- **Database Phân tích (OLAP):** SQLite (Entity Framework Core)
+- **Front-end:** HTML5, CSS3, JavaScript (jQuery AJAX), Bootstrap 5, FontAwesome 6, Google Fonts.
+- **ORMs:** Entity Framework Core (Code-First Migrations).
+
+---
+
+## ⚙ Hướng dẫn Cài đặt & Khởi chạy (Setup Guide)
+
+1. **Yêu Cầu Môi Trường:**
+   - .NET 8 SDK
+   - Oracle Database 11g (XE hoặc EE) chạy cổng 1521. Schema mặc định (hoặc điều chỉnh tại `appsettings.json`).
+
+2. **Cấu hình Connection Strings (appsettings.json):**
+   ```json
+   "ConnectionStrings": {
+     "DefaultConnection": "Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=XE)));User Id=C##USER;Password=PASSWORD;",
+     "AnalyticsConnection": "Data Source=analytics.db"
+   }
+   ```
+
+3. **Tạo Database & Seeding Data:**
+   - Mở Terminal (PowerShell/CMD) tại thư mục chứa file `.csproj`
+   - Khởi tạo Database lệnh CLI:
+     ```bash
+     dotnet ef database update
+     ```
+   - *Tính Năng Seeder*: Lớp `DbInitializer` sẽ tự động tiêm hàng chục sản phẩm mẫu từ DB Dummy, Tái tạo Role/User (`admin@bnstore.vn`) trong lần đầu Load hệ thống.
+
+4. **Kích Hoạt Project:**
+   ```bash
+   dotnet run
+   ```
+   *Truy vấn localhost thông qua Google Chrome để trải nghiệm toàn vẹn luồng Web-Shopping đẳng cấp này.* 🚀
