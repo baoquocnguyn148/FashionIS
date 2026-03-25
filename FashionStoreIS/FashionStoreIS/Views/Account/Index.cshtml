@@ -48,6 +48,14 @@
                    class="list-group-item list-group-item-action @(activeTab == "orders" ? "active" : "")">
                     <i class="fa-solid fa-box me-3 menu-icon"></i> Đơn hàng của tôi
                 </a>
+                <a href="@Url.Action("Index", "Account", new { tab = "profile" })" 
+                   class="list-group-item list-group-item-action @(activeTab == "profile" ? "active" : "")">
+                    <i class="fa-regular fa-id-card me-3 menu-icon"></i> Hồ sơ của tôi
+                </a>
+                <a href="@Url.Action("Index", "Account", new { tab = "security" })" 
+                   class="list-group-item list-group-item-action @(activeTab == "security" ? "active" : "")">
+                    <i class="fa-solid fa-shield-halved me-3 menu-icon"></i> Bảo mật tài khoản
+                </a>
                 <a href="@Url.Action("Index", "Account", new { tab = "address" })" 
                    class="list-group-item list-group-item-action @(activeTab == "address" ? "active" : "")">
                     <i class="fa-solid fa-location-dot me-3 menu-icon"></i> Địa chỉ giao hàng
@@ -76,15 +84,7 @@
                 </form>
             </div>
             
-            <!-- Hidden old functionality for completeness behind the scenes if needed -->
-            @if(activeTab == "profile" || activeTab == "membership" || activeTab == "security")
-            {
-                 <div class="list-group list-group-flush sidebar-menu mt-4 d-none">
-                     <a href="#" class="list-group-item list-group-item-action active">
-                        <i class="fa-solid fa-gear me-3 menu-icon"></i> Legacy System Route
-                     </a>
-                 </div>
-            }
+            <!-- Cleaned up legacy layout container -->
         </div>
 
         <!-- Main Content Area -->
@@ -208,6 +208,114 @@
                         </table>
                     </div>
                 }
+            }
+            else if (activeTab == "profile")
+            {
+                <div class="mb-4">
+                    <h3 class="fw-bold text-dark mb-2" style="color: #0c1e36;">Hồ sơ của tôi</h3>
+                    <p class="text-muted small" style="font-size: 14px;">Quản lý thông tin cá nhân và ảnh đại diện</p>
+                </div>
+                
+                <div class="row g-5">
+                    <div class="col-md-7">
+                        <form asp-action="UpdateProfile" asp-controller="Account" method="post">
+                            @Html.AntiForgeryToken()
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Họ và tên</label>
+                                <input type="text" name="fullName" class="form-control bg-light border-0 py-2" value="@user?.FullName" required>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Email</label>
+                                <input type="email" class="form-control bg-light border-0 py-2 text-muted" value="@user?.Email" disabled readonly>
+                                <div class="form-text small">Email không thể thay đổi sau khi đăng ký.</div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Số điện thoại</label>
+                                <input type="tel" name="phoneNumber" class="form-control bg-light border-0 py-2" value="@user?.PhoneNumber">
+                            </div>
+                            <div class="row mb-4">
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Ngày sinh</label>
+                                    <input type="date" name="dob" class="form-control bg-light border-0 py-2" value="@(user?.DateOfBirth?.ToString("yyyy-MM-dd"))">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Giới tính</label>
+                                    <select name="gender" class="form-select bg-light border-0 py-2">
+                                        <option value="" selected="@(string.IsNullOrEmpty(user?.Gender))">Chưa cập nhật</option>
+                                        <option value="Nam" selected="@(user?.Gender == "Nam")">Nam</option>
+                                        <option value="Nữ" selected="@(user?.Gender == "Nữ")">Nữ</option>
+                                        <option value="Khác" selected="@(user?.Gender == "Khác")">Khác</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-dark px-4 py-2 fw-medium rounded-pill me-2" style="background-color: #0f3c83;">Lưu thay đổi</button>
+                        </form>
+                    </div>
+                    
+                    <div class="col-md-5">
+                        <div class="card border-0 bg-light rounded-4 text-center p-4">
+                            <form asp-action="UploadAvatar" asp-controller="Account" method="post" enctype="multipart/form-data">
+                                @Html.AntiForgeryToken()
+                                <label for="avatarUpload" class="cursor-pointer mb-3 position-relative d-inline-block">
+                                    <div class="rounded-circle overflow-hidden border border-3 border-white shadow-sm" style="width: 120px; height: 120px; background: #fff;">
+                                        @if (!string.IsNullOrEmpty(user?.AvatarUrl))
+                                        {
+                                            <img src="@user.AvatarUrl" class="w-100 h-100 object-fit-cover" alt="Avatar">
+                                        }
+                                        else
+                                        {
+                                            <img src="https://ui-avatars.com/api/?name=@(user?.FullName ?? user?.UserName)&background=random&size=120" class="w-100 h-100 object-fit-cover" alt="Avatar">
+                                        }
+                                    </div>
+                                    <div class="position-absolute bottom-0 end-0 bg-dark text-white rounded-circle d-flex align-items-center justify-content-center border border-2 border-white" style="width: 32px; height: 32px; right: -5px; bottom: -5px;">
+                                        <i class="fa-solid fa-camera small"></i>
+                                    </div>
+                                </label>
+                                <input type="file" name="avatar" id="avatarUpload" class="d-none" accept="image/jpeg, image/png, image/webp" onchange="this.form.submit()">
+                                <p class="text-muted small px-3 mb-0">Dung lượng file tới đa 2MB.<br>Định dạng: .JPEG, .PNG, .WEBP</p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (activeTab == "security")
+            {
+                <div class="mb-5">
+                    <h3 class="fw-bold text-dark mb-2" style="color: #0c1e36;">Bảo mật tài khoản</h3>
+                    <p class="text-muted small" style="font-size: 14px;">Quản lý mật khẩu và cài đặt an toàn</p>
+                </div>
+                
+                <div class="card border-0 border rounded-4 pt-1 shadow-sm mx-auto" style="border-color: #eaeaea !important; max-width: 500px;">
+                    <div class="card-body p-4 p-md-5">
+                        <form asp-action="ChangePassword" asp-controller="Account" method="post">
+                            @Html.AntiForgeryToken()
+                            
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Mật khẩu hiện tại</label>
+                                <div class="input-group">
+                                    <input type="password" name="currentPassword" class="form-control bg-light border-0 py-2" required>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Mật khẩu mới</label>
+                                <div class="input-group">
+                                    <input type="password" name="newPassword" class="form-control bg-light border-0 py-2" required minlength="8">
+                                </div>
+                                <div class="form-text small mt-2">Mật khẩu phải dài ít nhất 8 ký tự, bao gồm số và chữ cái.</div>
+                            </div>
+                            
+                            <div class="mb-5">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Xác nhận mật khẩu mới</label>
+                                <div class="input-group">
+                                    <input type="password" name="confirmPassword" class="form-control bg-light border-0 py-2" required minlength="8">
+                                </div>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-dark w-100 py-3 fw-bold rounded-pill text-uppercase" style="background-color: #0f3c83; letter-spacing: 0.5px;">Đổi mật khẩu</button>
+                        </form>
+                    </div>
+                </div>
             }
             else
             {
