@@ -64,6 +64,7 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddScoped<IUserStore<ApplicationUser>, OracleCompatibleUserStore>();
 builder.Services.AddScoped<IRoleStore<IdentityRole>, OracleCompatibleRoleStore>();
+builder.Services.AddScoped<IVnPayService, VnPayService>();
 builder.Services.AddControllersWithViews();
 
 // Session for Admin auth

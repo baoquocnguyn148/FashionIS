@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
+using FashionStoreIS.Services;
 
 namespace FashionStoreIS.Controllers
 {
@@ -12,6 +13,7 @@ namespace FashionStoreIS.Controllers
     {
         private readonly ApplicationDbContext _db;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IVnPayService _vnPayService;
         private const string CART_COOKIE_NAME = "BNStore_Cart";
         private static string GenerateOrderCode()
         {
@@ -21,10 +23,11 @@ namespace FashionStoreIS.Controllers
             return $"BN{ts}{rnd}";
         }
 
-        public CheckoutController(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
+        public CheckoutController(ApplicationDbContext db, UserManager<ApplicationUser> userManager, IVnPayService vnPayService)
         {
             _db = db;
             _userManager = userManager;
+            _vnPayService = vnPayService;
         }
 
         [HttpGet]
@@ -63,7 +66,7 @@ namespace FashionStoreIS.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ProcessOrder(
             string customerName, string address, string phone, 
-            string? voucherCode, string? note)
+            string? voucherCode, string? note, string paymentMethod = "COD")
         {
             // BƯỚC 1: Validate input
             if (string.IsNullOrWhiteSpace(customerName) || 
@@ -105,7 +108,7 @@ namespace FashionStoreIS.Controllers
                     Address        = address.Trim(),
                     Note           = string.IsNullOrWhiteSpace(note) ? null : note.Trim(),
                     Status         = OrderStatus.Pending,
-                    PaymentMethod  = PaymentMethod.Cash,
+                    PaymentMethod  = paymentMethod == "VNPAY" ? PaymentMethod.EWallet : PaymentMethod.Cash,
                     PaymentStatus  = PaymentStatus.Unpaid,
                     SubTotal       = 0,
                     DiscountAmount = 0,
@@ -238,7 +241,22 @@ namespace FashionStoreIS.Controllers
                 await _db.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // Xóa cookie giỏ hàng
+                if (paymentMethod == "VNPAY")
+                {
+                    var vnPayModel = new PaymentInformationModel
+                    {
+                        OrderType = "other",
+                        Amount = (double)order.TotalAmount,
+                        OrderDescription = $"Thanh toan don hang {order.OrderCode}",
+                        Name = customerName,
+                        OrderId = order.Id.ToString(),
+                        ReturnUrl = Url.Action("PaymentCallback", "Checkout", null, Request.Scheme)!
+                    };
+                    var paymentUrl = _vnPayService.CreatePaymentUrl(vnPayModel, HttpContext);
+                    return Redirect(paymentUrl);
+                }
+
+                // Xóa cookie giỏ hàng nếu COD
                 Response.Cookies.Delete(CART_COOKIE_NAME);
 
                 return View("OrderSuccess", order);
@@ -253,6 +271,66 @@ namespace FashionStoreIS.Controllers
 
                 Console.WriteLine($"[CHECKOUT_ERROR] {errorMsg}");
                 TempData["Error"] = "Lỗi hệ thống: " + errorMsg;
+                return RedirectToAction("Index");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PaymentCallback()
+        {
+            var response = _vnPayService.PaymentExecute(Request.Query);
+            if (string.IsNullOrEmpty(response.OrderId))
+            {
+                TempData["Error"] = "Giao dịch không hợp lệ.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            var orderId = int.Parse(response.OrderId);
+            var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
+            
+            if (order == null)
+            {
+                TempData["Error"] = "Không tìm thấy đơn hàng.";
+                return RedirectToAction("Index", "Home");
+            }
+
+            if (response.Success)
+            {
+                order.PaymentStatus = PaymentStatus.Paid;
+                await _db.SaveChangesAsync();
+                
+                Response.Cookies.Delete(CART_COOKIE_NAME);
+                return View("OrderSuccess", order);
+            }
+            else
+            {
+                // Payment Failed, so we must cancel the order and restore stock & voucher if needed
+                order.Status = OrderStatus.Cancelled;
+                order.Note += " [Giao dịch thanh toán VNPAY thất bại hoặc bị hủy]";
+
+                var orderDetails = await _db.OrderDetails.Where(od => od.OrderId == order.Id).ToListAsync();
+                foreach (var od in orderDetails)
+                {
+                    if (od.ProductSkuId.HasValue)
+                    {
+                        var sku = await _db.ProductSkus.FindAsync(od.ProductSkuId);
+                        if (sku != null) sku.Stock += od.Quantity;
+                    }
+                    else
+                    {
+                        var prod = await _db.Products.FindAsync(od.ProductId);
+                        if (prod != null) prod.Stock += od.Quantity;
+                    }
+                }
+
+                if (order.VoucherId.HasValue)
+                {
+                    var voucher = await _db.Vouchers.FindAsync(order.VoucherId);
+                    if (voucher != null) voucher.UsedCount = Math.Max(0, voucher.UsedCount - 1);
+                }
+
+                await _db.SaveChangesAsync();
+                TempData["Error"] = "Giao dịch VNPAY đã bị hủy hoặc gặp sự cố. Vui lòng thanh toán lại!";
                 return RedirectToAction("Index");
             }
         }

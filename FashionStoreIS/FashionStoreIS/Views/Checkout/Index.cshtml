@@ -71,12 +71,16 @@
                                 </label>
                             </div>
                             
-                            <div class="payment-method-item disabled opacity-50 mt-2">
-                                <label class="d-flex align-items-center w-100 cursor-not-allowed">
-                                    <input type="radio" name="paymentMethod" value="BANK" disabled class="d-none">
+                            <div class="payment-method-item mt-2">
+                                <label class="d-flex align-items-center w-100 cursor-pointer">
+                                    <input type="radio" name="paymentMethod" value="VNPAY" class="d-none">
                                     <div class="custom-radio me-3"></div>
-                                    <div class="method-info">
-                                        <div class="method-name">Chuyển khoản ngân hàng (Sắp ra mắt)</div>
+                                    <div class="method-info d-flex align-items-center gap-3">
+                                        <div>
+                                            <div class="method-name">Thanh toán trực tuyến VNPAY</div>
+                                            <div class="method-desc text-muted">Quét thẻ ATM nội địa, Visa/Master, hoặc ví VNPAY QR.</div>
+                                        </div>
+                                        <img src="https://vnpay.vn/wp-content/uploads/2020/07/Logo-VNPAYQR-update.png" alt="VNPAY" height="24">
                                     </div>
                                 </label>
                             </div>
@@ -168,6 +172,12 @@
         $('#checkoutForm').on('submit', function() {
             const $btn = $('.btn-checkout-submit');
             $btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span> ĐANG XỬ LÝ...');
+        });
+
+        // Toggle payment method active border
+        $('input[name="paymentMethod"]').change(function() {
+            $('.payment-method-item').removeClass('active');
+            $(this).closest('.payment-method-item').addClass('active');
         });
     });
 </script>
