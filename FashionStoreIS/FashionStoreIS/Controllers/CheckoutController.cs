@@ -311,15 +311,15 @@ namespace FashionStoreIS.Controllers
                 var orderDetails = await _db.OrderDetails.Where(od => od.OrderId == order.Id).ToListAsync();
                 foreach (var od in orderDetails)
                 {
+                    if (od.ProductId.HasValue)
+                    {
+                        var prod = await _db.Products.FindAsync(od.ProductId);
+                        if (prod != null) prod.Stock += od.Quantity;
+                    }
                     if (od.ProductSkuId.HasValue)
                     {
                         var sku = await _db.ProductSkus.FindAsync(od.ProductSkuId);
                         if (sku != null) sku.Stock += od.Quantity;
-                    }
-                    else
-                    {
-                        var prod = await _db.Products.FindAsync(od.ProductId);
-                        if (prod != null) prod.Stock += od.Quantity;
                     }
                 }
 
