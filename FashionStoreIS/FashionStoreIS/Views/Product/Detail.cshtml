@@ -72,13 +72,27 @@
     .qty-stock { font-size: 11px; color: #888; }
 
     /* Action buttons */
-    .pdp-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+    .pdp-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
     .btn-add-cart, .btn-buy-now { height: 48px; border: none; font-size: 13px; font-weight: 700; letter-spacing: 0.05em; cursor: pointer; border-radius: 3px; transition: all 0.2s; }
     .btn-add-cart { background: #f5f5f5; color: #111; border: 1.5px solid #ddd; }
     .btn-add-cart:hover:not(:disabled) { background: #e8e8e8; }
     .btn-buy-now { background: #111; color: #fff; }
     .btn-buy-now:hover:not(:disabled) { background: #333; }
     .btn-add-cart:disabled, .btn-buy-now:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Wishlist button */
+    .btn-wishlist {
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        width: 100%; height: 44px; border: 1.5px solid #ddd; background: #fff;
+        color: #555; font-size: 13px; font-weight: 600; letter-spacing: 0.04em;
+        cursor: pointer; border-radius: 3px; transition: all 0.25s; margin-bottom: 20px;
+    }
+    .btn-wishlist svg { transition: all 0.25s; }
+    .btn-wishlist:hover { border-color: #e53935; color: #e53935; }
+    .btn-wishlist:hover svg { stroke: #e53935; }
+    .btn-wishlist.active { border-color: #e53935; background: #fff5f5; color: #e53935; }
+    .btn-wishlist.active svg { fill: #e53935; stroke: #e53935; }
+    .btn-wishlist.loading { opacity: 0.6; cursor: not-allowed; }
 
     /* Accordion */
     .pdp-accordion { border-top: 1px solid #eee; }
@@ -196,6 +210,18 @@
                 <button class="btn-add-cart" id="btn-cart" type="button">Thêm vào giỏ</button>
                 <button class="btn-buy-now" id="btn-buy" type="button">Mua ngay</button>
             </div>
+
+            <!-- Wishlist button (chỉ hiện khi đã đăng nhập) -->
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <button class="btn-wishlist" id="btn-wishlist" type="button"
+                        data-product-id="@Model.Id" onclick="toggleWishlistPdp(@Model.Id, this)">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                    </svg>
+                    <span id="btn-wishlist-text">Thêm vào yêu thích</span>
+                </button>
+            }
 
             <!-- Accordion -->
             <div class="pdp-accordion">
@@ -382,6 +408,81 @@ function addToCart(gotoCheckout) {
 
 document.getElementById('btn-cart').addEventListener('click', () => addToCart(false));
 document.getElementById('btn-buy').addEventListener('click', () => addToCart(true));
+
+// ─── Wishlist Toggle (Product Detail Page) ──────────────────────────────
+function toggleWishlistPdp(productId, btn) {
+    if (btn.classList.contains('loading')) return;
+    const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    btn.classList.add('loading');
+
+    $.ajax({
+        url: '/Wishlist/Toggle/' + productId,
+        type: 'POST',
+        data: { 
+            id: productId,
+            __RequestVerificationToken: token 
+        },
+        success: function(res) {
+            btn.classList.remove('loading');
+            if (res.success) {
+                const isWl = res.inWishlist;
+                btn.classList.toggle('active', isWl);
+                document.getElementById('btn-wishlist-text').textContent =
+                    isWl ? 'Đã yêu thích' : 'Thêm vào yêu thích';
+
+                // Cập nhật badge trên navbar
+                var badge = document.getElementById('wlNavBadge');
+                if (badge) {
+                    if (res.count > 0) {
+                        badge.textContent = res.count;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+
+                showPdpWlToast(isWl ? '♡ Đã thêm vào yêu thích!' : '✕ Đã bỏ khỏi yêu thích');
+            }
+        },
+        error: function() {
+            btn.classList.remove('loading');
+            showPdpWlToast('Có lỗi. Vui lòng thử lại.');
+        }
+    });
+}
+
+function showPdpWlToast(msg) {
+    var existing = document.getElementById('pdp-wl-toast');
+    if (existing) existing.remove();
+
+    var t = document.createElement('div');
+    t.id = 'pdp-wl-toast';
+    t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#111;color:#fff;padding:14px 22px;border-radius:6px;font-size:13px;z-index:99999;box-shadow:0 4px 20px rgba(0,0,0,0.2);transition:opacity 0.3s;display:flex;align-items:center;gap:8px';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.style.opacity='0'; setTimeout(function(){ t.remove(); }, 300); }, 2500);
+}
+
+// Load trạng thái wishlist khi vào trang
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <text>
+    $.get('/Wishlist/Status/@Model.Id', function(data) {
+        var btn = document.getElementById('btn-wishlist');
+        if (!btn) return;
+        if (data.inWishlist) {
+            btn.classList.add('active');
+            document.getElementById('btn-wishlist-text').textContent = 'Đã yêu thích';
+        }
+        // Cập nhật badge
+        var badge = document.getElementById('wlNavBadge');
+        if (badge && data.count > 0) {
+            badge.textContent = data.count;
+            badge.style.display = 'flex';
+        }
+    });
+    </text>
+}
 
 // Initialize
 updateStockInfo();

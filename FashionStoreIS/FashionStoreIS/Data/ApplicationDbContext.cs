@@ -25,6 +25,19 @@ namespace FashionStoreIS.Data
         public DbSet<PurchaseOrderDetail> PurchaseOrderDetails { get; set; }
         public DbSet<LoyaltyTransaction> LoyaltyTransactions { get; set; }
         public DbSet<Store> Stores { get; set; }
+        public DbSet<UserAddress> UserAddresses { get; set; }
+        public DbSet<ReturnRequest> ReturnRequests { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
+        public DbSet<Campaign> Campaigns { get; set; }
+        public DbSet<WishlistItem> WishlistItems { get; set; }
+
+        // HRM & Payroll
+        public DbSet<Department> Departments { get; set; }
+        public DbSet<Attendance> Attendances { get; set; }
+        public DbSet<LeaveRequest> LeaveRequests { get; set; }
+        public DbSet<SalaryComponent> SalaryComponents { get; set; }
+        public DbSet<Payroll> Payrolls { get; set; }
+        public DbSet<PayrollItem> PayrollItems { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -230,7 +243,54 @@ namespace FashionStoreIS.Data
                 b.ToTable("EMPLOYEES");
                 b.Property(x => x.FullName).HasColumnName("FULLNAME").HasMaxLength(100).IsRequired();
                 b.Property(x => x.Position).HasColumnName("POSITION").HasMaxLength(50);
-                b.HasOne(x => x.Store).WithMany().HasForeignKey(x => x.StoreId).HasConstraintName("FK_EMP_STORE");
+            b.HasOne(x => x.Store).WithMany().HasForeignKey(x => x.StoreId).HasConstraintName("FK_EMP_STORE");
+                b.HasOne(x => x.Department).WithMany(d => d.Employees).HasForeignKey(x => x.DepartmentId).HasConstraintName("FK_EMP_DEPT");
+                b.Property(x => x.BaseSalaryPerHour).HasColumnName("BASESALARYPERHOUR").HasColumnType("NUMBER(12,2)");
+                b.Property(x => x.BankAccountNumber).HasColumnName("BANKACCOUNTNUMBER").HasMaxLength(50);
+                b.Property(x => x.BankName).HasColumnName("BANKNAME").HasMaxLength(100);
+                b.Property(x => x.BankAccountName).HasColumnName("BANKACCOUNTNAME").HasMaxLength(100);
+            });
+
+            builder.Entity<Department>(b => {
+                b.ToTable("DEPARTMENTS");
+                b.Property(x => x.Name).HasColumnName("NAME").HasMaxLength(100).IsRequired();
+            });
+
+            builder.Entity<Attendance>(b => {
+                b.ToTable("ATTENDANCES");
+                b.Property(x => x.Date).HasColumnName("DATE");
+                b.Property(x => x.TotalHours).HasColumnName("TOTALHOURS").HasColumnType("NUMBER(5,2)");
+                b.HasOne(x => x.Employee).WithMany().HasForeignKey(x => x.EmployeeId).HasConstraintName("FK_ATT_EMP");
+            });
+
+            builder.Entity<LeaveRequest>(b => {
+                b.ToTable("LEAVEREQUESTS");
+                b.HasOne(x => x.Employee).WithMany().HasForeignKey(x => x.EmployeeId).HasConstraintName("FK_LEAVE_EMP");
+            });
+
+            builder.Entity<SalaryComponent>(b => {
+                b.ToTable("SALARYCOMPONENTS");
+                b.Property(x => x.DefaultAmount).HasColumnName("DEFAULTAMOUNT").HasColumnType("NUMBER(12,2)");
+            });
+
+            builder.Entity<Payroll>(b => {
+                b.ToTable("PAYROLLS");
+                b.Property(x => x.Month).HasColumnName("MONTH");
+                b.Property(x => x.Year).HasColumnName("YEAR");
+                b.Property(x => x.TotalHoursWorked).HasColumnName("TOTALHOURSWORKED").HasColumnType("NUMBER(8,2)");
+                b.Property(x => x.BaseHourlyRate).HasColumnName("BASEHOURLYRATE").HasColumnType("NUMBER(12,2)");
+                b.Property(x => x.TotalBaseSalary).HasColumnName("TOTALBASESALARY").HasColumnType("NUMBER(14,2)");
+                b.Property(x => x.TotalAdditions).HasColumnName("TOTALADDITIONS").HasColumnType("NUMBER(14,2)");
+                b.Property(x => x.TotalDeductions).HasColumnName("TOTALDEDUCTIONS").HasColumnType("NUMBER(14,2)");
+                b.Property(x => x.NetSalary).HasColumnName("NETSALARY").HasColumnType("NUMBER(14,2)");
+                b.HasOne(x => x.Employee).WithMany().HasForeignKey(x => x.EmployeeId).HasConstraintName("FK_PAY_EMP");
+            });
+
+            builder.Entity<PayrollItem>(b => {
+                b.ToTable("PAYROLLITEMS");
+                b.Property(x => x.Amount).HasColumnName("AMOUNT").HasColumnType("NUMBER(12,2)");
+                b.HasOne(x => x.Payroll).WithMany(p => p.Items).HasForeignKey(x => x.PayrollId).HasConstraintName("FK_PI_PAY");
+                b.HasOne(x => x.SalaryComponent).WithMany().HasForeignKey(x => x.SalaryComponentId).HasConstraintName("FK_PI_SC");
             });
 
             builder.Entity<Order>(b => {
@@ -307,15 +367,21 @@ namespace FashionStoreIS.Data
             builder.Entity<PurchaseOrder>(b => {
                 b.ToTable("PURCHASEORDERS");
                 b.Property(x => x.PoCode).HasColumnName("POCODE").HasMaxLength(20).IsRequired();
-                b.Property(x => x.TotalCost).HasColumnName("TOTALCOST").HasColumnType("NUMBER(16,0)");
+                if (isOracle) b.Property(x => x.TotalCost).HasColumnName("TOTALCOST").HasColumnType("NUMBER(16,0)");
+                else b.Property(x => x.TotalCost).HasColumnName("TOTALCOST").HasColumnType("decimal(18,2)");
                 b.HasOne(x => x.Supplier).WithMany(s => s.PurchaseOrders).HasForeignKey(x => x.SupplierId).HasConstraintName("FK_PO_SUP");
                 b.HasOne(x => x.Store).WithMany().HasForeignKey(x => x.StoreId).HasConstraintName("FK_PO_STORE");
             });
 
             builder.Entity<PurchaseOrderDetail>(b => {
                 b.ToTable("PURCHASEORDERDETAILS");
-                b.Property(x => x.UnitCost).HasColumnName("UNITCOST").HasColumnType("NUMBER(12,0)");
-                b.Property(x => x.Subtotal).HasColumnName("SUBTOTAL").HasColumnType("NUMBER(14,0)");
+                if (isOracle) {
+                    b.Property(x => x.UnitCost).HasColumnName("UNITCOST").HasColumnType("NUMBER(12,0)");
+                    b.Property(x => x.Subtotal).HasColumnName("SUBTOTAL").HasColumnType("NUMBER(14,0)");
+                } else {
+                    b.Property(x => x.UnitCost).HasColumnName("UNITCOST").HasColumnType("decimal(18,2)");
+                    b.Property(x => x.Subtotal).HasColumnName("SUBTOTAL").HasColumnType("decimal(18,2)");
+                }
                 b.HasOne(x => x.PurchaseOrder).WithMany(p => p.Details).HasForeignKey(x => x.PurchaseOrderId).HasConstraintName("FK_POD_PO");
                 b.HasOne(x => x.ProductSku).WithMany().HasForeignKey(x => x.ProductSkuId).HasConstraintName("FK_POD_SKU");
             });
@@ -342,15 +408,117 @@ namespace FashionStoreIS.Data
                 
                 b.Property(x => x.Code).HasColumnName("CODE").HasMaxLength(50).IsRequired();
                 b.HasIndex(x => x.Code).IsUnique();
-                b.Property(x => x.DiscountAmount).HasColumnName("DISCOUNTAMOUNT").HasColumnType("NUMBER(12,0)");
-                b.Property(x => x.MinOrderAmount).HasColumnName("MINORDERAMOUNT").HasColumnType("NUMBER(12,0)");
+                if (isOracle) {
+                    b.Property(x => x.DiscountAmount).HasColumnName("DISCOUNTAMOUNT").HasColumnType("NUMBER(12,0)");
+                    b.Property(x => x.MinOrderAmount).HasColumnName("MINORDERAMOUNT").HasColumnType("NUMBER(12,0)");
+                } else {
+                    b.Property(x => x.DiscountAmount).HasColumnName("DISCOUNTAMOUNT").HasColumnType("decimal(18,2)");
+                    b.Property(x => x.MinOrderAmount).HasColumnName("MINORDERAMOUNT").HasColumnType("decimal(18,2)");
+                }
                 b.Property(x => x.ExpiryDate).HasColumnName("EXPIRYDATE");
                 b.Property(x => x.IsActive).HasColumnName("ISACTIVE");
                 b.Property(x => x.MaxUsageCount).HasColumnName("MAXUSAGECOUNT");
                 b.Property(x => x.UsedCount).HasColumnName("USEDCOUNT");
             });
 
+            builder.Entity<UserAddress>(b => {
+                b.ToTable("USERADDRESSES");
+                if (isOracle) b.Property(e => e.Id).UseHiLo("HILOSEQUENCE").HasColumnName("ID");
+                b.Property(x => x.UserId).HasColumnName("USERID");
+                b.Property(x => x.FullName).HasColumnName("FULLNAME").HasMaxLength(100).IsRequired();
+                b.Property(x => x.PhoneNumber).HasColumnName("PHONENUMBER").HasMaxLength(15).IsRequired();
+                b.Property(x => x.AddressLine).HasColumnName("ADDRESSLINE").HasMaxLength(200).IsRequired();
+                b.Property(x => x.IsDefault).HasColumnName("ISDEFAULT");
+                // Wire back to ApplicationUser.Addresses collection so no shadow FK is generated
+                b.HasOne<ApplicationUser>()
+                 .WithMany(u => u.Addresses)
+                 .HasForeignKey(x => x.UserId)
+                 .HasConstraintName("FK_UA_USER");
+            });
 
+            builder.Entity<ReturnRequest>(b => {
+                b.ToTable("RETURNREQUESTS");
+                if (isOracle) b.Property(e => e.Id).UseHiLo("HILOSEQUENCE").HasColumnName("ID");
+                b.Property(x => x.OrderId).HasColumnName("ORDERID");
+                b.Property(x => x.Reason).HasColumnName("REASON").HasMaxLength(500).IsRequired();
+                b.Property(x => x.Status).HasColumnName("STATUS").HasConversion<byte>();
+                if (isOracle) b.Property(x => x.RefundAmount).HasColumnName("REFUNDAMOUNT").HasColumnType("NUMBER(12,0)");
+                else b.Property(x => x.RefundAmount).HasColumnName("REFUNDAMOUNT").HasColumnType("decimal(18,2)");
+                b.Property(x => x.AdminNote).HasColumnName("ADMINNOTE").HasMaxLength(500);
+                b.Property(x => x.ProcessedAt).HasColumnName("PROCESSEDAT");
+                b.HasOne(x => x.Order)
+                 .WithMany(o => o.ReturnRequests)
+                 .HasForeignKey(x => x.OrderId)
+                 .IsRequired()
+                 .HasConstraintName("FK_RR_ORDER");
+            });
+
+            builder.Entity<Notification>(b => {
+                b.ToTable("NOTIFICATIONS");
+                if (isOracle) b.Property(e => e.Id).UseHiLo("HILOSEQUENCE").HasColumnName("ID");
+                b.Property(x => x.UserId).HasColumnName("USERID");
+                b.Property(x => x.Title).HasColumnName("TITLE").HasMaxLength(200).IsRequired();
+                b.Property(x => x.Message).HasColumnName("MESSAGE").HasMaxLength(1000).IsRequired();
+                b.Property(x => x.IsRead).HasColumnName("ISREAD");
+                b.Property(x => x.ActionUrl).HasColumnName("ACTIONURL").HasMaxLength(255);
+                // Wire back to ApplicationUser.Notifications collection so no shadow FK is generated
+                b.HasOne<ApplicationUser>()
+                 .WithMany(u => u.Notifications)
+                 .HasForeignKey(x => x.UserId)
+                 .HasConstraintName("FK_NOTIF_USER");
+            });
+
+            builder.Entity<Campaign>(b =>
+            {
+                b.ToTable("CAMPAIGNS");
+                if (isOracle) b.Property(e => e.Id).UseHiLo("HILOSEQUENCE").HasColumnName("ID");
+                b.Property(x => x.Name).HasColumnName("NAME").HasMaxLength(150).IsRequired();
+                b.Property(x => x.Description).HasColumnName("DESCRIPTION").HasMaxLength(500);
+                b.Property(x => x.StartDate).HasColumnName("STARTDATE");
+                b.Property(x => x.EndDate).HasColumnName("ENDDATE");
+                b.Property(x => x.TargetSegment).HasColumnName("TARGETSEGMENT").HasMaxLength(50);
+                b.Property(x => x.NotificationTitle).HasColumnName("NOTIFICATIONTITLE").HasMaxLength(200);
+                b.Property(x => x.NotificationMessage).HasColumnName("NOTIFICATIONMESSAGE").HasMaxLength(1000);
+                b.Property(x => x.IsSent).HasColumnName("ISSENT");
+                b.Property(x => x.SentAt).HasColumnName("SENTAT");
+                b.Property(x => x.RecipientCount).HasColumnName("RECIPIENTCOUNT");
+                b.HasOne(x => x.Voucher)
+                 .WithMany()
+                 .HasForeignKey(x => x.VoucherId)
+                 .IsRequired(false)
+                 .OnDelete(DeleteBehavior.Restrict)
+                 .HasConstraintName("FK_CAMP_VOUCHER");
+            });
+
+            // ─── WishlistItem ─────────────────────────────────────────────────────
+            builder.Entity<WishlistItem>(b =>
+            {
+                b.ToTable("WISHLISTITEMS");
+                if (isOracle)
+                    b.Property(e => e.Id).UseHiLo("HILOSEQUENCE").HasColumnName("ID");
+                else
+                    b.Property(e => e.Id).HasColumnName("ID");
+
+                b.Property(x => x.UserId).HasColumnName("USERID").HasMaxLength(450).IsRequired();
+                b.Property(x => x.ProductId).HasColumnName("PRODUCTID").IsRequired();
+
+                // Unique constraint: mỗi user chỉ yêu thích 1 lần mỗi sản phẩm
+                b.HasIndex(x => new { x.UserId, x.ProductId })
+                 .IsUnique()
+                 .HasDatabaseName("UQ_WL_USER_PROD");
+
+                b.HasOne(x => x.User)
+                 .WithMany()
+                 .HasForeignKey(x => x.UserId)
+                 .OnDelete(DeleteBehavior.Cascade)
+                 .HasConstraintName("FK_WL_USER");
+
+                b.HasOne(x => x.Product)
+                 .WithMany()
+                 .HasForeignKey(x => x.ProductId)
+                 .OnDelete(DeleteBehavior.Cascade)
+                 .HasConstraintName("FK_WL_PRODUCT");
+            });
         }
     }
 }

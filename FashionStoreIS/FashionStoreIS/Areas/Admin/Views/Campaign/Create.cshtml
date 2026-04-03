@@ -1,0 +1,137 @@
+@model FashionStoreIS.Areas.Admin.ViewModels.CampaignViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Tạo Campaign mới";
+    bool isEdit = Model.Id > 0;
+}
+
+@section Styles {
+<style>
+    .camp-form { max-width:780px; }
+    .preview-box { background:rgba(99,102,241,.06); border:1px solid rgba(99,102,241,.2); border-radius:12px; padding:20px; margin-top:24px; }
+    .preview-box-title { font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#6366f1; margin-bottom:12px; }
+    .notif-preview { background:var(--admin-card); border-radius:10px; padding:16px; border:1px solid var(--admin-border); }
+    .notif-preview-title { font-size:14px; font-weight:700; color:#fff; margin-bottom:4px; }
+    .notif-preview-msg { font-size:13px; color:var(--admin-muted); }
+</style>
+}
+
+<a href="/Admin/Campaign" style="color:var(--admin-muted); font-size:12px; text-decoration:none; display:flex; align-items:center; gap:6px; margin-bottom:16px;">
+    <i class="fa fa-arrow-left"></i> Quay lại Campaign
+</a>
+
+<h2 style="font-size:20px; font-weight:700; margin-bottom:24px;">@(isEdit ? "✏️ Chỉnh sửa Campaign" : "📣 Tạo Campaign mới")</h2>
+
+<form method="post" action="@(isEdit ? $"/Admin/Campaign/Edit/{Model.Id}" : "/Admin/Campaign/Create")" class="camp-form">
+    @Html.AntiForgeryToken()
+    @if (isEdit) { <input type="hidden" name="Id" value="@Model.Id" /> }
+
+    <div class="admin-card" style="padding:28px; margin-bottom:20px;">
+        <div style="font-size:13px; font-weight:700; color:var(--admin-muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:20px;">Thông tin Campaign</div>
+
+        <div class="form-group">
+            <label class="form-label">Tên Campaign *</label>
+            <input name="Name" class="form-control" value="@Model.Name" placeholder="VD: Tri ân khách VIP tháng 4" required />
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Mô tả</label>
+            <textarea name="Description" class="form-control" rows="2" placeholder="Mô tả mục tiêu của campaign...">@Model.Description</textarea>
+        </div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label class="form-label">Ngày bắt đầu *</label>
+                <input type="date" name="StartDate" class="form-control" value="@Model.StartDate.ToString("yyyy-MM-dd")" required />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Ngày kết thúc *</label>
+                <input type="date" name="EndDate" class="form-control" value="@Model.EndDate.ToString("yyyy-MM-dd")" required />
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-card" style="padding:28px; margin-bottom:20px;">
+        <div style="font-size:13px; font-weight:700; color:var(--admin-muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:20px;">Đối tượng & Voucher</div>
+
+        <div class="form-grid">
+            <div class="form-group">
+                <label class="form-label">Nhóm khách hàng mục tiêu *</label>
+                <select name="TargetSegment" class="form-control" required>
+                    @foreach (var seg in Model.AvailableSegments)
+                    {
+                        if (Model.TargetSegment == seg.Value)
+                        {
+                            <option value="@seg.Value" selected>@seg.Label</option>
+                        }
+                        else
+                        {
+                            <option value="@seg.Value">@seg.Label</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Voucher đính kèm (tùy chọn)</label>
+                <select name="VoucherId" class="form-control">
+                    <option value="">-- Không đính kèm voucher --</option>
+                    @foreach (var v in Model.AvailableVouchers)
+                    {
+                        if (Model.VoucherId == v.Id)
+                        {
+                            <option value="@v.Id" selected>
+                                @v.Code – Giảm @v.DiscountAmount.ToString("N0")₫ (HSD: @v.ExpiryDate.ToString("dd/MM/yy"))
+                            </option>
+                        }
+                        else
+                        {
+                            <option value="@v.Id">
+                                @v.Code – Giảm @v.DiscountAmount.ToString("N0")₫ (HSD: @v.ExpiryDate.ToString("dd/MM/yy"))
+                            </option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-card" style="padding:28px; margin-bottom:20px;">
+        <div style="font-size:13px; font-weight:700; color:var(--admin-muted); text-transform:uppercase; letter-spacing:.1em; margin-bottom:20px;">Nội dung thông báo</div>
+
+        <div class="form-group">
+            <label class="form-label">Tiêu đề thông báo *</label>
+            <input name="NotificationTitle" id="notif-title" class="form-control" value="@Model.NotificationTitle" placeholder="VD: 🎁 Ưu đãi đặc biệt dành cho bạn!" required oninput="updatePreview()" />
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Nội dung thông báo *</label>
+            <textarea name="NotificationMessage" id="notif-msg" class="form-control" rows="4"
+                      placeholder="Nội dung chi tiết của thông báo..." required oninput="updatePreview()">@Model.NotificationMessage</textarea>
+        </div>
+
+        <!-- Live Preview -->
+        <div class="preview-box">
+            <div class="preview-box-title">📱 Preview thông báo</div>
+            <div class="notif-preview">
+                <div class="notif-preview-title" id="preview-title">@(Model.NotificationTitle.Length > 0 ? Model.NotificationTitle : "Tiêu đề sẽ hiển thị ở đây")</div>
+                <div class="notif-preview-msg" id="preview-msg">@(Model.NotificationMessage.Length > 0 ? Model.NotificationMessage : "Nội dung thông báo...")</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:flex; gap:12px;">
+        <button type="submit" class="btn-admin btn-primary"><i class="fa fa-save"></i> @(isEdit ? "Lưu thay đổi" : "Tạo Campaign")</button>
+        <a href="/Admin/Campaign" class="btn-admin btn-secondary">Hủy</a>
+    </div>
+</form>
+
+@section Scripts {
+<script>
+function updatePreview() {
+    const title = document.getElementById('notif-title').value;
+    const msg   = document.getElementById('notif-msg').value;
+    document.getElementById('preview-title').textContent = title || 'Tiêu đề sẽ hiển thị ở đây';
+    document.getElementById('preview-msg').textContent   = msg   || 'Nội dung thông báo...';
+}
+</script>
+}

@@ -1,0 +1,79 @@
+@model List<FashionStoreIS.Models.Campaign>
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Quản lý Campaign";
+}
+
+@section Styles {
+<style>
+    .camp-grid { display:grid; gap:16px; }
+    .camp-card { background:var(--admin-card); border:1px solid var(--admin-border); border-radius:12px; padding:20px 24px; display:grid; grid-template-columns:1fr auto; gap:20px; align-items:center; transition:border-color .2s; }
+    .camp-card:hover { border-color:rgba(255,255,255,.12); }
+    .camp-name { font-size:16px; font-weight:700; color:#fff; margin-bottom:6px; }
+    .camp-meta { font-size:12px; color:var(--admin-muted); display:flex; gap:14px; align-items:center; flex-wrap:wrap; }
+    .camp-actions { display:flex; gap:8px; }
+    .sent-badge { display:inline-flex; align-items:center; gap:5px; padding:3px 12px; border-radius:20px; font-size:11px; font-weight:700; }
+</style>
+}
+
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
+    <div>
+        <h2 style="font-size:20px; font-weight:700;">📣 Campaign Marketing</h2>
+        <div style="font-size:13px; color:var(--admin-muted); margin-top:4px;">@Model.Count campaign • @Model.Count(c => c.IsSent) đã gửi</div>
+    </div>
+    <a href="/Admin/Campaign/Create" class="btn-admin btn-primary"><i class="fa fa-plus"></i> Tạo Campaign</a>
+</div>
+
+@if (!Model.Any())
+{
+    <div style="text-align:center; padding:60px; color:var(--admin-muted);">
+        <i class="fa fa-bullhorn" style="font-size:48px; margin-bottom:16px; display:block; opacity:.3;"></i>
+        <div style="font-size:16px; font-weight:600; margin-bottom:8px;">Chưa có campaign nào</div>
+        <a href="/Admin/Campaign/Create" class="btn-admin btn-primary" style="margin-top:12px;">Tạo Campaign đầu tiên</a>
+    </div>
+}
+else
+{
+    <div class="camp-grid">
+        @foreach (var c in Model)
+        {
+            <div class="camp-card">
+                <div>
+                    <div class="camp-name">@c.Name</div>
+                    <div class="camp-meta">
+                        @if (c.IsSent)
+                        {
+                            <span class="sent-badge" style="background:#10b98122; color:#10b981;">✅ Đã gửi @c.SentAt?.ToString("dd/MM/yy HH:mm") • @c.RecipientCount người</span>
+                        }
+                        else
+                        {
+                            <span class="sent-badge" style="background:#f59e0b22; color:#f59e0b;">📝 Draft</span>
+                        }
+                        <span>🎯 @(c.TargetSegment == "All" ? "Tất cả KH" : c.TargetSegment)</span>
+                        <span>📅 @c.StartDate.ToString("dd/MM") – @c.EndDate.ToString("dd/MM/yyyy")</span>
+                        @if (c.Voucher != null)
+                        {
+                            <span>🎁 @c.Voucher.Code</span>
+                        }
+                    </div>
+                    <div style="font-size:12px; color:var(--admin-muted); margin-top:8px; font-style:italic;">@c.NotificationTitle</div>
+                </div>
+                <div class="camp-actions">
+                    <a href="/Admin/Campaign/Preview/@c.Id" class="btn-admin btn-secondary btn-sm"><i class="fa fa-eye"></i> Preview</a>
+                    @if (!c.IsSent)
+                    {
+                        <a href="/Admin/Campaign/Edit/@c.Id" class="btn-admin btn-secondary btn-sm"><i class="fa fa-pen"></i></a>
+                        <form method="post" action="/Admin/Campaign/Send/@c.Id" style="display:inline;" onsubmit="return confirm('Gửi campaign này tới tất cả người nhận?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-admin btn-primary btn-sm"><i class="fa fa-paper-plane"></i> Gửi</button>
+                        </form>
+                        <form method="post" action="/Admin/Campaign/Delete/@c.Id" style="display:inline;" onsubmit="return confirm('Xóa campaign này?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn-admin btn-danger btn-sm"><i class="fa fa-trash"></i></button>
+                        </form>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+}

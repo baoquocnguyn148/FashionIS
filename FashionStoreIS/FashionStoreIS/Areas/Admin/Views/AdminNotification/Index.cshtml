@@ -1,0 +1,86 @@
+@model List<FashionStoreIS.Models.Notification>
+@{
+    ViewData["Title"] = "Trung tâm Thông báo";
+}
+
+<div class="form-grid">
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h5 class="admin-card-title">Gửi thông báo mới</h5>
+        </div>
+        <div class="p-4">
+            <form method="post" action="/Admin/AdminNotification/Send">
+                @Html.AntiForgeryToken()
+                <div class="mb-3">
+                    <label class="form-label">ID Người nhận (User ID)</label>
+                    <input type="text" name="userId" class="form-control" placeholder="User ID để gửi thông báo..." value="@ViewBag.FilterUserId" required />
+                    <small class="text-muted">Lấy ID từ mục quản lý khách hàng</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Tiêu đề</label>
+                    <input type="text" name="title" class="form-control" placeholder="Tiêu đề thông báo..." required />
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Nội dung</label>
+                    <textarea name="message" class="form-control" rows="4" placeholder="Nhập nội dung thông báo..." required></textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Đường dẫn hành động (Action URL)</label>
+                    <input type="text" name="actionUrl" class="form-control" placeholder="Ví dụ: /Account/Index?tab=orders" />
+                </div>
+                <button type="submit" class="btn-admin btn-primary w-100" style="background: var(--admin-accent); color: #fff;">
+                    <i class="fas fa-paper-plane"></i> Gửi ngay
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h5 class="admin-card-title">Lịch sử gửi (200 gần nhất)</h5>
+        </div>
+        <div class="p-0" style="max-height: 500px; overflow-y: auto;">
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th class="ps-4">Thông tin</th>
+                        <th>Trạng thái</th>
+                        <th class="pe-4">Thời gian</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var n in Model)
+                    {
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-white small">@n.Title</div>
+                                <div class="text-muted text-truncate" style="max-width: 250px;" title="@n.Message">@n.Message</div>
+                                <div class="text-info" style="font-size: 10px;">To: @n.UserId</div>
+                            </td>
+                            <td>
+                                @if (n.IsRead)
+                                {
+                                    <span class="badge badge-green">Đã đọc</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-secondary">Chưa đọc</span>
+                                }
+                            </td>
+                            <td class="pe-4 text-muted small">@n.CreatedAt.ToString("dd/MM HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            @if (!Model.Any())
+            {
+                <div class="p-5 text-center text-muted italic">Chưa có thông báo nào.</div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+.badge-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.badge-secondary { background: rgba(148, 163, 184, 0.15); color: #94a3b8; }
+</style>

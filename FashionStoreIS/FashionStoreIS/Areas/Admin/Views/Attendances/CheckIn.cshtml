@@ -1,0 +1,43 @@
+@model FashionStoreIS.Models.Attendance
+
+@{
+    ViewData["Title"] = "Check-in Ca làm việc";
+}
+
+<div class="admin-card" style="max-width: 500px; margin: 0 auto;">
+    <div class="admin-card-header">
+        <div class="admin-card-title">BẮT ĐẦU CA LÀM MỚI</div>
+    </div>
+    <div class="admin-content" style="padding: 30px;">
+        <form asp-action="CheckIn" method="post">
+            <div asp-validation-summary="ModelOnly" class="alert alert-error"></div>
+            
+            <div class="form-group">
+                <label class="form-label">Chọn nhân viên</label>
+                <select asp-for="EmployeeId" class="form-control" asp-items="ViewBag.EmployeeId">
+                    <option value="">-- Chọn nhân viên --</option>
+                </select>
+                <span asp-validation-for="EmployeeId" style="color: var(--admin-red); font-size: 11px;"></span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Ngày làm việc</label>
+                <input type="text" class="form-control" value="@DateTime.Today.ToString("dd/MM/yyyy")" disabled />
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Note" class="form-label">Ghi chú (Không bắt buộc)</label>
+                <textarea asp-for="Note" class="form-control" placeholder="Ví dụ: Làm ca sáng..."></textarea>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <button type="submit" class="btn-admin btn-primary" style="width: 100%; justify-content: center; padding: 12px;">
+                    <i class="fa-solid fa-clock"></i> XÁC NHẬN CHECK-IN
+                </button>
+                <a asp-action="Index" class="btn-admin btn-secondary" style="width: 100%; justify-content: center; margin-top: 10px;">
+                    Hủy bỏ
+                </a>
+            </div>
+        </form>
+    </div>
+</div>

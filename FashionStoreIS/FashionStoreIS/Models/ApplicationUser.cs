@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using FashionStoreIS.Models.Executive;
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -18,5 +19,8 @@ namespace FashionStoreIS.Models
         public DateTime JoinDate { get; set; } = DateTime.Now;
 
         public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+        public virtual ICollection<UserAddress> Addresses { get; set; } = new List<UserAddress>();
+        public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+        public virtual ICollection<ExecutiveAlert> ExecutiveAlerts { get; set; } = new List<ExecutiveAlert>();
     }
 }

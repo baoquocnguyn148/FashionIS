@@ -1,0 +1,94 @@
+@model List<FashionStoreIS.Areas.Admin.ViewModels.Crm.TimelineEventViewModel>
+@{
+    Layout = "_Layout";
+    var user = ViewBag.User as FashionStoreIS.Models.ApplicationUser;
+}
+
+@section Styles {
+<style>
+    .tl-container { max-width: 760px; margin: 0 auto; position: relative; padding-left: 40px; }
+    .tl-container::before { content:''; position:absolute; left:16px; top:0; bottom:0; width:2px; background:var(--admin-border); }
+    .tl-item { position:relative; margin-bottom:28px; }
+    .tl-dot { position:absolute; left:-32px; top:14px; width:14px; height:14px; border-radius:50%; border:2px solid var(--admin-bg); box-shadow:0 0 0 2px var(--admin-border); }
+    .tl-card { background:var(--admin-card); border:1px solid var(--admin-border); border-radius:12px; padding:16px 20px; transition:border-color .2s; }
+    .tl-card:hover { border-color:rgba(99,102,241,.3); }
+    .tl-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .tl-title { font-size:14px; font-weight:700; color:#fff; display:flex; align-items:center; gap:8px; }
+    .tl-date { font-size:11px; color:var(--admin-muted); }
+    .tl-desc { font-size:13px; color:var(--admin-muted); line-height:1.5; }
+    .tl-badge { display:inline-block; padding:2px 10px; border-radius:20px; font-size:10px; font-weight:700; }
+    .tl-filter { display:flex; gap:8px; margin-bottom:24px; flex-wrap:wrap; }
+    .filter-btn { padding:6px 14px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; border:1px solid var(--admin-border); background:transparent; color:var(--admin-muted); transition:all .2s; }
+    .filter-btn.active, .filter-btn:hover { border-color:#6366f1; color:#fff; background:rgba(99,102,241,.1); }
+</style>
+}
+
+<div style="display:flex; align-items:center; gap:16px; margin-bottom:24px;">
+    <a href="/Admin/Crm/CustomerProfile/@user?.Id" style="color:var(--admin-muted); font-size:12px; text-decoration:none;">
+        <i class="fa fa-arrow-left"></i> Hồ sơ
+    </a>
+    <h2 style="font-size:18px; font-weight:700;">
+        📅 Timeline: <span style="color:#6366f1;">@(user?.FullName ?? user?.UserName)</span>
+    </h2>
+    <span style="color:var(--admin-muted); font-size:13px;">@Model.Count sự kiện</span>
+</div>
+
+<!-- Filters -->
+<div class="tl-filter">
+    <button class="filter-btn active" onclick="filterTimeline('all',this)">Tất cả (@Model.Count)</button>
+    <button class="filter-btn" onclick="filterTimeline('Order',this)">🛍 Đơn hàng (@Model.Count(e => e.EventType == "Order"))</button>
+    <button class="filter-btn" onclick="filterTimeline('Return',this)">↩ Trả hàng (@Model.Count(e => e.EventType == "Return"))</button>
+    <button class="filter-btn" onclick="filterTimeline('Notification',this)">🔔 Thông báo (@Model.Count(e => e.EventType == "Notification"))</button>
+</div>
+
+<div class="tl-container">
+    @foreach (var e in Model)
+    {
+        <div class="tl-item" data-type="@e.EventType">
+            <div class="tl-dot" style="background:@e.Color;"></div>
+            <div class="tl-card">
+                <div class="tl-header">
+                    <div class="tl-title">
+                        <i class="fa @e.Icon" style="color:@e.Color; font-size:14px;"></i>
+                        @e.Title
+                        @if (!string.IsNullOrEmpty(e.Badge))
+                        {
+                            <span class="tl-badge" style="background:@(e.BadgeColor)22; color:@e.BadgeColor;">@e.Badge</span>
+                        }
+                    </div>
+                    <div class="tl-date">@e.EventDate.ToString("dd/MM/yyyy HH:mm")</div>
+                </div>
+                <div class="tl-desc">@e.Description</div>
+                @if (!string.IsNullOrEmpty(e.LinkUrl))
+                {
+                    <a href="@e.LinkUrl" style="font-size:12px; color:#6366f1; text-decoration:none; margin-top:8px; display:inline-block;">
+                        Xem chi tiết →
+                    </a>
+                }
+            </div>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div style="text-align:center; padding:60px 0; color:var(--admin-muted);">
+            <i class="fa fa-timeline" style="font-size:40px; margin-bottom:12px; display:block;"></i>
+            Chưa có hoạt động nào
+        </div>
+    }
+</div>
+
+@section Scripts {
+<script>
+function filterTimeline(type, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.tl-item').forEach(item => {
+        if (type === 'all' || item.dataset.type === type)
+            item.style.display = '';
+        else
+            item.style.display = 'none';
+    });
+}
+</script>
+}

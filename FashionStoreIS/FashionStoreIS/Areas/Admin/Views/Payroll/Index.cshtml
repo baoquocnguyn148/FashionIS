@@ -1,0 +1,113 @@
+@model IEnumerable<FashionStoreIS.Models.Payroll>
+
+@{
+    ViewData["Title"] = "Quản lý Tiền lương";
+    var filterMonth = (int)ViewData["FilterMonth"]!;
+    var filterYear = (int)ViewData["FilterYear"]!;
+}
+
+<div class="search-bar">
+    <form asp-action="Index" method="get" style="display: flex; gap: 10px;">
+        <select name="month" class="form-control" style="width: 140px;">
+            @for (int i = 1; i <= 12; i++)
+            {
+                <option value="@i" selected="@(i == filterMonth)">Tháng @i</option>
+            }
+        </select>
+        <select name="year" class="form-control" style="width: 140px;">
+            @for (int i = DateTime.Now.Year; i >= 2024; i--)
+            {
+                <option value="@i" selected="@(i == filterYear)">Năm @i</option>
+            }
+        </select>
+        <button type="submit" class="btn-admin btn-primary">Lọc bảng lương</button>
+    </form>
+    
+    <form asp-action="Generate" method="post" style="margin-left: auto;">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="month" value="@filterMonth" />
+        <input type="hidden" name="year" value="@filterYear" />
+        <button type="submit" class="btn-admin btn-secondary" onclick="return confirm('Hệ thống sẽ tính toán lại bảng lương cho toàn bộ nhân viên. Tiếp tục?')">
+            <i class="fa-solid fa-calculator"></i> Tính lương tháng @filterMonth/@filterYear
+        </button>
+    </form>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-error">@TempData["Error"]</div>
+}
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <div class="admin-card-title">BẢNG LƯƠNG TỔNG HỢP (TÍNH THEO GIỜ LÀM)</div>
+    </div>
+    <div class="table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Nhân viên</th>
+                    <th>Tổng số giờ</th>
+                    <th>Lương/Giờ</th>
+                    <th>Lương cơ bản</th>
+                    <th>Phụ cấp</th>
+                    <th>Giảm trừ</th>
+                    <th>Thực lĩnh (Net)</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td style="font-weight: 600;">@(item.Employee?.FullName ?? item.EmployeeId.ToString())</td>
+                        <td>@item.TotalHoursWorked.ToString("0.##") giờ</td>
+                        <td>@item.BaseHourlyRate.ToString("N0") đ</td>
+                        <td>@item.TotalBaseSalary.ToString("N0") đ</td>
+                        <td style="color: var(--admin-green);">+@item.TotalAdditions.ToString("N0") đ</td>
+                        <td style="color: var(--admin-red);">-@item.TotalDeductions.ToString("N0") đ</td>
+                        <td style="font-weight: 700; color: #fff;">@item.NetSalary.ToString("N0") đ</td>
+                        <td>
+                            @if (item.Status == PayrollStatus.Paid)
+                            {
+                                <span class="badge badge-green">Đã thanh toán</span>
+                            }
+                            else if (item.Status == PayrollStatus.Processed)
+                            {
+                                <span class="badge badge-primary">Chờ thanh toán</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">Dự thảo</span>
+                            }
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn-admin btn-secondary btn-sm" title="Xem phiếu lương">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                                @if (item.Status != PayrollStatus.Paid)
+                                {
+                                    <form asp-action="ProcessPayment" asp-route-id="@item.Id" method="post" style="display: inline;">
+                                        <button type="submit" class="btn-admin btn-primary btn-sm" title="Xác nhận thanh toán">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: var(--admin-muted);">
+                            Chưa có dữ liệu bảng lương tháng này. Nhấn "Tính lương" để bắt đầu.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

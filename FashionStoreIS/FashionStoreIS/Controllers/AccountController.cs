@@ -1,5 +1,6 @@
 using FashionStoreIS.Data;
 using FashionStoreIS.Models;
+using FashionStoreIS.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,11 +13,13 @@ namespace FashionStoreIS.Controllers
     {
         private readonly ApplicationDbContext _db;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly INotificationService _notif;
 
-        public AccountController(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
+        public AccountController(ApplicationDbContext db, UserManager<ApplicationUser> userManager, INotificationService notif)
         {
             _db = db;
             _userManager = userManager;
+            _notif = notif;
         }
 
         public async Task<IActionResult> Index(string tab = "orders", string? status = null)
@@ -24,27 +27,57 @@ namespace FashionStoreIS.Controllers
             if (User.Identity?.Name == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
 
             var user = await _userManager.FindByNameAsync(User.Identity.Name);
-            
             if (user == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
-
-            var query = _db.Orders.Where(o => o.UserId == user!.Id);
-            
-            if (!string.IsNullOrEmpty(status))
-            {
-                if (Enum.TryParse<OrderStatus>(status, out var statusEnum))
-                {
-                    query = query.Where(o => o.Status == statusEnum);
-                }
-            }
-
-            var orders = await query
-                .OrderByDescending(o => o.CreatedAt)
-                .ToListAsync();
 
             ViewBag.User = user;
             ViewBag.ActiveTab = tab;
-            ViewBag.SelectedStatus = status;
-            return View(orders);
+
+            if (tab == "orders")
+            {
+                var query = _db.Orders.Where(o => o.UserId == user.Id);
+                if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, out var statusEnum))
+                {
+                    query = query.Where(o => o.Status == statusEnum);
+                }
+                var orders = await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
+                ViewBag.SelectedStatus = status;
+                return View(orders);
+            }
+            else if (tab == "address")
+            {
+                var addresses = await _db.UserAddresses
+                    .Where(a => a.UserId == user.Id)
+                    .OrderByDescending(a => a.IsDefault)
+                    .ToListAsync();
+                return View(addresses);
+            }
+            else if (tab == "notifications")
+            {
+                var notifications = await _db.Notifications
+                    .Where(n => n.UserId == user.Id)
+                    .OrderByDescending(n => n.CreatedAt)
+                    .ToListAsync();
+                return View(notifications);
+            }
+            else if (tab == "returns")
+            {
+                var returns = await _db.ReturnRequests
+                    .Include(r => r.Order)
+                    .Where(r => r.Order.UserId == user.Id)
+                    .OrderByDescending(r => r.CreatedAt)
+                    .ToListAsync();
+                return View(returns);
+            }
+            else if (tab == "promotions")
+            {
+                var vouchers = await _db.Vouchers
+                    .Where(v => v.IsActive && v.ExpiryDate > DateTime.Now)
+                    .OrderByDescending(v => v.DiscountAmount)
+                    .ToListAsync();
+                return View(vouchers);
+            }
+
+            return View(new List<Order>());
         }
 
         [HttpPost]
@@ -203,6 +236,7 @@ namespace FashionStoreIS.Controllers
                 }
 
                 await _db.SaveChangesAsync();
+                await _notif.SendOrderCancelledAsync(order);
                 TempData["Success"] = "Đã hủy đơn hàng thành công.";
             }
 
@@ -232,6 +266,155 @@ namespace FashionStoreIS.Controllers
             if (order == null) return NotFound();
 
             return View(order);
+        }
+
+        // --- Address Management ---
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddAddress(string fullName, string phoneNumber, string addressLine, bool isDefault)
+        {
+            var user = await _userManager.FindByNameAsync(User.Identity!.Name!);
+            if (user == null) return NotFound();
+
+            if (isDefault)
+            {
+                var existingDefault = await _db.UserAddresses.FirstOrDefaultAsync(a => a.UserId == user.Id && a.IsDefault);
+                if (existingDefault != null) existingDefault.IsDefault = false;
+            }
+
+            var addressCount = await _db.UserAddresses.CountAsync(a => a.UserId == user.Id);
+
+            var address = new UserAddress
+            {
+                UserId = user.Id,
+                FullName = fullName,
+                PhoneNumber = phoneNumber,
+                AddressLine = addressLine,
+                IsDefault = isDefault || addressCount == 0
+            };
+
+            _db.UserAddresses.Add(address);
+            await _db.SaveChangesAsync();
+
+            TempData["Success"] = "Đã thêm địa chỉ mới thành công.";
+            return RedirectToAction("Index", new { tab = "address" });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteAddress(int id)
+        {
+            var user = await _userManager.FindByNameAsync(User.Identity!.Name!);
+            if (user == null) return NotFound();
+
+            var address = await _db.UserAddresses.FirstOrDefaultAsync(a => a.Id == id && a.UserId == user.Id);
+            if (address == null) return NotFound();
+
+            if (address.IsDefault)
+            {
+                var other = await _db.UserAddresses.FirstOrDefaultAsync(a => a.Id != id && a.UserId == user.Id);
+                if (other != null) other.IsDefault = true;
+            }
+
+            _db.UserAddresses.Remove(address);
+            await _db.SaveChangesAsync();
+
+            TempData["Success"] = "Đã xóa địa chỉ thành công.";
+            return RedirectToAction("Index", new { tab = "address" });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SetDefaultAddress(int id)
+        {
+            var user = await _userManager.FindByNameAsync(User.Identity!.Name!);
+            if (user == null) return NotFound();
+
+            var addresses = await _db.UserAddresses.Where(a => a.UserId == user.Id).ToListAsync();
+            foreach (var a in addresses)
+            {
+                a.IsDefault = (a.Id == id);
+            }
+
+            await _db.SaveChangesAsync();
+            return RedirectToAction("Index", new { tab = "address" });
+        }
+
+        // --- Returns ---
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RequestReturn(int orderId, string reason)
+        {
+            var user = await _userManager.FindByNameAsync(User.Identity!.Name!);
+            if (user == null) return NotFound();
+
+            var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == orderId && o.UserId == user.Id);
+            if (order == null) return NotFound();
+
+            if (order.Status != OrderStatus.Completed)
+            {
+                TempData["Error"] = "Chỉ có thể yêu cầu trả hàng cho đơn hàng đã giao thành công.";
+                return RedirectToAction("Index", new { tab = "orders" });
+            }
+
+            var existing = await _db.ReturnRequests.AnyAsync(r => r.OrderId == orderId);
+            if (existing)
+            {
+                TempData["Error"] = "Đơn hàng này đã có yêu cầu xử lý trả hàng.";
+                return RedirectToAction("Index", new { tab = "returns" });
+            }
+
+            var rr = new ReturnRequest
+            {
+                OrderId = orderId,
+                Reason = reason,
+                Status = ReturnRequestStatus.Pending,
+                RefundAmount = order.TotalAmount
+            };
+
+            _db.ReturnRequests.Add(rr);
+            await _db.SaveChangesAsync();
+
+            TempData["Success"] = "Yêu cầu trả hàng đã được gửi và đang chờ xử lý.";
+            return RedirectToAction("Index", new { tab = "returns" });
+        }
+
+        // --- Notifications ---
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarkRead(int id)
+        {
+            var user = await _userManager.FindByNameAsync(User.Identity!.Name!);
+            if (user == null) return NotFound();
+
+            var n = await _db.Notifications.FirstOrDefaultAsync(x => x.Id == id && x.UserId == user.Id);
+            if (n != null)
+            {
+                n.IsRead = true;
+                await _db.SaveChangesAsync();
+            }
+
+            return RedirectToAction("Index", new { tab = "notifications" });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteNotification(int id)
+        {
+            var user = await _userManager.FindByNameAsync(User.Identity!.Name!);
+            if (user == null) return NotFound();
+
+            var n = await _db.Notifications.FirstOrDefaultAsync(x => x.Id == id && x.UserId == user.Id);
+            if (n != null)
+            {
+                _db.Notifications.Remove(n);
+                await _db.SaveChangesAsync();
+            }
+
+            return RedirectToAction("Index", new { tab = "notifications" });
         }
     }
 }

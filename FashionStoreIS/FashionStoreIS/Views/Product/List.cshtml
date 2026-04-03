@@ -68,20 +68,35 @@
         <div class="sm-product-grid">
             @foreach (var p in Model)
             {
-                <a class="sm-product-card" href="/Product/Detail/@p.Id">
-                    <div class="sm-card-image">
-                        @if (p.Stock <= 0)
-                        {
-                            <div class="sm-sold-out">SOLD OUT</div>
-                        }
-                        <img src="@(string.IsNullOrEmpty(p.ImageUrl) ? "https://placehold.co/600x750/f0f0f0/999?text=NO+IMAGE" : p.ImageUrl)"
-                             alt="@p.Name" loading="lazy" />
-                    </div>
-                    <div class="sm-card-info">
-                        <div class="sm-card-name">@p.Name.ToUpper()</div>
-                        <div class="sm-card-price">@p.Price.ToString("N0")₫</div>
-                    </div>
-                </a>
+                <div class="sm-product-card">
+                    <!-- Wishlist Heart Button -->
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <button class="sm-wl-btn"
+                                id="wl-btn-@p.Id"
+                                onclick="toggleWishlist(@p.Id, this)"
+                                title="Thêm vào yêu thích">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                            </svg>
+                        </button>
+                    }
+
+                    <a class="sm-card-link" href="/Product/Detail/@p.Id">
+                        <div class="sm-card-image">
+                            @if (p.Stock <= 0)
+                            {
+                                <div class="sm-sold-out">SOLD OUT</div>
+                            }
+                            <img src="@(string.IsNullOrEmpty(p.ImageUrl) ? "https://placehold.co/600x750/f0f0f0/999?text=NO+IMAGE" : p.ImageUrl)"
+                                 alt="@p.Name" loading="lazy" />
+                        </div>
+                        <div class="sm-card-info">
+                            <div class="sm-card-name">@p.Name.ToUpper()</div>
+                            <div class="sm-card-price">@p.Price.ToString("N0")₫</div>
+                        </div>
+                    </a>
+                </div>
             }
         </div>
 
@@ -342,6 +357,7 @@
 }
 
 .sm-product-card {
+    position: relative;
     display: block;
     text-decoration: none;
     color: inherit;
@@ -351,6 +367,37 @@
     transition: background 0.2s;
 }
 .sm-product-card:hover { background: #fafafa; }
+
+/* Card link wrapper (bọc image + info) */
+.sm-card-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Wishlist Heart Button */
+.sm-wl-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    padding: 0;
+}
+.sm-wl-btn:hover { background: #fff; border-color: #e53e3e; }
+.sm-wl-btn:hover svg { stroke: #e53e3e; }
+.sm-wl-btn.active svg { fill: #e53e3e; stroke: #e53e3e; }
+.sm-wl-btn.active { border-color: #e53e3e; background: #fff5f5; }
 
 .sm-card-image {
     position: relative;
@@ -517,5 +564,91 @@ $(document).ready(function () {
         window.location.href = window.location.pathname + '?' + urlParams.toString();
     };
 });
+
+// ─── Wishlist Toggle (AJAX) ────────────────────────────────────────
+window.toggleWishlist = function(productId, btn) {
+    // Lấy CSRF token từ meta tag (layout cung cấp)
+    var token = $('meta[name="csrf-token"]').attr('content') || '';
+
+    $.ajax({
+        url: '/Wishlist/Toggle/' + productId,
+        type: 'POST',
+        data: { 
+            id: productId, 
+            __RequestVerificationToken: token 
+        },
+        success: function(res) {
+            if (res.success) {
+                $(btn).toggleClass('active', res.inWishlist);
+                var msg = res.inWishlist ? '♥ Đã thêm vào yêu thích!' : '✓ Đã bỏ khỏi yêu thích';
+                showWlToast(msg);
+
+                // Cập nhật badge wlNavBadge trên navbar
+                var badge = document.getElementById('wlNavBadge');
+                if (badge) {
+                    if (res.count > 0) {
+                        badge.textContent = res.count;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            }
+        },
+        error: function(xhr) {
+            if (xhr.status === 401) {
+                window.location.href = '/Identity/Account/Login?returnUrl=' + encodeURIComponent(window.location.pathname);
+            } else {
+                showWlToast('Lỗi. Vui lòng thử lại.');
+            }
+        }
+    });
+};
+
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <text>
+    // Load trạng thái wishlist cho tất cả sản phẩm trên trang
+    $(document).ready(function() {
+        // Tất cả productId trên trang này
+        var productIds = [];
+        $('[id^="wl-btn-"]').each(function() {
+            var id = parseInt(this.id.replace('wl-btn-', ''));
+            if (!isNaN(id)) productIds.push(id);
+        });
+
+        if (productIds.length === 0) return;
+
+        // Gọi API lấy danh sách wishlist items của user
+        $.get('/Wishlist/GetWishlistIds', function(data) {
+            if (data && data.ids) {
+                data.ids.forEach(function(pid) {
+                    var btn = document.getElementById('wl-btn-' + pid);
+                    if (btn) btn.classList.add('active');
+                });
+            }
+            // Cập nhật badge
+            var badge = document.getElementById('wlNavBadge');
+            if (badge && data && data.count > 0) {
+                badge.textContent = data.count;
+                badge.style.display = 'flex';
+            }
+        });
+    });
+    </text>
+}
+
+function showWlToast(msg) {
+    var t = $('<div>').text(msg).css({
+        position: 'fixed', bottom: '24px', right: '24px',
+        background: '#111', color: '#fff',
+        padding: '13px 20px', borderRadius: '6px',
+        fontSize: '13px', zIndex: 99999,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+        opacity: 1, transition: 'opacity 0.3s'
+    });
+    $('body').append(t);
+    setTimeout(function() { t.css('opacity', 0); setTimeout(function() { t.remove(); }, 300); }, 2500);
+}
 </script>
 }

@@ -14,6 +14,7 @@ namespace FashionStoreIS.Controllers
         private readonly ApplicationDbContext _db;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IVnPayService _vnPayService;
+        private readonly INotificationService _notif;
         private const string CART_COOKIE_NAME = "BNStore_Cart";
         private static string GenerateOrderCode()
         {
@@ -23,11 +24,12 @@ namespace FashionStoreIS.Controllers
             return $"BN{ts}{rnd}";
         }
 
-        public CheckoutController(ApplicationDbContext db, UserManager<ApplicationUser> userManager, IVnPayService vnPayService)
+        public CheckoutController(ApplicationDbContext db, UserManager<ApplicationUser> userManager, IVnPayService vnPayService, INotificationService notif)
         {
             _db = db;
             _userManager = userManager;
             _vnPayService = vnPayService;
+            _notif = notif;
         }
 
         [HttpGet]
@@ -241,6 +243,12 @@ namespace FashionStoreIS.Controllers
                 await _db.SaveChangesAsync();
                 await transaction.CommitAsync();
 
+                // Send notification if user is logged in
+                if (!string.IsNullOrEmpty(order.UserId))
+                {
+                    await _notif.SendOrderSuccessAsync(order);
+                }
+
                 if (paymentMethod == "VNPAY")
                 {
                     var vnPayModel = new PaymentInformationModel
@@ -299,6 +307,12 @@ namespace FashionStoreIS.Controllers
                 order.PaymentStatus = PaymentStatus.Paid;
                 await _db.SaveChangesAsync();
                 
+                // Send notification
+                if (!string.IsNullOrEmpty(order.UserId))
+                {
+                    await _notif.SendOrderSuccessAsync(order);
+                }
+
                 Response.Cookies.Delete(CART_COOKIE_NAME);
                 return View("OrderSuccess", order);
             }

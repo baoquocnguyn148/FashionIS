@@ -145,7 +145,7 @@ namespace FashionStoreIS.Services
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return "127.0.0.1";
             }

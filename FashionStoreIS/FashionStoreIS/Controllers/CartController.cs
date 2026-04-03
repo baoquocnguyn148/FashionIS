@@ -1,5 +1,7 @@
 using FashionStoreIS.Data;
 using FashionStoreIS.Models;
+using FashionStoreIS.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
@@ -9,11 +11,15 @@ namespace FashionStoreIS.Controllers
     public class CartController : Controller
     {
         private readonly ApplicationDbContext _db;
+        private readonly INotificationService _notif;
+        private readonly UserManager<ApplicationUser> _userManager;
         private const string CART_COOKIE_NAME = "BNStore_Cart";
 
-        public CartController(ApplicationDbContext db)
+        public CartController(ApplicationDbContext db, INotificationService notif, UserManager<ApplicationUser> userManager)
         {
             _db = db;
+            _notif = notif;
+            _userManager = userManager;
         }
 
         [HttpGet]
@@ -81,6 +87,17 @@ namespace FashionStoreIS.Controllers
             }
 
             SaveCartItems(cart);
+
+            // Send notification if user is logged in
+            if (User.Identity?.IsAuthenticated == true)
+            {
+                var userId = _userManager.GetUserId(User);
+                if (!string.IsNullOrEmpty(userId))
+                {
+                    await _notif.SendCartAddedAsync(userId, product.Name);
+                }
+            }
+
             return Json(new { success = true, itemCount = cart.Sum(i => i.Quantity) });
         }
 

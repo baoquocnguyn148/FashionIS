@@ -33,5 +33,6 @@ namespace FashionStoreIS.Models
         public virtual ApplicationUser? User { get; set; }
 
         public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+        public virtual ICollection<ReturnRequest> ReturnRequests { get; set; } = new List<ReturnRequest>();
     }
 }

@@ -1,5 +1,6 @@
 using FashionStoreIS.Data;
 using FashionStoreIS.Models;
+using FashionStoreIS.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -22,10 +23,12 @@ namespace FashionStoreIS.Areas.Admin.Controllers
     public class InventoryController : Controller
     {
         private readonly ApplicationDbContext _db;
+        private readonly InventoryIntelligenceService _intel;
 
-        public InventoryController(ApplicationDbContext db)
+        public InventoryController(ApplicationDbContext db, InventoryIntelligenceService intel)
         {
             _db = db;
+            _intel = intel;
         }
 
         public async Task<IActionResult> Index(string? search)
@@ -53,6 +56,7 @@ namespace FashionStoreIS.Areas.Admin.Controllers
             }).ToList();
 
             ViewBag.InventoryItems = groups;
+            ViewBag.Intelligence = await _intel.GetIntelligenceAsync();
             return View();
         }
 

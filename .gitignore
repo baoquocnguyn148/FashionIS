@@ -22,11 +22,23 @@ bld/
 bin/
 obj/
 
-# Visual Studio 2015/2017 cache directory
+# Visual Studio cache
 .vs/
 
-# Others
+# .NET & EF
+*.log
+*.txt.bak
+build_*.log
+build_*.txt
+msbuild.log
+startup.log
+tmp_*.cs
+
+# Database & Secrets
 App_Data/*.db
 App_Data/*.db-journal
-*.log
+appsettings.Development.json
+
+# OS
 .DS_Store
+Thumbs.db

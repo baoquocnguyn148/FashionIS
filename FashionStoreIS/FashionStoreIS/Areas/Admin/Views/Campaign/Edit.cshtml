@@ -1,0 +1,7 @@
+@model FashionStoreIS.Areas.Admin.ViewModels.CampaignViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = $"Preview: {Model.Name}";
+}
+@* Reuse Create view for Edit *@
+@await Html.PartialAsync("Create", Model)

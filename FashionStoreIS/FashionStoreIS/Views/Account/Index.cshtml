@@ -1,4 +1,4 @@
-@model List<FashionStoreIS.Models.Order>
+@model dynamic
 @{
     ViewData["Title"] = "Tài khoản của tôi";
     var user = ViewBag.User as FashionStoreIS.Models.ApplicationUser;
@@ -200,6 +200,15 @@
                                                         <button type="submit" class="btn btn-sm btn-outline-danger px-3">Hủy đơn</button>
                                                     </form>
                                                 }
+                                                @if (order.Status == FashionStoreIS.Models.OrderStatus.Completed)
+                                                {
+                                                    <button type="button" class="btn btn-sm btn-outline-warning px-3"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#returnModal"
+                                                            onclick="setReturnOrder(@order.Id)">
+                                                        <i class="fa-solid fa-rotate-left me-1"></i>Trả hàng
+                                                    </button>
+                                                }
                                             </div>
                                         </td>
                                     </tr>
@@ -207,7 +216,40 @@
                             </tbody>
                         </table>
                     </div>
-                }
+
+                    <!-- Return Request Modal -->
+                    <div class="modal fade" id="returnModal" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content border-0 shadow rounded-4">
+                                <div class="modal-header border-0 pb-0">
+                                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-rotate-left me-2 text-warning"></i>Yêu cầu trả hàng</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <form asp-action="RequestReturn" asp-controller="Account" method="post">
+                                    @Html.AntiForgeryToken()
+                                    <div class="modal-body p-4">
+                                        <input type="hidden" name="orderId" id="returnOrderId" value="" />
+                                        <p class="text-muted small mb-3">Vui lòng nhập lý do bạn muốn trả hàng. Yêu cầu sẽ được xem xét trong vòng 1-3 ngày làm việc.</p>
+                                        <div class="mb-3">
+                                            <label class="form-label small fw-bold text-muted">Lý do trả hàng <span class="text-danger">*</span></label>
+                                            <textarea name="reason" class="form-control bg-light border-0" rows="4" required 
+                                                      placeholder="Ví dụ: Sản phẩm bị lỗi, không đúng mô tả, nhận nhầm hàng..."></textarea>
+                                        </div>
+                                        <div class="alert alert-warning border-0 rounded-3 small py-2 px-3">
+                                            <i class="fa-solid fa-circle-info me-1"></i>
+                                            Chỉ có thể yêu cầu trả hàng trong vòng <strong>7 ngày</strong> sau khi nhận hàng.
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer border-0 pt-0">
+                                        <button type="button" class="btn btn-light px-4 rounded-pill" data-bs-dismiss="modal">Hủy bỏ</button>
+                                        <button type="submit" class="btn btn-warning px-4 rounded-pill fw-bold">Gửi yêu cầu</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                }  @* Close else block *@
             }
             else if (activeTab == "profile")
             {
@@ -317,14 +359,267 @@
                     </div>
                 </div>
             }
-            else
+            else if (activeTab == "address")
             {
-                <div class="empty-state border rounded-4 text-center py-5 px-3 mx-auto mt-4 w-100 shadow-sm" style="border-color: #eaeaea !important;">
-                    <div class="empty-icon-circle mx-auto mb-4 d-flex align-items-center justify-content-center mt-3">
-                        <i class="fa-solid fa-clock-rotate-left profile-theme-icon" style="font-size: 24px;"></i>
+                var addresses = (Model as IEnumerable<FashionStoreIS.Models.UserAddress>)?.ToList() ?? new List<FashionStoreIS.Models.UserAddress>();
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h3 class="fw-bold text-dark mb-1" style="color: #0c1e36;">Địa chỉ của tôi</h3>
+                        <p class="text-muted small mb-0">Quản lý địa chỉ nhận hàng của bạn</p>
                     </div>
-                    <h5 class="fw-bold mb-3" style="color: #0c1e36;">Tính năng đang phát triển</h5>
-                    <p class="text-muted small mb-5 lh-lg mx-auto" style="max-width: 350px;">Mục này hiện đang được nâng cấp để mang lại trải nghiệm tuyệt vời nhất cho bạn.</p>
+                    <button class="btn btn-dark btn-sm px-3 rounded-pill" data-bs-toggle="modal" data-bs-target="#addAddressModal">
+                        <i class="fa-solid fa-plus me-1"></i> Thêm địa chỉ mới
+                    </button>
+                </div>
+
+                <div class="row g-3">
+                    @if (!addresses.Any())
+                    {
+                        <div class="col-12 text-center py-5 border rounded-4 bg-light">
+                            <i class="fa-solid fa-map-location-dot mb-3 opacity-25" style="font-size: 48px;"></i>
+                            <p class="text-muted">Bạn chưa có địa chỉ nào được lưu.</p>
+                        </div>
+                    }
+                    @foreach (var addr in addresses)
+                    {
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm rounded-4 h-100 @(addr.IsDefault ? "border-primary-subtle bg-primary-subtle bg-opacity-10" : "border")" style="border: 1px solid #eee !important;">
+                                <div class="card-body p-4">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="fw-bold mb-0">@addr.FullName</h6>
+                                        @if (addr.IsDefault)
+                                        {
+                                            <span class="badge bg-primary rounded-pill small" style="font-size: 10px; background-color: #0f3c83 !important;">Mặc định</span>
+                                        }
+                                    </div>
+                                    <p class="text-muted small mb-1"><i class="fa-solid fa-phone me-2 opacity-50"></i>@addr.PhoneNumber</p>
+                                    <p class="text-dark small mb-3"><i class="fa-solid fa-location-dot me-2 opacity-50"></i>@addr.AddressLine</p>
+                                    <div class="d-flex gap-2 mt-auto pt-2">
+                                        @if (!addr.IsDefault)
+                                        {
+                                            <form asp-action="SetDefaultAddress" method="post" class="m-0">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@addr.Id" />
+                                                <button type="submit" class="btn btn-link text-primary p-0 small text-decoration-none" style="font-size: 12px; color: #0f3c83 !important;">Thiết lập mặc định</button>
+                                            </form>
+                                            <span class="text-muted opacity-25">|</span>
+                                        }
+                                        <form asp-action="DeleteAddress" method="post" class="m-0" onsubmit="return confirm('Xóa địa chỉ này?')">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="id" value="@addr.Id" />
+                                            <button type="submit" class="btn btn-link text-danger p-0 small text-decoration-none" style="font-size: 12px;">Xóa</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Add Address Modal -->
+                <div class="modal fade" id="addAddressModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content border-0 shadow rounded-4">
+                            <div class="modal-header border-0 pb-0">
+                                <h5 class="modal-title fw-bold">Thêm địa chỉ mới</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form asp-action="AddAddress" method="post">
+                                @Html.AntiForgeryToken()
+                                <div class="modal-body p-4">
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-muted">Họ và tên người nhận</label>
+                                        <input type="text" name="fullName" class="form-control bg-light border-0" required placeholder="Nhập tên người nhận">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-muted">Số điện thoại</label>
+                                        <input type="tel" name="phoneNumber" class="form-control bg-light border-0" required placeholder="Nhập số điện thoại">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label small fw-bold text-muted">Địa chỉ chi tiết</label>
+                                        <textarea name="addressLine" class="form-control bg-light border-0" rows="3" required placeholder="Số nhà, tên đường, phường/xã..."></textarea>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="isDefault" value="true" id="isDefaultCheck">
+                                        <label class="form-check-label small" for="isDefaultCheck">Đặt làm địa chỉ mặc định</label>
+                                    </div>
+                                </div>
+                                <div class="modal-footer border-0 pt-0">
+                                    <button type="button" class="btn btn-light px-4 rounded-pill" data-bs-toggle="modal">Hủy</button>
+                                    <button type="submit" class="btn btn-dark px-4 rounded-pill" style="background-color: #0f3c83;">Hoàn thành</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+            else if (activeTab == "returns")
+            {
+                var returns = (Model as IEnumerable<FashionStoreIS.Models.ReturnRequest>)?.ToList() ?? new List<FashionStoreIS.Models.ReturnRequest>();
+                <div class="mb-5">
+                    <h3 class="fw-bold text-dark mb-2" style="color: #0c1e36;">Trả hàng/Hoàn tiền</h3>
+                    <p class="text-muted small" style="font-size: 14px;">Theo dõi các yêu cầu đổi trả sản phẩm</p>
+                </div>
+
+                @if (!returns.Any())
+                {
+                    <div class="empty-state border rounded-4 text-center py-5 px-3 mx-auto mt-4 w-100 shadow-sm" style="border-color: #eaeaea !important;">
+                         <div class="empty-icon-circle mx-auto mb-4 d-flex align-items-center justify-content-center mt-3">
+                            <i class="fa-solid fa-rotate-left profile-theme-icon" style="font-size: 24px;"></i>
+                        </div>
+                        <h5 class="fw-bold mb-3" style="color: #0c1e36;">Chưa có yêu cầu trả hàng</h5>
+                        <p class="text-muted small mb-5 lh-lg mx-auto" style="max-width: 350px;">Lịch sử yêu cầu trả hàng hoặc hoàn tiền của bạn sẽ hiển thị tại đây.</p>
+                        <a href="@Url.Action("Index", new { tab = "orders", status = "Completed" })" class="btn btn-theme-primary px-4 py-2 mb-3 fw-medium" style="font-size: 14px;">Tới danh sách đơn hàng &rarr;</a>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="bg-light">
+                                <tr class="small text-uppercase text-muted">
+                                    <th class="border-0 px-3 py-3">Đơn hàng</th>
+                                    <th class="border-0 py-3">Lý do của bạn</th>
+                                    <th class="border-0 py-3">Trạng thái</th>
+                                    <th class="border-0 py-3">Phản hồi từ Shop</th>
+                                    <th class="border-0 py-3">Ngày gửi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var r in returns)
+                                {
+                                    <tr>
+                                        <td class="px-3 fw-bold">#@r.Order?.OrderCode</td>
+                                        <td class="small text-truncate" style="max-width: 150px;">@r.Reason</td>
+                                        <td>
+                                            @{
+                                                var rStatusClass = r.Status switch {
+                                                    FashionStoreIS.Models.ReturnRequestStatus.Pending => "bg-warning text-dark",
+                                                    FashionStoreIS.Models.ReturnRequestStatus.Approved => "bg-info text-white",
+                                                    FashionStoreIS.Models.ReturnRequestStatus.Completed => "bg-success text-white",
+                                                    FashionStoreIS.Models.ReturnRequestStatus.Rejected => "bg-danger text-white",
+                                                    _ => "bg-secondary text-white"
+                                                };
+                                                var rStatusText = r.Status switch {
+                                                    FashionStoreIS.Models.ReturnRequestStatus.Pending => "Chờ xử lý",
+                                                    FashionStoreIS.Models.ReturnRequestStatus.Approved => "Đã duyệt",
+                                                    FashionStoreIS.Models.ReturnRequestStatus.Completed => "Hoàn tất",
+                                                    FashionStoreIS.Models.ReturnRequestStatus.Rejected => "Từ chối",
+                                                    _ => r.Status.ToString()
+                                                };
+                                            }
+                                            <span class="badge @rStatusClass rounded-pill px-3">@rStatusText</span>
+                                        </td>
+                                        <td class="small">
+                                            @if (!string.IsNullOrEmpty(r.AdminNote))
+                                            {
+                                                <div class="text-primary fw-medium" style="max-width: 250px;">
+                                                    <i class="fa-solid fa-comment-dots me-1"></i> @r.AdminNote
+                                                </div>
+                                            }
+                                            else if (r.Status == FashionStoreIS.Models.ReturnRequestStatus.Pending)
+                                            {
+                                                <span class="text-muted italic">Đang chờ kiểm duyệt...</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td class="text-muted small">@r.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            }
+            else if (activeTab == "promotions")
+            {
+                var vouchers = (Model as IEnumerable<FashionStoreIS.Models.Voucher>)?.ToList() ?? new List<FashionStoreIS.Models.Voucher>();
+                <div class="mb-4">
+                    <h3 class="fw-bold text-dark mb-2" style="color: #0c1e36;">Kho Voucher</h3>
+                    <p class="text-muted small" style="font-size: 14px;">Khám phá các ưu đãi độc quyền dành riêng cho bạn</p>
+                </div>
+
+                <div class="row g-3">
+                    @if (!vouchers.Any())
+                    {
+                        <div class="col-12 text-center py-5 border rounded-4 bg-light">
+                            <i class="fa-solid fa-ticket mb-3 opacity-25" style="font-size: 48px;"></i>
+                            <p class="text-muted">Hiện tại không có mã giảm giá khả dụng.</p>
+                        </div>
+                    }
+                    @foreach (var v in vouchers)
+                    {
+                        <div class="col-md-6 col-xl-4">
+                            <div class="voucher-card position-relative d-flex bg-white border overflow-hidden rounded-3 shadow-sm" style="min-height: 110px;">
+                                <div class="voucher-left d-flex flex-column align-items-center justify-content-center text-white px-2 text-center" style="width: 100px; background: linear-gradient(135deg, #0f3c83, #1e5bb8); border-right: 2px dashed #eee;">
+                                    <i class="fa-solid fa-gift mb-2" style="font-size: 20px;"></i>
+                                    <span class="small fw-bold">GIẢM GIÁ</span>
+                                </div>
+                                <div class="voucher-right p-3 flex-grow-1">
+                                    <h6 class="fw-bold text-dark mb-1">@v.DiscountAmount.ToString("N0")₫</h6>
+                                    <p class="text-muted small mb-2" style="font-size: 11px;">Mã: <span class="text-primary fw-bold">@v.Code</span></p>
+                                    <div class="d-flex justify-content-between align-items-end mt-2">
+                                        <span class="text-danger small fw-medium" style="font-size: 10px;">HSD: @v.ExpiryDate.ToString("dd/MM")</span>
+                                        <button class="btn btn-sm btn-outline-primary py-0 px-2 rounded-pill" style="font-size: 10px;" onclick="copyCode('@v.Code')">Dùng ngay</button>
+                                    </div>
+                                </div>
+                                <div class="voucher-cutout-top"></div>
+                                <div class="voucher-cutout-bottom"></div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <script>
+                    function copyCode(code) {
+                        navigator.clipboard.writeText(code);
+                        alert("Đã copy mã: " + code + ". Sử dụng mã này khi thanh toán!");
+                    }
+                </script>
+            }
+            else if (activeTab == "notifications")
+            {
+                var notifications = (Model as IEnumerable<FashionStoreIS.Models.Notification>)?.ToList() ?? new List<FashionStoreIS.Models.Notification>();
+                <div class="mb-4">
+                    <h3 class="fw-bold text-dark mb-2" style="color: #0c1e36;">Thông báo</h3>
+                    <p class="text-muted small" style="font-size: 14px;">Cập nhật những tin tức mới nhất từ BN Store</p>
+                </div>
+
+                <div class="list-group list-group-flush border rounded-4 overflow-hidden shadow-sm">
+                    @if (!notifications.Any())
+                    {
+                        <div class="list-group-item text-center py-5 bg-light">
+                            <i class="fa-solid fa-bell-slash mb-3 opacity-25" style="font-size: 48px;"></i>
+                            <p class="text-muted small mb-0">Bạn chưa có thông báo nào.</p>
+                        </div>
+                    }
+                    @foreach (var n in notifications)
+                    {
+                        <div class="list-group-item list-group-item-action p-4 @(n.IsRead ? "bg-white" : "bg-light")" style="border-left: 4px solid @(n.IsRead ? "transparent" : "#0f3c83")">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="fw-bold mb-1 @(n.IsRead ? "text-dark" : "text-primary")">@n.Title</h6>
+                                <small class="text-muted">@n.CreatedAt.ToString("dd/MM HH:mm")</small>
+                            </div>
+                            <p class="text-muted small mb-3">@n.Message</p>
+                            <div class="d-flex gap-3">
+                                @if (!n.IsRead)
+                                {
+                                    <form asp-action="MarkRead" method="post" class="m-0">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@n.Id" />
+                                        <button type="submit" class="btn btn-link text-primary p-0 small text-decoration-none" style="font-size: 11px;">Đánh dấu đã đọc</button>
+                                    </form>
+                                }
+                                <form asp-action="DeleteNotification" method="post" class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@n.Id" />
+                                    <button type="submit" class="btn btn-link text-danger p-0 small text-decoration-none" style="font-size: 11px;">Xóa</button>
+                                </form>
+                            </div>
+                        </div>
+                    }
                 </div>
             }
         </div>
@@ -464,4 +759,44 @@
 
     /* Animation */
     .animate__fadeIn { animation-duration: 0.5s; }
+
+    /* Voucher Card Styling */
+    .voucher-card {
+        border-color: #eee !important;
+        transition: transform 0.2s ease, shadow 0.2s ease;
+    }
+    .voucher-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.05) !important;
+    }
+    .voucher-cutout-top, .voucher-cutout-bottom {
+        position: absolute;
+        left: 90px;
+        width: 20px;
+        height: 20px;
+        background-color: #fff; /* Matches card bg */
+        border-radius: 50%;
+        border: 1px solid #eee;
+        z-index: 10;
+    }
+    .voucher-cutout-top { top: -10px; }
+    .voucher-cutout-bottom { bottom: -10px; }
+
+    /* Notification Styling */
+    .list-group-item-action:hover {
+        background-color: #f8f9fa !important;
+    }
+
+    /* Form control styling */
+    .form-control:focus, .form-select:focus {
+        box-shadow: none;
+        background-color: #fff !important;
+        border: 1px solid #0f3c83 !important;
+    }
 </style>
+
+<script>
+    function setReturnOrder(orderId) {
+        document.getElementById('returnOrderId').value = orderId;
+    }
+</script>

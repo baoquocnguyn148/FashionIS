@@ -1,0 +1,82 @@
+@model IEnumerable<FashionStoreIS.Models.Attendance>
+
+@{
+    ViewData["Title"] = "Quản lý Chấm công";
+    var filterDate = ViewData["FilterDate"]?.ToString();
+}
+
+<div class="search-bar">
+    <form asp-action="Index" method="get" style="display: flex; gap: 10px;">
+        <input type="date" name="date" class="form-control" value="@filterDate" />
+        <button type="submit" class="btn-admin btn-primary">Lọc dữ liệu</button>
+    </form>
+    <a asp-action="CheckIn" class="btn-admin btn-secondary" style="margin-left: auto;">
+        <i class="fa-solid fa-plus"></i> Bắt đầu ca làm (Check-in)
+    </a>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <div class="admin-card-title">CHẤM CÔNG NGÀY: @(DateTime.Parse(filterDate!).ToString("dd/MM/yyyy"))</div>
+    </div>
+    <div class="table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Nhân viên</th>
+                    <th>Giờ vào</th>
+                    <th>Giờ ra</th>
+                    <th>Tổng số giờ</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td style="font-weight: 600;">@(item.Employee?.FullName ?? item.EmployeeId.ToString())</td>
+                        <td>@(item.CheckIn.HasValue ? item.CheckIn.Value.ToString(@"hh\:mm") : "--:--")</td>
+                        <td>@(item.CheckOut.HasValue ? item.CheckOut.Value.ToString(@"hh\:mm") : "--:--")</td>
+                        <td style="font-weight: 700;">@(item.TotalHours > 0 ? item.TotalHours.ToString("0.##") : "0") giờ</td>
+                        <td>
+                            @if (item.Status == AttendanceStatus.Present)
+                            {
+                                <span class="badge badge-green">Đúng giờ</span>
+                            }
+                            else if (item.Status == AttendanceStatus.Late)
+                            {
+                                <span class="badge badge-red">Đi muộn</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-secondary">@(item.Status.ToString())</span>
+                            }
+                        </td>
+                        <td>
+                            @if (!item.CheckOut.HasValue)
+                            {
+                                <form asp-action="CheckOut" asp-route-id="@item.Id" method="post" style="display: inline;">
+                                    <button type="submit" class="btn-admin btn-primary btn-sm">
+                                        <i class="fa-solid fa-sign-out-alt"></i> Check-out
+                                    </button>
+                                </form>
+                            }
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn-admin btn-danger btn-sm" title="Xóa">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 40px; color: var(--admin-muted);">
+                            Hôm nay chưa có dữ liệu chấm công.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

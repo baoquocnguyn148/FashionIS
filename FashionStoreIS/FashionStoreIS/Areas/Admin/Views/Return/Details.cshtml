@@ -1,0 +1,171 @@
+@model FashionStoreIS.Models.ReturnRequest
+@{
+    ViewData["Title"] = "Chi tiết Yêu cầu Trả hàng";
+    var user = ViewBag.User as FashionStoreIS.Models.ApplicationUser;
+}
+
+<div class="mb-4">
+    <a href="/Admin/Return" class="btn-admin btn-secondary btn-sm">
+        <i class="fas fa-arrow-left"></i> Quay lại danh sách
+    </a>
+</div>
+
+<div class="form-grid">
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h5 class="admin-card-title">Thông tin yêu cầu</h5>
+        </div>
+        <div class="p-4">
+            <div class="mb-3">
+                <label class="form-label">Mã Đơn Hàng</label>
+                <div class="fw-bold text-white">#@Model.Order?.OrderCode</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Ngày gửi yêu cầu</label>
+                <div class="text-white">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Lý do trả hàng</label>
+                <div class="p-3 bg-dark border border-secondary rounded text-white" style="min-height: 80px;">
+                    @Model.Reason
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Số tiền hoàn trả dự kiến</label>
+                <div class="price-text fs-4">@Model.RefundAmount.ToString("N0") VND</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-card">
+        <div class="admin-card-header">
+            <h5 class="admin-card-title">Thông tin khách hàng</h5>
+        </div>
+        <div class="p-4">
+            <div class="mb-3">
+                <label class="form-label">Tên khách hàng</label>
+                <div class="text-white">@(user?.FullName ?? Model.Order?.CustomerName ?? "N/A")</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Số điện thoại</label>
+                <div class="text-white">@(user?.PhoneNumber ?? Model.Order?.Phone ?? "N/A")</div>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <div class="text-white">@(user?.Email ?? "N/A")</div>
+            </div>
+            <hr class="border-secondary opacity-25 my-4" />
+            <div class="mb-3">
+                <label class="form-label">Trạng thái hiện tại</label>
+                @{
+                    var badgeClass = Model.Status switch {
+                        FashionStoreIS.Models.ReturnRequestStatus.Pending => "badge-warning",
+                        FashionStoreIS.Models.ReturnRequestStatus.Approved => "badge-primary",
+                        FashionStoreIS.Models.ReturnRequestStatus.Completed => "badge-green",
+                        FashionStoreIS.Models.ReturnRequestStatus.Rejected => "badge-red",
+                        _ => ""
+                    };
+                    var statusText = Model.Status switch {
+                        FashionStoreIS.Models.ReturnRequestStatus.Pending => "Chờ xử lý",
+                        FashionStoreIS.Models.ReturnRequestStatus.Approved => "Đã duyệt",
+                        FashionStoreIS.Models.ReturnRequestStatus.Completed => "Hoàn tất",
+                        FashionStoreIS.Models.ReturnRequestStatus.Rejected => "Từ chối",
+                        _ => Model.Status.ToString()
+                    };
+                }
+                <span class="badge @badgeClass" style="font-size: 12px; padding: 8px 16px;">@statusText</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card mt-4">
+    <div class="admin-card-header">
+        <h5 class="admin-card-title">Xử lý yêu cầu</h5>
+    </div>
+    <div class="p-4">
+        @if (Model.Status == FashionStoreIS.Models.ReturnRequestStatus.Pending)
+        {
+            <div class="row g-4">
+                <div class="col-md-6 border-end border-secondary border-opacity-25">
+                    <h6 class="form-label text-success mb-3">Duyệt yêu cầu</h6>
+                    <form method="post" action="/Admin/Return/Approve">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <div class="mb-3">
+                            <label class="form-label">Ghi chú/Hướng dẫn gửi hàng (không bắt buộc)</label>
+                            <textarea name="adminNote" class="form-control" placeholder="Ví dụ: Vui lòng gửi hàng về địa chỉ..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-admin btn-primary w-100" style="background: var(--admin-green); color: #fff;">
+                            <i class="fas fa-check-circle"></i> Duyệt & Gửi thông báo
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    <h6 class="form-label text-danger mb-3">Từ chối yêu cầu</h6>
+                    <form method="post" action="/Admin/Return/Reject">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <div class="mb-3">
+                            <label class="form-label">Lý do từ chối (bắt buộc)</label>
+                            <textarea name="adminNote" class="form-control" required placeholder="Lý do từ chối..."></textarea>
+                        </div>
+                        <button type="submit" class="btn-admin btn-danger w-100">
+                            <i class="fas fa-times-circle"></i> Từ chối & Gửi thông báo
+                        </button>
+                    </form>
+                </div>
+            </div>
+        }
+        else if (Model.Status == FashionStoreIS.Models.ReturnRequestStatus.Approved)
+        {
+            <div class="bg-dark bg-opacity-25 p-4 rounded border border-info border-opacity-25">
+                <h6 class="form-label text-info mb-3">Hoàn tất quy trình</h6>
+                <p class="text-muted small mb-4">Sau khi nhận được hàng và kiểm tra xong, bạn có thể thực hiện hoàn tiền để kết thúc yêu cầu này.</p>
+                <form method="post" action="/Admin/Return/Complete">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Số tiền hoàn trả thực tế</label>
+                                <input type="number" name="refundAmount" class="form-control" value="@Model.RefundAmount" required />
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label class="form-label">Ghi chú hoàn tất (không bắt buộc)</label>
+                                <input type="text" name="adminNote" class="form-control" placeholder="Ví dụ: Đã nhận hàng & hoàn tiền qua chuyển khoản." />
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-admin btn-primary mt-2" style="background: var(--admin-green); color: #fff;">
+                        <i class="fas fa-hand-holding-usd"></i> Xác nhận Hoàn tiền & Hoàn tất
+                    </button>
+                </form>
+            </div>
+        }
+        else
+        {
+            <div class="p-3 bg-dark bg-opacity-25 rounded border border-secondary border-opacity-25">
+                <div class="mb-2">
+                    <label class="form-label">Ghi chú xử lý:</label>
+                    <div class="text-white">@(string.IsNullOrEmpty(Model.AdminNote) ? "-" : Model.AdminNote)</div>
+                </div>
+                <div class="mb-0">
+                    <label class="form-label">Thời gian xử lý:</label>
+                    <div class="text-white">@(Model.ProcessedAt?.ToString("dd/MM/yyyy HH:mm") ?? "-")</div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+.order-id { font-family: 'Courier New', Courier, monospace; font-weight: bold; color: #a78bfa; background: rgba(167, 139, 250, 0.1); padding: 4px 8px; border-radius: 6px; }
+.price-text { font-weight: 700; color: #10b981; }
+.badge-warning { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+.badge-primary { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+.badge-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.badge-red { background: rgba(239, 104, 104, 0.15); color: #f87171; }
+</style>

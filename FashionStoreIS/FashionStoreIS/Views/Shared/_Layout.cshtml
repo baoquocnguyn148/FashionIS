@@ -88,7 +88,38 @@
                         z-index: 2;
                     }
                 </style>
+
+                @* ─── Wishlist Icon (chỉ hiển thị khi đã đăng nhập) ─── *@
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a href="/Wishlist" class="header-icon-btn d-none d-md-flex" aria-label="Danh sách yêu thích" id="wishlistNavBtn" title="Yêu thích" style="position:relative;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                        <span class="wl-nav-badge" id="wlNavBadge" style="display:none">0</span>
+                    </a>
+                    <style>
+                    .wl-nav-badge {
+                        position: absolute;
+                        top: 2px;
+                        right: 2px;
+                        background: #e74c3c;
+                        color: white;
+                        font-size: 11px;
+                        font-weight: 600;
+                        min-width: 18px;
+                        height: 18px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        padding: 0 5px;
+                    }
+                    </style>
+                }
+
                 <button type="button" class="header-cart-btn" id="openCart" aria-label="Giỏ hàng" onclick="showCart()">
+
                     <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
                         <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/>
                         <path d="M16 10a4 4 0 01-8 0"/>
@@ -192,6 +223,7 @@
             @if (User.Identity?.IsAuthenticated == true)
             {
                 <li><a href="/Account" class="menu-link">TÀI KHOẢN</a></li>
+                <li><a href="/Wishlist" class="menu-link">YÊU THÍCH <span id="mobileWlBadge" class=""></span></a></li>
                 @if (User.IsInRole("SuperAdmin") || User.IsInRole("Staff"))
                 {
                     <li><a href="/Admin/Dashboard" class="menu-link" style="color:var(--sv-gray-text)">QUẢN TRỊ</a></li>
@@ -497,17 +529,17 @@
                 <div class="footer-col">
                     <h4>Hỗ trợ</h4>
                     <ul>
-                        <li><a href="#">Hướng dẫn mua hàng</a></li>
-                        <li><a href="#">Chính sách đổi trả</a></li>
-                        <li><a href="#">Bảng size</a></li>
-                        <li><a href="#">Liên hệ</a></li>
+                        <li><a href="/Support/BuyingGuide">Hướng dẫn mua hàng</a></li>
+                        <li><a href="/Support/ReturnPolicy">Chính sách đổi trả</a></li>
+                        <li><a href="/Support/SizeGuide">Bảng size</a></li>
+                        <li><a href="/Support/Contact">Liên hệ</a></li>
                     </ul>
                 </div>
                 <div class="footer-col">
                     <h4>Cửa hàng</h4>
                     <ul>
-                        <li><a href="#">BN STORE Quận 1</a></li>
-                        <li><a href="#">BN STORE Quận 3</a></li>
+                        <li><a href="/Support/Stores#store-q1">BN STORE Quận 1</a></li>
+                        <li><a href="/Support/Stores#store-q3">BN STORE Quận 3</a></li>
                         <li><a href="/Admin/Dashboard">Khu vực quản trị</a></li>
                     </ul>
                 </div>
@@ -666,6 +698,25 @@
             
             // Initial cart count
             updateCartCount();
+
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <text>
+            // Load wishlist count khi page load → cập nhật badge trên navbar
+            $.get('/Wishlist/GetWishlistIds', function(data) {
+                if (data && data.count > 0) {
+                    var badge = document.getElementById('wlNavBadge');
+                    if (badge) { badge.textContent = data.count; badge.style.display = 'flex'; }
+                    var mobileBadge = document.getElementById('mobileWlBadge');
+                    if (mobileBadge) {
+                        mobileBadge.textContent = ' (' + data.count + ')';
+                        mobileBadge.style.color = '#e74c3c';
+                        mobileBadge.style.fontWeight = '700';
+                    }
+                }
+            });
+                </text>
+            }
         });
     </script>
     

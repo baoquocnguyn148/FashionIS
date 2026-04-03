@@ -1,19 +1,92 @@
-@using FashionStoreIS.Models
+@using FashionStoreIS.Services
 @{
-    ViewData["Title"] = "Quản lý tồn kho";
+    ViewData["Title"] = "Inventory Intelligence";
     var search = ViewBag.Search as string ?? "";
+    var intel = ViewBag.Intelligence as InventoryIntelligenceViewModel;
+}
 
-    var groups = ViewBag.ProductGroups as IEnumerable<object> ?? Enumerable.Empty<object>();
+@section Styles {
+<style>
+    .intel-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .intel-card { background: var(--admin-card); border: 1px solid var(--admin-border); border-radius: 12px; padding: 20px; }
+    .intel-label { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--admin-muted); margin-bottom: 8px; }
+    .intel-value { font-size: 24px; font-weight: 800; color: #fff; }
+    .intel-sub { font-size: 11px; color: var(--admin-muted); margin-top: 4px; }
+
+    .insight-card { border-radius: 10px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; border-left: 4px solid #fff; }
+    .insight-Danger { background: rgba(239,68,68,0.1); border-color: #ef4444; }
+    .insight-Warning { background: rgba(245,158,11,0.1); border-color: #f59e0b; }
+    .insight-Info { background: rgba(59,130,246,0.1); border-color: #3b82f6; }
+    
+    .stock-health-bar { height: 4px; width: 100%; background: rgba(255,255,255,0.05); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+    .health-Healthy { background: #10b981; }
+    .health-Warning { background: #f59e0b; }
+    .health-Critical { background: #ef4444; }
+</style>
 }
 
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-    <h2 style="font-size:18px; font-weight:700; color:#fff;">📦 Quản lý tồn kho theo SKU</h2>
+    <h2 style="font-size:22px; font-weight:800; color:#fff;">📊 Inventory Intelligence & DSS</h2>
+    <div style="text-align:right;">
+        <div style="font-size:11px; color:var(--admin-muted); text-transform:uppercase; letter-spacing:1px;">Ngày báo cáo</div>
+        <div style="font-size:13px; font-weight:600;">@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</div>
+    </div>
 </div>
+
+@if (intel != null)
+{
+    <!-- KPI Dashboard -->
+    <div class="intel-grid">
+        <div class="intel-card">
+            <div class="intel-label">Giá trị vốn (Cost)</div>
+            <div class="intel-value">@intel.TotalAssetValue.ToString("N0")₫</div>
+            <div class="intel-sub">Tổng vốn lưu động trong kho</div>
+        </div>
+        <div class="intel-card">
+            <div class="intel-label">Doanh thu dự kiến</div>
+            <div class="intel-value" style="color:#10b981;">@intel.PotentialRevenue.ToString("N0")₫</div>
+            <div class="intel-sub">Biên lợi nhuận: ~@intel.MarginPercentage.ToString("F1")%</div>
+        </div>
+        <div class="intel-card">
+            <div class="intel-label">Sức khỏe kho hàng</div>
+            <div class="intel-value">@intel.HealthyStockCount <span style="font-size:14px; font-weight:400; color:var(--admin-muted);">/ @intel.TotalSkus</span></div>
+            <div class="intel-sub">⚠️ @intel.LowStockCount sắp hết • ❌ @intel.OutOfStockCount hết hàng</div>
+        </div>
+        <div class="intel-card">
+            <div class="intel-label">Tỷ lệ hết hàng</div>
+            @{
+                var oosPct = intel.TotalSkus > 0 ? (intel.OutOfStockCount * 100.0 / intel.TotalSkus) : 0;
+            }
+            <div class="intel-value" style="color:@(oosPct > 10 ? "#ef4444" : "#fff");">@oosPct.ToString("F1")%</div>
+            <div class="intel-sub">Mục tiêu: &lt; 5% để tối ưu doanh thu</div>
+        </div>
+    </div>
+
+    <!-- Smart Insights -->
+    @foreach (var insight in intel.Insights)
+    {
+        <div class="insight-card insight-@insight.Type">
+            <div style="font-size:24px;">
+                @(insight.Type == "Danger" ? "🚨" : insight.Type == "Warning" ? "⚡" : "ℹ️")
+            </div>
+            <div style="flex:1;">
+                <div style="font-size:14px; font-weight:700; color:#fff;">@insight.Title</div>
+                <div style="font-size:12px; color:var(--admin-muted);">@insight.Message</div>
+            </div>
+            @if (!string.IsNullOrEmpty(insight.ActionUrl))
+            {
+                <a href="@insight.ActionUrl" class="btn-admin btn-sm @(insight.Type == "Danger" ? "btn-danger" : "btn-primary")">
+                    @insight.ActionText
+                </a>
+            }
+        </div>
+    }
+}
 
 <div style="display:flex; gap:12px; margin-bottom:20px; align-items:center; flex-wrap:wrap;">
     <form method="get" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-        <input name="search" value="@search" class="form-control" placeholder="Tìm sản phẩm..." style="max-width:280px;" />
-        <button type="submit" class="btn-admin btn-primary">Tìm kiếm</button>
+        <input name="search" value="@search" class="form-control" placeholder="Tìm kiếm SKU hoặc tên sản phẩm..." style="max-width:320px;" />
+        <button type="submit" class="btn-admin btn-primary"><i class="fa fa-search"></i> Lọc dữ liệu</button>
         @if (!string.IsNullOrEmpty(search))
         {
             <a href="/Admin/Inventory" class="btn-admin btn-secondary">Xóa lọc</a>
@@ -88,7 +161,13 @@ else
                                 <td style="color:#94a3b8;">@sku.CostPrice.ToString("N0") ₫</td>
                                 <td>@displayPrice.ToString("N0") ₫</td>
                                 <td style="text-align:center;">
-                                    <span style="font-size:22px; font-weight:700; color:@stockColor;">@sku.Stock</span>
+                                    @{
+                                        var healthClass = sku.Stock <= 0 ? "Critical" : (sku.Stock <= 10 ? "Warning" : "Healthy");
+                                        var healthLabel = sku.Stock <= 0 ? "Hết hàng" : (sku.Stock <= 10 ? "Sắp hết" : "Ổn định");
+                                    }
+                                    <span style="font-size:22px; font-weight:800; color:@stockColor; display:block;">@sku.Stock</span>
+                                    <div class="stock-health-bar"><div class="health-@healthClass" style="width:@(Math.Min(sku.Stock * 2, 100))%;"></div></div>
+                                    <span style="font-size:9px; font-weight:700; text-transform:uppercase; color:var(--admin-muted); margin-top:2px; display:block;">@healthLabel</span>
                                 </td>
                                 <td style="text-align:center;">
                                     <span class="badge @(sku.IsActive ? "badge-green" : "badge-red")">

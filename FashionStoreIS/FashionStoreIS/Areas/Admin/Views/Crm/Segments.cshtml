@@ -1,0 +1,136 @@
+@model FashionStoreIS.Areas.Admin.ViewModels.Crm.SegmentsViewModel
+@using FashionStoreIS.Services
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Phân khúc khách hàng (RFM)";
+    var segments = new[] { "Champions","Loyal","PotentialLoyalists","New","AtRisk","Lost","Others" };
+}
+
+@section Styles {
+<style>
+    .seg-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:30px; }
+    .seg-card { background:var(--admin-card); border:1px solid var(--admin-border); border-radius:12px; padding:20px 22px; cursor:pointer; transition:all .2s; position:relative; overflow:hidden; }
+    .seg-card:hover { border-color:rgba(255,255,255,.15); transform:translateY(-2px); }
+    .seg-card.seg-active { border-color:var(--seg-color); box-shadow:0 0 0 1px var(--seg-color); }
+    .seg-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--seg-color); }
+    .seg-count { font-size:36px; font-weight:800; color:#fff; }
+    .seg-label { font-size:13px; font-weight:600; margin:6px 0 2px; }
+    .seg-desc { font-size:11px; color:var(--admin-muted); }
+    .seg-pct { position:absolute; top:18px; right:18px; font-size:12px; color:var(--admin-muted); }
+
+    .customer-grid { display:grid; gap:12px; }
+    .cust-row { background:var(--admin-card); border:1px solid var(--admin-border); border-radius:10px; padding:14px 20px; display:grid; grid-template-columns:40px 1fr 120px 120px 100px 80px; align-items:center; gap:12px; font-size:13px; transition:border-color .2s; }
+    .cust-row:hover { border-color:rgba(255,255,255,.1); }
+    .cust-avatar { width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg,#6366f1,#a855f7); display:flex; align-items:center; justify-content:center; font-weight:700; color:#fff; font-size:14px; }
+    .cust-name { font-weight:600; color:#fff; }
+    .cust-email { font-size:11px; color:var(--admin-muted); }
+    .tier-label { font-size:11px; font-weight:700; padding:2px 10px; border-radius:20px; }
+</style>
+}
+
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;">
+    <div>
+        <h2 style="font-size:20px; font-weight:700;">🎯 Phân khúc khách hàng RFM</h2>
+        <div style="font-size:13px; color:var(--admin-muted); margin-top:4px;">@Model.TotalCustomers khách hàng • Phân loại theo Recency, Frequency, Monetary</div>
+    </div>
+    <a href="/Admin/Campaign/Create" class="btn-admin btn-primary"><i class="fa fa-bullhorn"></i> Tạo Campaign</a>
+</div>
+
+<!-- Segment Cards -->
+<div class="seg-grid">
+    @{
+        var segInfo = new (string key, string label, string color, string desc)[]
+        {
+            ("Champions",          "🏆 Champions",         "#f59e0b", "Mua nhiều, chi nhiều, gần đây"),
+            ("Loyal",              "💙 Trung thành",        "#6366f1", "Mua đều đặn, gắn bó lâu dài"),
+            ("PotentialLoyalists", "⭐ Tiềm năng",          "#10b981", "Mua gần đây, đang phát triển"),
+            ("New",                "🆕 Khách mới",          "#3b82f6", "Đặt hàng lần đầu ≤30 ngày"),
+            ("AtRisk",             "⚠️ Nguy cơ rời",        "#ef4444", "Từng mua nhưng im lặng >60 ngày"),
+            ("Lost",               "💔 Đã mất",             "#64748b", "Không hoạt động >120 ngày"),
+            ("Others",             "📦 Khác",               "#94a3b8", "Các trường hợp còn lại"),
+        };
+    }
+    @foreach (var (key, label, color, desc) in segInfo)
+    {
+        var count = Model.Segments.TryGetValue(key, out var grp) ? grp.Count : 0;
+        var pct   = Model.TotalCustomers > 0 ? (count * 100.0 / Model.TotalCustomers).ToString("F0") : "0";
+        <div class="seg-card" style="--seg-color:@color;" onclick="showSegment('@key')" id="seg-card-@key">
+            <div class="seg-pct">@pct%</div>
+            <div class="seg-count" style="color:@color;">@count</div>
+            <div class="seg-label" style="color:@color;">@label</div>
+            <div class="seg-desc">@desc</div>
+        </div>
+    }
+</div>
+
+<!-- Customer List by Segment -->
+<div class="admin-card">
+    <div class="admin-card-header">
+        <span class="admin-card-title" id="seg-list-title">Tất cả khách hàng</span>
+        <div style="display:flex;gap:10px;">
+            <a id="btn-campaign" href="/Admin/Campaign/Create" class="btn-admin btn-primary" style="display:none;">
+                <i class="fa fa-bullhorn"></i> Campaign cho nhóm này
+            </a>
+        </div>
+    </div>
+    <div id="customer-list" style="padding:0 24px 16px;">
+        @foreach (var grp in Model.Segments.Values)
+        {
+            foreach (var c in grp)
+            {
+                <div class="cust-row" data-segment="@c.Segment">
+                    <div class="cust-avatar">@c.FullName[0]</div>
+                    <div>
+                        <div class="cust-name">@c.FullName</div>
+                        <div class="cust-email">@c.Email</div>
+                    </div>
+                    <div style="color:var(--admin-muted);">@c.OrderCount đơn</div>
+                    <div style="font-weight:600;">@c.TotalSpent.ToString("N0")₫</div>
+                    <div>
+                        @{
+                            var tc = c.Tier.ToString();
+                            var tcolor = tc == "Vip" ? "#a855f7" : tc == "Gold" ? "#f59e0b" : tc == "Silver" ? "#9ca3af" : "#cd7f32";
+                        }
+                        <span class="tier-label" style="background:@(tcolor)22; color:@tcolor;">@c.Tier</span>
+                    </div>
+                    <div>
+                        <a href="/Admin/Crm/CustomerProfile/@c.UserId" class="btn-admin btn-secondary btn-sm">
+                            <i class="fa fa-eye"></i>
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+        @if (!Model.Segments.Any() || Model.TotalCustomers == 0)
+        {
+            <div style="padding:40px; text-align:center; color:var(--admin-muted);">Chưa có dữ liệu khách hàng</div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+<script>
+let currentFilter = 'all';
+window.onload = function() {
+    const params = new URLSearchParams(window.location.search);
+    const seg = params.get('segment');
+    if (seg) showSegment(seg);
+}
+function showSegment(key) {
+    currentFilter = key;
+    document.querySelectorAll('.seg-card').forEach(c => c.classList.remove('seg-active'));
+    document.getElementById('seg-card-' + key)?.classList.add('seg-active');
+    document.querySelectorAll('.cust-row').forEach(row => {
+        row.style.display = (row.dataset.segment === key) ? '' : 'none';
+    });
+    const labels = {
+        Champions:'🏆 Champions', Loyal:'💙 Khách trung thành', PotentialLoyalists:'⭐ Tiềm năng',
+        New:'🆕 Khách mới', AtRisk:'⚠️ Có nguy cơ rời bỏ', Lost:'💔 Đã mất', Others:'📦 Khác'
+    };
+    document.getElementById('seg-list-title').textContent = labels[key] || key;
+    const btn = document.getElementById('btn-campaign');
+    btn.style.display = 'flex';
+    btn.href = '/Admin/Campaign/Create?segment=' + key;
+}
+</script>
+}

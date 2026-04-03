@@ -1,0 +1,54 @@
+@{
+    ViewData["Title"] = "Hệ thống cửa hàng - BN STORE";
+}
+
+<div class="page-container section-spacer">
+    <h1 class="support-title text-center mb-5">HỆ THỐNG CỬA HÀNG</h1>
+    
+    <div class="stores-grid">
+        <!-- Store 1: District 1 -->
+        <div class="store-item" id="store-q1">
+            <div class="store-image" style="background-image: url('https://placehold.co/800x450/111/fff?text=BN+STORE+QUAN+1')"></div>
+            <div class="store-detail">
+                <div class="badge-store">CHI NHÁNH QUẬN 1</div>
+                <h3>BN STORE - FLAGSHIP</h3>
+                <p><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> 123 Lê Lợi, Phường Bến Thành, Quận 1, TP. HCM</p>
+                <p><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.27-2.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> 090 123 4567</p>
+                <p><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> 09:00 - 22:00 (Hàng ngày)</p>
+            </div>
+        </div>
+
+        <!-- Store 2: District 3 -->
+        <div class="store-item" id="store-q3">
+            <div class="store-image" style="background-image: url('https://placehold.co/800x450/222/fff?text=BN+STORE+QUAN+3')"></div>
+            <div class="store-detail">
+                <div class="badge-store">CHI NHÁNH QUẬN 3</div>
+                <h3>BN STORE - CONCEPT</h3>
+                <p><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> 456 Nguyễn Đình Chiểu, Phường 4, Quận 3, TP. HCM</p>
+                <p><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.27-2.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg> 090 765 4321</p>
+                <p><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> 09:30 - 21:30 (Hàng ngày)</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .stores-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 40px; }
+    .store-item { background: #fff; border: 1px solid #eee; border-radius: 8px; overflow: hidden; transition: all 0.3s; }
+    .store-item:hover { box-shadow: 0 10px 30px rgba(0,0,0,0.05); transform: translateY(-5px); }
+    
+    .store-image { height: 260px; background-size: cover; background-position: center; }
+    .store-detail { padding: 30px; }
+    
+    .badge-store { 
+        display: inline-block; font-size: 10px; font-weight: 700; color: #888; 
+        border: 1px solid #eee; padding: 4px 10px; border-radius: 100px; margin-bottom: 15px; letter-spacing: 0.1em;
+    }
+    .store-detail h3 { font-size: 18px; font-weight: 800; color: #111; margin-bottom: 20px; letter-spacing: 0.05em; }
+    .store-detail p { display: flex; align-items: start; gap: 10px; font-size: 14px; color: #555; margin-bottom: 12px; line-height: 1.4; }
+    .store-detail svg { flex-shrink: 0; color: #111; margin-top: 2px; }
+
+    @@media (max-width: 768px) {
+        .stores-grid { grid-template-columns: 1fr; }
+    }
+</style>

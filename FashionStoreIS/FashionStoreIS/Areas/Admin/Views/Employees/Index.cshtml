@@ -1,0 +1,67 @@
+@model IEnumerable<FashionStoreIS.Models.Employee>
+
+@{
+    ViewData["Title"] = "Quản lý Nhân sự";
+}
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <div class="admin-card-title">DANH SÁCH NHÂN VIÊN</div>
+        <a asp-action="Create" class="btn-admin btn-primary">
+            <i class="fa-solid fa-plus"></i> Thêm mới nhân viên
+        </a>
+    </div>
+    <div class="table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Nhân viên</th>
+                    <th>Chức vụ & Phòng ban</th>
+                    <th>Chi nhánh</th>
+                    <th>Ngày vào làm</th>
+                    <th>Lương/Giờ</th>
+                    <th>Trạng thái</th>
+                    <th>Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600; color: #fff;">@item.FullName</div>
+                            <div style="font-size: 11px; color: var(--admin-muted);">@item.Email</div>
+                        </td>
+                        <td>
+                            <div>@item.Position</div>
+                            <div style="font-size: 11px; color: var(--admin-accent);">@(item.Department?.Name ?? "N/A")</div>
+                        </td>
+                        <td>@(item.Store?.Name ?? "Tất cả")</td>
+                        <td>@item.HireDate.ToString("dd/MM/yyyy")</td>
+                        <td style="font-weight: 600; color: #fff;">@item.BaseSalaryPerHour.ToString("N0") đ</td>
+                        <td>
+                            @if (item.IsActive)
+                            {
+                                <span class="badge badge-green">Hoạt động</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-red">Đã nghỉ</span>
+                            }
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn-admin btn-secondary btn-sm" title="Sửa">
+                                    <i class="fa-solid fa-pen"></i>
+                                </a>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn-admin btn-secondary btn-sm" title="Chi tiết">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

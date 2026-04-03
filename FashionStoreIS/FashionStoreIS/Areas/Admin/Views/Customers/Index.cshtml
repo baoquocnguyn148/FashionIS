@@ -47,7 +47,9 @@
                     <td style="font-weight: 600; color: var(--admin-green);">@item.TotalSpent.ToString("N0") VNĐ</td>
                     <td>@(item.LastOrderDate?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa mua hàng")</td>
                     <td style="text-align: right;">
-                        <button class="btn-admin btn-secondary btn-sm">Xem chi tiết</button>
+                        <a href="/Admin/Crm/CustomerProfile/@u.Id" class="btn-admin btn-secondary btn-sm">
+                            <i class="fa fa-user-circle"></i> Hồ sơ CRM
+                        </a>
                     </td>
                 </tr>
             }

@@ -176,6 +176,85 @@ namespace FashionStoreIS.Data.Migrations
                     b.ToTable("BANNERS", (string)null);
                 });
 
+            modelBuilder.Entity("FashionStoreIS.Models.Campaign", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ID");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("CREATEDAT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("DESCRIPTION");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ENDDATE");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ISDELETED");
+
+                    b.Property<bool>("IsSent")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ISSENT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("NAME");
+
+                    b.Property<string>("NotificationMessage")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("NOTIFICATIONMESSAGE");
+
+                    b.Property<string>("NotificationTitle")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("NOTIFICATIONTITLE");
+
+                    b.Property<int>("RecipientCount")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("RECIPIENTCOUNT");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("SENTAT");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("STARTDATE");
+
+                    b.Property<string>("TargetSegment")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("TARGETSEGMENT");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("UPDATEDAT");
+
+                    b.Property<int?>("VoucherId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("VOUCHERID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VoucherId");
+
+                    b.ToTable("CAMPAIGNS", (string)null);
+                });
+
             modelBuilder.Entity("FashionStoreIS.Models.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -468,6 +547,59 @@ namespace FashionStoreIS.Data.Migrations
                     b.ToTable("LOYALTYTRANSACTIONS", (string)null);
                 });
 
+            modelBuilder.Entity("FashionStoreIS.Models.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ID");
+
+                    b.Property<string>("ActionUrl")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ACTIONURL");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("CREATEDAT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ISDELETED");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ISREAD");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("MESSAGE");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("TITLE");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("UPDATEDAT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("USERID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("NOTIFICATIONS", (string)null);
+                });
+
             modelBuilder.Entity("FashionStoreIS.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -492,7 +624,9 @@ namespace FashionStoreIS.Data.Migrations
                         .HasColumnName("CUSTOMERNAME");
 
                     b.Property<decimal>("DiscountAmount")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT")
+                        .HasDefaultValue(0m)
                         .HasColumnName("DISCOUNTAMOUNT");
 
                     b.Property<bool>("IsDeleted")
@@ -522,7 +656,9 @@ namespace FashionStoreIS.Data.Migrations
                         .HasColumnName("PHONE");
 
                     b.Property<int>("PointsEarned")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
+                        .HasDefaultValue(0)
                         .HasColumnName("POINTSEARNED");
 
                     b.Property<byte>("Status")
@@ -534,11 +670,15 @@ namespace FashionStoreIS.Data.Migrations
                         .HasColumnName("STOREID");
 
                     b.Property<decimal>("SubTotal")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("NUMBER(14,0)")
+                        .HasDefaultValue(0m)
                         .HasColumnName("SUBTOTAL");
 
                     b.Property<decimal>("TotalAmount")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("NUMBER(14,0)")
+                        .HasDefaultValue(0m)
                         .HasColumnName("TOTALAMOUNT");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -581,7 +721,9 @@ namespace FashionStoreIS.Data.Migrations
                         .HasColumnName("CREATEDAT");
 
                     b.Property<decimal>("DiscountPercent")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT")
+                        .HasDefaultValue(0m)
                         .HasColumnName("DISCOUNTPERCENT");
 
                     b.Property<bool>("IsDeleted")
@@ -794,6 +936,7 @@ namespace FashionStoreIS.Data.Migrations
                         .HasColumnName("SKUCODE");
 
                     b.Property<int>("Stock")
+                        .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(0)
@@ -860,7 +1003,7 @@ namespace FashionStoreIS.Data.Migrations
                         .HasColumnName("SUPPLIERID");
 
                     b.Property<decimal>("TotalCost")
-                        .HasColumnType("NUMBER(16,0)")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("TOTALCOST");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -908,11 +1051,11 @@ namespace FashionStoreIS.Data.Migrations
                         .HasColumnName("QUANTITYRECEIVED");
 
                     b.Property<decimal>("Subtotal")
-                        .HasColumnType("NUMBER(14,0)")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("SUBTOTAL");
 
                     b.Property<decimal>("UnitCost")
-                        .HasColumnType("NUMBER(12,0)")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("UNITCOST");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -926,6 +1069,59 @@ namespace FashionStoreIS.Data.Migrations
                     b.HasIndex("PurchaseOrderId");
 
                     b.ToTable("PURCHASEORDERDETAILS", (string)null);
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.ReturnRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ID");
+
+                    b.Property<string>("AdminNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ADMINNOTE");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("CREATEDAT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ISDELETED");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ORDERID");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("PROCESSEDAT");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("REASON");
+
+                    b.Property<decimal>("RefundAmount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("REFUNDAMOUNT");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("STATUS");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("UPDATEDAT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.ToTable("RETURNREQUESTS", (string)null);
                 });
 
             modelBuilder.Entity("FashionStoreIS.Models.StockAdjustment", b =>
@@ -1090,6 +1286,60 @@ namespace FashionStoreIS.Data.Migrations
                     b.ToTable("SUPPLIERS", (string)null);
                 });
 
+            modelBuilder.Entity("FashionStoreIS.Models.UserAddress", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ID");
+
+                    b.Property<string>("AddressLine")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ADDRESSLINE");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("CREATEDAT");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("FULLNAME");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ISDEFAULT");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("ISDELETED");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("PHONENUMBER");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("UPDATEDAT");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("USERID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("USERADDRESSES", (string)null);
+                });
+
             modelBuilder.Entity("FashionStoreIS.Models.Voucher", b =>
                 {
                     b.Property<int>("Id")
@@ -1108,7 +1358,7 @@ namespace FashionStoreIS.Data.Migrations
                         .HasColumnName("CREATEDAT");
 
                     b.Property<decimal>("DiscountAmount")
-                        .HasColumnType("NUMBER(12,0)")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("DISCOUNTAMOUNT");
 
                     b.Property<DateTime>("ExpiryDate")
@@ -1123,13 +1373,21 @@ namespace FashionStoreIS.Data.Migrations
                         .HasColumnType("INTEGER")
                         .HasColumnName("ISDELETED");
 
+                    b.Property<int>("MaxUsageCount")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("MAXUSAGECOUNT");
+
                     b.Property<decimal>("MinOrderAmount")
-                        .HasColumnType("NUMBER(12,0)")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("MINORDERAMOUNT");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT")
                         .HasColumnName("UPDATEDAT");
+
+                    b.Property<int>("UsedCount")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("USEDCOUNT");
 
                     b.HasKey("Id");
 
@@ -1293,6 +1551,17 @@ namespace FashionStoreIS.Data.Migrations
                     b.ToTable("ASPNETUSERTOKENS", (string)null);
                 });
 
+            modelBuilder.Entity("FashionStoreIS.Models.Campaign", b =>
+                {
+                    b.HasOne("FashionStoreIS.Models.Voucher", "Voucher")
+                        .WithMany()
+                        .HasForeignKey("VoucherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_CAMP_VOUCHER");
+
+                    b.Navigation("Voucher");
+                });
+
             modelBuilder.Entity("FashionStoreIS.Models.Category", b =>
                 {
                     b.HasOne("FashionStoreIS.Models.Category", "ParentCategory")
@@ -1364,12 +1633,22 @@ namespace FashionStoreIS.Data.Migrations
                     b.Navigation("Order");
                 });
 
+            modelBuilder.Entity("FashionStoreIS.Models.Notification", b =>
+                {
+                    b.HasOne("FashionStoreIS.Models.ApplicationUser", null)
+                        .WithMany("Notifications")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_NOTIF_USER");
+                });
+
             modelBuilder.Entity("FashionStoreIS.Models.Order", b =>
                 {
                     b.HasOne("FashionStoreIS.Models.Customer", "Customer")
-                        .WithMany("Orders")
+                        .WithMany()
                         .HasForeignKey("CustomerId")
-                        .HasConstraintName("FK_ORD_CUST");
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("FashionStoreIS.Models.Store", "Store")
                         .WithMany("Orders")
@@ -1381,11 +1660,12 @@ namespace FashionStoreIS.Data.Migrations
                     b.HasOne("FashionStoreIS.Models.ApplicationUser", "User")
                         .WithMany("Orders")
                         .HasForeignKey("UserId")
-                        .HasConstraintName("FK_ORD_USER");
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("FashionStoreIS.Models.Voucher", "Voucher")
                         .WithMany()
-                        .HasForeignKey("VoucherId");
+                        .HasForeignKey("VoucherId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Customer");
 
@@ -1408,12 +1688,12 @@ namespace FashionStoreIS.Data.Migrations
                     b.HasOne("FashionStoreIS.Models.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
-                        .HasConstraintName("FK_OD_PROD");
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("FashionStoreIS.Models.ProductSku", "ProductSku")
                         .WithMany("OrderDetails")
                         .HasForeignKey("ProductSkuId")
-                        .HasConstraintName("FK_OD_SKU");
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Order");
 
@@ -1506,6 +1786,18 @@ namespace FashionStoreIS.Data.Migrations
                     b.Navigation("PurchaseOrder");
                 });
 
+            modelBuilder.Entity("FashionStoreIS.Models.ReturnRequest", b =>
+                {
+                    b.HasOne("FashionStoreIS.Models.Order", "Order")
+                        .WithMany("ReturnRequests")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_RR_ORDER");
+
+                    b.Navigation("Order");
+                });
+
             modelBuilder.Entity("FashionStoreIS.Models.StockAdjustment", b =>
                 {
                     b.HasOne("FashionStoreIS.Models.Inventory", "Inventory")
@@ -1516,6 +1808,16 @@ namespace FashionStoreIS.Data.Migrations
                         .HasConstraintName("FK_SA_INV");
 
                     b.Navigation("Inventory");
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.UserAddress", b =>
+                {
+                    b.HasOne("FashionStoreIS.Models.ApplicationUser", null)
+                        .WithMany("Addresses")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_UA_USER");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -1571,6 +1873,10 @@ namespace FashionStoreIS.Data.Migrations
 
             modelBuilder.Entity("FashionStoreIS.Models.ApplicationUser", b =>
                 {
+                    b.Navigation("Addresses");
+
+                    b.Navigation("Notifications");
+
                     b.Navigation("Orders");
                 });
 
@@ -1581,11 +1887,6 @@ namespace FashionStoreIS.Data.Migrations
                     b.Navigation("SubCategories");
                 });
 
-            modelBuilder.Entity("FashionStoreIS.Models.Customer", b =>
-                {
-                    b.Navigation("Orders");
-                });
-
             modelBuilder.Entity("FashionStoreIS.Models.Inventory", b =>
                 {
                     b.Navigation("StockAdjustments");
@@ -1594,6 +1895,8 @@ namespace FashionStoreIS.Data.Migrations
             modelBuilder.Entity("FashionStoreIS.Models.Order", b =>
                 {
                     b.Navigation("OrderDetails");
+
+                    b.Navigation("ReturnRequests");
                 });
 
             modelBuilder.Entity("FashionStoreIS.Models.Product", b =>

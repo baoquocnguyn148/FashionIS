@@ -51,4 +51,41 @@ namespace FashionStoreIS.Models
         Received = 4,
         Cancelled = 5
     }
+
+    public enum AttendanceStatus : byte
+    {
+        Present = 1,
+        Late = 2,
+        Absent = 3,
+        HalfDay = 4
+    }
+
+    public enum LeaveType : byte
+    {
+        Annual = 1,
+        Sick = 2,
+        Personal = 3,
+        Unpaid = 4
+    }
+
+    public enum LeaveStatus : byte
+    {
+        Pending = 1,
+        Approved = 2,
+        Rejected = 3
+    }
+
+    public enum PayrollStatus : byte
+    {
+        Draft = 1,
+        Processed = 2,
+        Paid = 3,
+        Cancelled = 4
+    }
+
+    public enum SalaryComponentType : byte
+    {
+        Addition = 1,
+        Deduction = 2
+    }
 }

@@ -1,0 +1,282 @@
+@model FashionStoreIS.Areas.Admin.ViewModels.Crm.Customer360ViewModel
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Hồ sơ khách hàng";
+}
+
+@section Styles {
+<style>
+    .crm-header { display: flex; align-items: center; gap: 24px; margin-bottom: 28px; }
+    .crm-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg,#6366f1,#a855f7); display:flex; align-items:center; justify-content:center; font-size:32px; font-weight:700; color:#fff; flex-shrink:0; }
+    .crm-avatar img { width:80px; height:80px; border-radius:50%; object-fit:cover; }
+    .crm-name { font-size:22px; font-weight:700; color:#fff; }
+    .crm-meta { font-size:13px; color:var(--admin-muted); margin-top:4px; }
+    .segment-badge { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; margin-top:6px; }
+
+    .kpi-row { display:grid; grid-template-columns: repeat(5,1fr); gap:14px; margin-bottom:28px; }
+    .kpi-card { background:var(--admin-card); border:1px solid var(--admin-border); border-radius:12px; padding:18px 20px; }
+    .kpi-label { font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--admin-muted); margin-bottom:6px; }
+    .kpi-value { font-size:24px; font-weight:800; color:#fff; }
+    .kpi-sub { font-size:11px; color:var(--admin-muted); margin-top:4px; }
+
+    .tab-bar { display:flex; gap:0; border-bottom:1px solid var(--admin-border); margin-bottom:24px; }
+    .tab-btn { padding:12px 20px; font-size:13px; font-weight:600; color:var(--admin-muted); cursor:pointer; border:none; background:none; border-bottom:2px solid transparent; margin-bottom:-1px; transition:all .2s; }
+    .tab-btn.active { color:#fff; border-bottom-color:#6366f1; }
+    .tab-pane { display:none; }
+    .tab-pane.active { display:block; }
+
+    .tier-bar { display:flex; align-items:center; gap:10px; margin-top:6px; }
+    .tier-dot { width:12px; height:12px; border-radius:50%; }
+    .tier-Bronze { background:#cd7f32; }
+    .tier-Silver { background:#9ca3af; }
+    .tier-Gold   { background:#f59e0b; }
+    .tier-Vip    { background:#a855f7; }
+
+    .order-row { display:grid; grid-template-columns: 140px 1fr 120px 120px 100px; align-items:center; gap:12px; padding:14px 0; border-bottom:1px solid rgba(255,255,255,.05); font-size:13px; }
+    .order-row:last-child { border-bottom:none; }
+    .order-code { font-weight:700; color:#6366f1; }
+    .status-pill { display:inline-block; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; }
+
+    .notif-panel { display:flex; flex-direction:column; gap:10px; }
+    .notif-item { background:rgba(255,255,255,.03); border:1px solid var(--admin-border); border-radius:8px; padding:14px 16px; }
+    .notif-title { font-size:13px; font-weight:600; margin-bottom:4px; }
+    .notif-msg { font-size:12px; color:var(--admin-muted); }
+    .notif-date { font-size:11px; color:var(--admin-muted); margin-top:6px; }
+
+    .send-notif-form { background:var(--admin-card); border:1px solid var(--admin-border); border-radius:12px; padding:24px; margin-top:20px; }
+</style>
+}
+
+<a href="/Admin/Customers" style="color:var(--admin-muted); font-size:12px; text-decoration:none; display:flex; align-items:center; gap:6px; margin-bottom:16px;">
+    <i class="fa fa-arrow-left"></i> Quay lại danh sách khách hàng
+</a>
+
+<!-- HEADER -->
+<div class="crm-header">
+    <div class="crm-avatar">
+        @if (!string.IsNullOrEmpty(Model.User.AvatarUrl))
+        {
+            <img src="@Model.User.AvatarUrl" alt="avatar" />
+        }
+        else
+        {
+            @((Model.User.FullName ?? Model.User.UserName ?? "?")[0])
+        }
+    </div>
+    <div>
+        <div class="crm-name">@(Model.User.FullName ?? Model.User.UserName)</div>
+        <div class="crm-meta">@Model.User.Email • @Model.User.PhoneNumber • Tham gia: @Model.User.JoinDate.ToString("dd/MM/yyyy")</div>
+        <div>
+            <span class="segment-badge" style="background:@(Model.SegmentColor)22; color:@Model.SegmentColor; border:1px solid @(Model.SegmentColor)44;">
+                @Model.SegmentLabel
+            </span>
+            <span class="tier-bar" style="display:inline-flex; margin-left:12px;">
+                <span class="tier-dot tier-@Model.Tier.ToString()"></span>
+                <span style="font-size:12px; font-weight:600; color:var(--admin-muted);">@Model.Tier</span>
+                <span style="font-size:12px; color:var(--admin-muted);">• @Model.LoyaltyPoints pts</span>
+            </span>
+        </div>
+    </div>
+    <div style="margin-left:auto; display:flex; gap:10px;">
+        <a href="/Admin/Crm/CustomerTimeline/@Model.User.Id" class="btn-admin btn-secondary">
+            <i class="fa fa-timeline"></i> Timeline
+        </a>
+    </div>
+</div>
+
+<!-- KPIs -->
+<div class="kpi-row">
+    <div class="kpi-card">
+        <div class="kpi-label">Tổng đơn hàng</div>
+        <div class="kpi-value">@Model.TotalOrders</div>
+        <div class="kpi-sub">✅ @Model.CompletedOrders hoàn thành • ❌ @Model.CancelledOrders hủy</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Tổng chi tiêu</div>
+        <div class="kpi-value" style="font-size:18px;">@Model.TotalSpent.ToString("N0")₫</div>
+        <div class="kpi-sub">TB: @Model.AvgOrderValue.ToString("N0")₫/đơn</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Đơn gần nhất</div>
+        <div class="kpi-value" style="font-size:18px;">@(Model.LastOrderDate?.ToString("dd/MM/yy") ?? "—")</div>
+        <div class="kpi-sub">
+            @if (Model.DaysSinceLastOrder < 9999)
+            { <span>@Model.DaysSinceLastOrder ngày trước</span> }
+            else
+            { <span>Chưa có đơn</span> }
+        </div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Điểm thành viên</div>
+        <div class="kpi-value">@Model.LoyaltyPoints</div>
+        <div class="kpi-sub">Hạng: @Model.Tier</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-label">Thông báo chưa đọc</div>
+        <div class="kpi-value" style="color:@(Model.UnreadNotifications > 0 ? "#ef4444" : "#10b981");">@Model.UnreadNotifications</div>
+        <div class="kpi-sub">/ @Model.NotificationHistory.Count tổng cộng</div>
+    </div>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+    <button class="tab-btn active" onclick="switchTab('orders',this)"><i class="fa fa-bag-shopping"></i> Đơn hàng (@Model.TotalOrders)</button>
+    <button class="tab-btn" onclick="switchTab('returns',this)"><i class="fa fa-rotate-left"></i> Trả hàng (@Model.Returns.Count)</button>
+    <button class="tab-btn" onclick="switchTab('points',this)"><i class="fa fa-star"></i> Điểm thưởng (@Model.PointHistory.Count)</button>
+    <button class="tab-btn" onclick="switchTab('notifs',this)"><i class="fa fa-bell"></i> Thông báo (@Model.NotificationHistory.Count)</button>
+    <button class="tab-btn" onclick="switchTab('send',this)"><i class="fa fa-paper-plane"></i> Gửi thông báo</button>
+</div>
+
+<!-- Tab: Orders -->
+<div id="tab-orders" class="tab-pane active">
+    <div class="admin-card">
+        @if (!Model.RecentOrders.Any())
+        {
+            <div style="padding:40px; text-align:center; color:var(--admin-muted);">Khách hàng chưa có đơn hàng nào</div>
+        }
+        else
+        {
+            <div style="padding:0 24px;">
+                <div class="order-row" style="font-size:10px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--admin-muted);">
+                    <span>Mã đơn</span><span>Sản phẩm</span><span>Tổng tiền</span><span>Ngày đặt</span><span>Trạng thái</span>
+                </div>
+                @foreach (var o in Model.RecentOrders)
+                {
+                    <div class="order-row">
+                        <a href="/Admin/Order/Details/@o.Id" class="order-code">@o.OrderCode</a>
+                        <span style="color:var(--admin-muted);">@o.OrderDetails.Count sản phẩm</span>
+                        <span style="font-weight:600;">@o.TotalAmount.ToString("N0")₫</span>
+                        <span style="color:var(--admin-muted);">@o.CreatedAt.ToString("dd/MM/yy HH:mm")</span>
+                        <span class="status-pill" style="background:@(GetStatusBg(o.Status)); color:@(GetStatusColor(o.Status));">
+                            @GetStatusText(o.Status)
+                        </span>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Tab: Returns -->
+<div id="tab-returns" class="tab-pane">
+    <div class="admin-card">
+        @if (!Model.Returns.Any())
+        {
+            <div style="padding:40px; text-align:center; color:var(--admin-muted);">Không có yêu cầu trả hàng</div>
+        }
+        else
+        {
+            <table class="admin-table">
+                <thead><tr><th>Đơn hàng</th><th>Lý do</th><th>Hoàn tiền</th><th>Trạng thái</th><th>Ngày</th></tr></thead>
+                <tbody>
+                    @foreach (var r in Model.Returns)
+                    {
+                        <tr>
+                            <td>#@r.OrderId</td>
+                            <td>@r.Reason</td>
+                            <td>@r.RefundAmount.ToString("N0")₫</td>
+                            <td><span class="badge @(r.Status == ReturnRequestStatus.Completed ? "badge-green" : "badge-red")">@r.Status</span></td>
+                            <td style="color:var(--admin-muted);">@r.CreatedAt.ToString("dd/MM/yy")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+<!-- Tab: Points -->
+<div id="tab-points" class="tab-pane">
+    <div class="admin-card">
+        @if (!Model.PointHistory.Any())
+        {
+            <div style="padding:40px; text-align:center; color:var(--admin-muted);">Chưa có giao dịch điểm</div>
+        }
+        else
+        {
+            <table class="admin-table">
+                <thead><tr><th>Điểm</th><th>Mô tả</th><th>Đơn hàng</th><th>Ngày</th></tr></thead>
+                <tbody>
+                    @foreach (var lt in Model.PointHistory)
+                    {
+                        <tr>
+                            <td style="color:@(lt.Points >= 0 ? "#10b981" : "#ef4444"); font-weight:700;">@(lt.Points >= 0 ? "+" : "")@lt.Points</td>
+                            <td>@lt.Description</td>
+                            <td>@(lt.OrderId.HasValue ? $"#{lt.OrderId}" : "—")</td>
+                            <td style="color:var(--admin-muted);">@lt.CreatedAt.ToString("dd/MM/yy")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+<!-- Tab: Notifications -->
+<div id="tab-notifs" class="tab-pane">
+    <div class="notif-panel">
+        @if (!Model.NotificationHistory.Any())
+        {
+            <div style="padding:40px; text-align:center; color:var(--admin-muted);">Chưa có thông báo</div>
+        }
+        @foreach (var n in Model.NotificationHistory)
+        {
+            <div class="notif-item" style="@(!n.IsRead ? "border-left:3px solid #6366f1;" : "")">
+                <div class="notif-title">@n.Title @(!n.IsRead ? "<span style='font-size:10px; background:#6366f122; color:#6366f1; padding:2px 8px; border-radius:20px; margin-left:8px;'>Chưa đọc</span>" : "")</div>
+                <div class="notif-msg">@n.Message</div>
+                <div class="notif-date">@n.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Tab: Send Notification -->
+<div id="tab-send" class="tab-pane">
+    <div class="send-notif-form">
+        <div style="font-size:15px; font-weight:700; margin-bottom:20px;">✉️ Gửi thông báo thủ công</div>
+        <form method="post" action="/Admin/Crm/SendNotification">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="userId" value="@Model.User.Id" />
+            <div class="form-group">
+                <label class="form-label">Tiêu đề</label>
+                <input name="title" class="form-control" placeholder="VD: Ưu đãi đặc biệt dành cho bạn!" />
+            </div>
+            <div class="form-group">
+                <label class="form-label">Nội dung</label>
+                <textarea name="message" class="form-control" rows="4" placeholder="Nội dung thông báo..."></textarea>
+            </div>
+            <button type="submit" class="btn-admin btn-primary"><i class="fa fa-paper-plane"></i> Gửi ngay</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+function switchTab(id, btn) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+}
+</script>
+}
+
+@functions {
+    string GetStatusText(FashionStoreIS.Models.OrderStatus s) => s switch {
+        FashionStoreIS.Models.OrderStatus.Pending    => "Chờ xử lý",
+        FashionStoreIS.Models.OrderStatus.Confirmed  => "Xác nhận",
+        FashionStoreIS.Models.OrderStatus.Processing => "Đang xử lý",
+        FashionStoreIS.Models.OrderStatus.Shipped    => "Đang giao",
+        FashionStoreIS.Models.OrderStatus.Completed  => "Hoàn thành",
+        FashionStoreIS.Models.OrderStatus.Cancelled  => "Đã hủy",
+        FashionStoreIS.Models.OrderStatus.Returned   => "Trả hàng",
+        _ => s.ToString()
+    };
+    string GetStatusColor(FashionStoreIS.Models.OrderStatus s) => s switch {
+        FashionStoreIS.Models.OrderStatus.Completed  => "#10b981",
+        FashionStoreIS.Models.OrderStatus.Cancelled  => "#ef4444",
+        FashionStoreIS.Models.OrderStatus.Shipped    => "#3b82f6",
+        _ => "#f59e0b"
+    };
+    string GetStatusBg(FashionStoreIS.Models.OrderStatus s) => GetStatusColor(s) + "22";
+}

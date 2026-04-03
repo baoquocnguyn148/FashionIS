@@ -223,10 +223,6 @@
                 Bán hàng tại quầy
             </a>
 
-            <a href="/Admin/Analytics" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Analytics" ? "active" : "")">
-                <i class="fa-solid fa-chart-line"></i>
-                Phân tích & DWH
-            </a>
 
             <a href="/Admin/Products" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Products" ? "active" : "")">
                 <i class="fa-solid fa-boxes-stacked"></i>
@@ -238,6 +234,16 @@
                 Đơn hàng
             </a>
 
+            <a href="/Admin/Return" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Return" ? "active" : "")">
+                <i class="fa-solid fa-rotate-left"></i>
+                Trả hàng / Hoàn tiền
+            </a>
+
+            <a href="/Admin/AdminNotification" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "AdminNotification" ? "active" : "")">
+                <i class="fa-solid fa-bell"></i>
+                Thông báo kh
+            </a>
+
             <a href="/Admin/Inventory" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Inventory" ? "active" : "")">
                 <i class="fa-solid fa-warehouse"></i>
                 Tồn kho SKU
@@ -246,6 +252,23 @@
             <a href="/Admin/Customers" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Customers" ? "active" : "")">
                 <i class="fa-solid fa-users"></i>
                 Khách hàng
+            </a>
+
+            <div style="font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#334155; padding:14px 18px 4px; margin-top:4px;">CRM</div>
+
+            <a href="/Admin/Crm/Analytics" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Crm" && ViewContext.RouteData.Values["action"]?.ToString() == "Analytics" ? "active" : "")">
+                <i class="fa-solid fa-chart-pie" style="color:#6366f1;"></i>
+                CRM Analytics
+            </a>
+
+            <a href="/Admin/Crm/Segments" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Crm" && ViewContext.RouteData.Values["action"]?.ToString() == "Segments" ? "active" : "")">
+                <i class="fa-solid fa-layer-group" style="color:#10b981;"></i>
+                Phân khúc RFM
+            </a>
+
+            <a href="/Admin/Campaign" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Campaign" ? "active" : "")">
+                <i class="fa-solid fa-bullhorn" style="color:#f59e0b;"></i>
+                Campaign
             </a>
 
             <a href="/Admin/Vouchers" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Vouchers" ? "active" : "")">
@@ -263,12 +286,30 @@
                 Banner
             </a>
 
+            <div style="font-size:9px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:#334155; padding:14px 18px 4px; margin-top:4px;">HRM & PAYROLL</div>
+
+            <a href="/Admin/Departments" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Departments" ? "active" : "")">
+                <i class="fa-solid fa-sitemap" style="color:#6366f1;"></i>
+                Phòng ban
+            </a>
+
+            <a href="/Admin/Employees" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Employees" ? "active" : "")">
+                <i class="fa-solid fa-user-tie" style="color:#10b981;"></i>
+                Nhân sự
+            </a>
+
+            <a href="/Admin/Attendances" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Attendances" ? "active" : "")">
+                <i class="fa-solid fa-clock-rotate-left" style="color:#f59e0b;"></i>
+                Chấm công
+            </a>
+
+            <a href="/Admin/Payroll" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Payroll" ? "active" : "")">
+                <i class="fa-solid fa-file-invoice-dollar" style="color:#f43f5e;"></i>
+                Tiền lương
+            </a>
+
             @if (User.IsInRole("SuperAdmin"))
             {
-                <a href="/Admin/SeedData" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "SeedData" ? "active" : "")">
-                    <i class="fa-solid fa-database"></i>
-                    Dữ liệu mẫu
-                </a>
                 <a href="/Admin/Staff" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Staff" ? "active" : "")">
                     <i class="fa-solid fa-user-shield"></i>
                     Nhân viên

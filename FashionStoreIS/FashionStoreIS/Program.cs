@@ -65,6 +65,20 @@ builder.Services.ConfigureApplicationCookie(options =>
 builder.Services.AddScoped<IUserStore<ApplicationUser>, OracleCompatibleUserStore>();
 builder.Services.AddScoped<IRoleStore<IdentityRole>, OracleCompatibleRoleStore>();
 builder.Services.AddScoped<IVnPayService, VnPayService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<RfmSegmentationService>();
+builder.Services.AddScoped<InventoryIntelligenceService>();
+
+// Executive Support System Services
+builder.Services.AddScoped<IStrategicAnalyticsService, StrategicAnalyticsService>();
+builder.Services.AddScoped<IExternalDataIntegrationService, ExternalDataIntegrationService>();
+builder.Services.AddScoped<IPayrollService, PayrollService>();
+
+// Executive Database Context
+var executiveDbPath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "Executive.db");
+builder.Services.AddDbContext<ExecutiveDbContext>(options =>
+    options.UseSqlite($"Data Source={executiveDbPath}"));
+
 builder.Services.AddControllersWithViews();
 
 // Session for Admin auth
@@ -77,6 +91,7 @@ builder.Services.AddSession(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpClient();
 builder.Services.AddHostedService<EtlDataSyncService>();
 
 var app = builder.Build();
@@ -112,6 +127,10 @@ using (var scope = app.Services.CreateScope())
     // Auto-create Analytics Data Warehouse Tables if missing
     var analyticsContext = services.GetRequiredService<AnalyticsDbContext>();
     analyticsContext.Database.EnsureCreated();
+    
+    // Auto-create Executive Database Tables if missing
+    var executiveContext = services.GetRequiredService<ExecutiveDbContext>();
+    executiveContext.Database.EnsureCreated();
 }
 
 app.UseHttpsRedirection();
