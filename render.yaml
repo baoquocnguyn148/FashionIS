@@ -1,0 +1,58 @@
+services:
+  # ─── Main ASP.NET Core Application ─────────────────────────────────
+  - type: web
+    name: fashion-store-web
+    env: docker
+    dockerContext: .
+    dockerfilePath: Dockerfile
+    # Render's Free Plan doesn't support persisting everything, but we can try
+    plan: free
+    region: singapore
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: POSTGRES_CONNECTION_STRING
+        fromDatabase:
+          name: fashion-db
+          property: connectionString
+      - key: ANALYTICS_CONNECTION_STRING
+        fromDatabase:
+          name: fashion-db
+          property: connectionString
+      - key: CHATBOT_URL
+        fromService:
+          name: fashion-store-chatbot
+          type: web
+          property: host
+
+  # ─── Python AI Shopping Assistant ───────────────────────────────────
+  - type: web
+    name: fashion-store-chatbot
+    env: docker
+    dockerContext: chatbot
+    dockerfilePath: Dockerfile.chatbot
+    plan: free
+    region: singapore
+    envVars:
+      - key: GROQ_API_KEY
+        sync: false # User to provide in Render Dashboard
+      - key: GROQ_MODEL
+        value: "llama-3.3-70b-specdec"
+      - key: BACKEND_API_URL
+        fromService:
+          name: fashion-store-web
+          type: web
+          property: host
+      - key: WEB_BASE_URL
+        fromService:
+          name: fashion-store-web
+          type: web
+          property: host
+
+databases:
+  # Defining the DB in blueprint makes it easy for Render to link
+  - name: fashion-db
+    plan: free
+    region: singapore
+    databaseName: fashionstore_migrated
+    user: postgres

@@ -1,0 +1,76 @@
+@model FashionStoreIS.ViewModels.EmployeePortal.PortalScheduleViewModel
+@{
+    Layout = "_EmployeeLayout";
+    ViewData["Title"] = "Lịch trình cá nhân";
+}
+
+<div class="row mb-3">
+    <div class="col-12">
+        <h4 class="fw-bold"><i class="fas fa-calendar-alt text-primary me-2"></i>Lịch làm việc</h4>
+        <p class="text-muted small">Tuần: @Model.WeekStart.ToString("dd/MM") - @Model.WeekStart.AddDays(6).ToString("dd/MM")</p>
+    </div>
+</div>
+
+<!-- This Week -->
+<div class="p-card border-0 mb-4 bg-white p-0 overflow-hidden">
+    <div class="p-3 bg-light border-bottom fw-bold d-flex justify-content-between align-items-center">
+        <span>TUẦN NÀY</span>
+        <span class="badge bg-primary rounded-pill">@Model.ThisWeek.Count ca</span>
+    </div>
+    <div class="p-0">
+        @if (Model.ThisWeek.Any())
+        {
+            @foreach (var sched in Model.ThisWeek.OrderBy(s => s.Date))
+            {
+                <div class="d-flex align-items-center p-3 border-bottom @(sched.Date.Date == DateTime.Today.Date ? "bg-primary bg-opacity-10" : "")">
+                    <div class="text-center me-3" style="width:50px">
+                        <div class="small fw-bold text-uppercase @(sched.Date.Date == DateTime.Today.Date ? "text-primary" : "text-muted")">@sched.Date.ToString("ddd")</div>
+                        <div class="h4 fw-bold mb-0 @(sched.Date.Date == DateTime.Today.Date ? "text-primary" : "")">@sched.Date.Day</div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">@sched.Shift.Name</div>
+                        <div class="small text-muted">@sched.Shift.StartTime.ToString(@"hh\:mm") - @sched.Shift.EndTime.ToString(@"hh\:mm")</div>
+                    </div>
+                    @if (sched.Date.Date == DateTime.Today.Date)
+                    {
+                        <span class="badge bg-primary rounded-pill">Today</span>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="p-4 text-center text-muted small">Chưa xếp lịch tuần này</div>
+        }
+    </div>
+</div>
+
+<!-- Next Week -->
+<div class="p-card border-0 bg-white p-0 overflow-hidden">
+    <div class="p-3 bg-light border-bottom fw-bold d-flex justify-content-between align-items-center">
+        <span>TUẦN TỚI</span>
+        <span class="badge bg-secondary rounded-pill">@Model.NextWeek.Count ca</span>
+    </div>
+    <div class="p-0">
+         @if (Model.NextWeek.Any())
+        {
+            @foreach (var sched in Model.NextWeek.OrderBy(s => s.Date))
+            {
+                <div class="d-flex align-items-center p-3 border-bottom">
+                    <div class="text-center me-3" style="width:50px">
+                        <div class="small fw-bold text-uppercase text-muted">@sched.Date.ToString("ddd")</div>
+                        <div class="h4 fw-bold mb-0">@sched.Date.Day</div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">@sched.Shift.Name</div>
+                        <div class="small text-muted">@sched.Shift.StartTime.ToString(@"hh\:mm") - @sched.Shift.EndTime.ToString(@"hh\:mm")</div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="p-4 text-center text-muted small">Chưa xếp lịch tuần tới</div>
+        }
+    </div>
+</div>

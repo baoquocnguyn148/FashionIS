@@ -25,13 +25,30 @@ namespace FashionStoreIS.Areas.Admin.Controllers
         }
 
         // GET: Admin/Employees
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? search, int? storeId, int? departmentId, bool? isActive)
         {
-            var employees = await _context.Employees
+            var query = _context.Employees
                 .Include(e => e.Department)
                 .Include(e => e.Store)
-                .ToListAsync();
-            return View(employees);
+                .Where(e => !e.IsDeleted);  // Soft delete từ BaseEntity
+
+            if (!string.IsNullOrWhiteSpace(search))
+                query = query.Where(e => e.FullName.Contains(search) || e.Email.Contains(search) || e.Phone.Contains(search));
+            if (storeId.HasValue)
+                query = query.Where(e => e.StoreId == storeId);
+            if (departmentId.HasValue)
+                query = query.Where(e => e.DepartmentId == departmentId);
+            if (isActive.HasValue)
+                query = query.Where(e => e.IsActive == isActive);
+
+            ViewData["Stores"] = new SelectList(_context.Stores, "Id", "Name", storeId);
+            ViewData["Departments"] = new SelectList(_context.Departments, "Id", "Name", departmentId);
+            ViewData["Search"] = search;
+            ViewData["StoreId"] = storeId;
+            ViewData["DepartmentId"] = departmentId;
+            ViewData["IsActive"] = isActive;
+
+            return View(await query.OrderBy(e => e.StoreId).ThenBy(e => e.FullName).ToListAsync());
         }
 
         // GET: Admin/Employees/Details/5
@@ -149,6 +166,18 @@ namespace FashionStoreIS.Areas.Admin.Controllers
             ViewData["DepartmentId"] = new SelectList(_context.Departments.Where(d => d.IsActive), "Id", "Name", employee.DepartmentId);
             ViewData["StoreId"] = new SelectList(_context.Stores, "Id", "Name", employee.StoreId);
             return View(employee);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleActive(int id)
+        {
+            var emp = await _context.Employees.FindAsync(id);
+            if (emp == null) return NotFound();
+            emp.IsActive = !emp.IsActive;
+            emp.UpdatedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+            TempData["Success"] = emp.IsActive ? "Đã kích hoạt nhân viên." : "Đã tắt hoạt động nhân viên.";
+            return RedirectToAction(nameof(Details), new { id });
         }
     }
 }

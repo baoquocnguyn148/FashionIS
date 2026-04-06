@@ -20,9 +20,15 @@ namespace FashionStoreIS.Data
 
                 // 1. Schema Synchronization
                 var provider = db.Database.ProviderName ?? "";
+                bool isPostgres = provider.Contains("Npgsql", StringComparison.OrdinalIgnoreCase);
                 bool isSqlite = provider.Contains("Sqlite", StringComparison.OrdinalIgnoreCase);
 
-                if (isSqlite)
+                if (isPostgres)
+                {
+                    // For Postgres, we rely on Migrations already applied in Program.cs
+                    Console.WriteLine("[DB_INIT] PostgreSQL detected. Using schema from migrations.");
+                }
+                else if (isSqlite)
                 {
                     await db.Database.EnsureCreatedAsync();
                     var conn = db.Database.GetDbConnection();
@@ -43,6 +49,10 @@ namespace FashionStoreIS.Data
                         @"CREATE TABLE IF NOT EXISTS SALARYCOMPONENTS (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL, TYPE INTEGER NOT NULL, DEFAULTAMOUNT REAL NOT NULL DEFAULT 0, DESCRIPTION TEXT, ISACTIVE INTEGER NOT NULL DEFAULT 1, CREATEDAT TEXT NOT NULL DEFAULT (datetime('now')), UPDATEDAT TEXT, ISDELETED INTEGER NOT NULL DEFAULT 0)",
                         @"CREATE TABLE IF NOT EXISTS PAYROLLS (ID INTEGER PRIMARY KEY AUTOINCREMENT, EMPLOYEEID INTEGER NOT NULL, MONTH INTEGER NOT NULL, YEAR INTEGER NOT NULL, TOTALHOURSWORKED REAL NOT NULL DEFAULT 0, BASEHOURLYRATE REAL NOT NULL DEFAULT 0, TOTALBASESALARY REAL NOT NULL DEFAULT 0, TOTALADDITIONS REAL NOT NULL DEFAULT 0, TOTALDEDUCTIONS REAL NOT NULL DEFAULT 0, NETSALARY REAL NOT NULL DEFAULT 0, STATUS INTEGER NOT NULL DEFAULT 1, PROCESSEDDATE TEXT, NOTE TEXT, CREATEDAT TEXT NOT NULL DEFAULT (datetime('now')), UPDATEDAT TEXT, ISDELETED INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(EMPLOYEEID) REFERENCES EMPLOYEES(ID))",
                         @"CREATE TABLE IF NOT EXISTS PAYROLLITEMS (ID INTEGER PRIMARY KEY AUTOINCREMENT, PAYROLLID INTEGER NOT NULL, SALARYCOMPONENTID INTEGER, AMOUNT REAL NOT NULL DEFAULT 0, NOTE TEXT, CREATEDAT TEXT NOT NULL DEFAULT (datetime('now')), UPDATEDAT TEXT, ISDELETED INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(PAYROLLID) REFERENCES PAYROLLS(ID), FOREIGN KEY(SALARYCOMPONENTID) REFERENCES SALARYCOMPONENTS(ID))",
+                        @"CREATE TABLE IF NOT EXISTS SHIFTS (ID INTEGER PRIMARY KEY AUTOINCREMENT, NAME TEXT NOT NULL, STARTTIME TEXT NOT NULL, ENDTIME TEXT NOT NULL, STOREID INTEGER NOT NULL, ISACTIVE INTEGER NOT NULL DEFAULT 1, CREATEDAT TEXT NOT NULL DEFAULT (datetime('now')), UPDATEDAT TEXT, ISDELETED INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(STOREID) REFERENCES STORES(ID))",
+                        @"CREATE TABLE IF NOT EXISTS SCHEDULES (ID INTEGER PRIMARY KEY AUTOINCREMENT, EMPLOYEEID INTEGER NOT NULL, SHIFTID INTEGER NOT NULL, DATE TEXT NOT NULL, STATUS INTEGER NOT NULL DEFAULT 1, NOTE TEXT, CREATEDAT TEXT NOT NULL DEFAULT (datetime('now')), UPDATEDAT TEXT, ISDELETED INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(EMPLOYEEID) REFERENCES EMPLOYEES(ID), FOREIGN KEY(SHIFTID) REFERENCES SHIFTS(ID))",
+                        @"CREATE TABLE IF NOT EXISTS KPIREVIEWS (ID INTEGER PRIMARY KEY AUTOINCREMENT, EMPLOYEEID INTEGER NOT NULL, REVIEWERID TEXT NOT NULL, MONTH INTEGER NOT NULL, YEAR INTEGER NOT NULL, SALESSCORE REAL NOT NULL DEFAULT 0, ATTITUDESCORE REAL NOT NULL DEFAULT 0, TEAMWORKSCORE REAL NOT NULL DEFAULT 0, TOTALSCORE REAL NOT NULL DEFAULT 0, RANK INTEGER NOT NULL, NOTES TEXT, CREATEDAT TEXT NOT NULL DEFAULT (datetime('now')), UPDATEDAT TEXT, ISDELETED INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(EMPLOYEEID) REFERENCES EMPLOYEES(ID), FOREIGN KEY(REVIEWERID) REFERENCES ASPNETUSERS(ID))",
+                        @"CREATE TABLE IF NOT EXISTS LEAVEBALANCES (ID INTEGER PRIMARY KEY AUTOINCREMENT, EMPLOYEEID INTEGER NOT NULL, YEAR INTEGER NOT NULL, ANNUALDAYSTOTAL INTEGER NOT NULL DEFAULT 12, ANNUALDAYSUSED INTEGER NOT NULL DEFAULT 0, SICKDAYSTOTAL INTEGER NOT NULL DEFAULT 5, SICKDAYSUSED INTEGER NOT NULL DEFAULT 0, CREATEDAT TEXT NOT NULL DEFAULT (datetime('now')), UPDATEDAT TEXT, ISDELETED INTEGER NOT NULL DEFAULT 0, FOREIGN KEY(EMPLOYEEID) REFERENCES EMPLOYEES(ID))",
 
                         // Patch EMPLOYEES with new columns
                         @"ALTER TABLE EMPLOYEES ADD COLUMN BASESALARYPERHOUR REAL NOT NULL DEFAULT 0",
@@ -91,8 +101,8 @@ namespace FashionStoreIS.Data
                 if (!await db.Banners.AnyAsync())
                 {
                     db.Banners.AddRange(
-                        new Banner { Title = "NEW COLLECTION 2026", SubTitle = "FOR DREAMERS ONLY", ImageUrl = "/uploads/banners/banner1.png", Position = "Hero", LinkUrl = "/Product/List", IsActive = true, DisplayOrder = 1, CreatedAt = DateTime.Now },
-                        new Banner { Title = "PREMIUM TOPS", SubTitle = "ESSENTIALS", ImageUrl = "/uploads/banners/banner2.png", Position = "Category1", LinkUrl = "/Product/List?cat=tops", IsActive = true, DisplayOrder = 2, CreatedAt = DateTime.Now }
+                        new Banner { Title = "NEW COLLECTION 2026", SubTitle = "FOR DREAMERS ONLY", ImageUrl = "/uploads/banners/banner1.png", Position = "Hero", LinkUrl = "/Product/List", IsActive = true, DisplayOrder = 1, CreatedAt = DateTime.UtcNow },
+                        new Banner { Title = "PREMIUM TOPS", SubTitle = "ESSENTIALS", ImageUrl = "/uploads/banners/banner2.png", Position = "Category1", LinkUrl = "/Product/List?cat=tops", IsActive = true, DisplayOrder = 2, CreatedAt = DateTime.UtcNow }
                     );
                     await db.SaveChangesAsync();
                 }
@@ -100,25 +110,31 @@ namespace FashionStoreIS.Data
                 if (!await db.Products.AnyAsync())
                 {
                     // Basic Categories
-                    var catTops = new Category { Name = "Áo", Slug = "tops", DisplayOrder = 1, CreatedAt = DateTime.Now };
-                    var catPants = new Category { Name = "Quần", Slug = "pants", DisplayOrder = 2, CreatedAt = DateTime.Now };
+                    var catTops = new Category { Name = "Áo", Slug = "tops", DisplayOrder = 1, CreatedAt = DateTime.UtcNow };
+                    var catPants = new Category { Name = "Quần", Slug = "pants", DisplayOrder = 2, CreatedAt = DateTime.UtcNow };
                     db.Categories.AddRange(catTops, catPants);
                     
-                    var supplier = new Supplier { Name = "Main Supplier", Phone = "0900000000", Email = "supplier@main.local", CreatedAt = DateTime.Now };
+                    var supplier = new Supplier { Name = "Main Supplier", Phone = "0900000000", Email = "supplier@main.local", CreatedAt = DateTime.UtcNow };
                     db.Suppliers.Add(supplier);
                     await db.SaveChangesAsync();
 
-                    var p1 = new Product { Name = "Áo thun BN Basic", Slug = "ao-thun-bn-basic", CategoryId = catTops.Id, SupplierId = supplier.Id, Price = 199000, ImageUrl = "https://placehold.co/400x500", CreatedAt = DateTime.Now, IsActive = true };
+                    var p1 = new Product { Name = "Áo thun BN Basic", Slug = "ao-thun-bn-basic", CategoryId = catTops.Id, SupplierId = supplier.Id, Price = 199000, ImageUrl = "https://placehold.co/400x500", CreatedAt = DateTime.UtcNow, IsActive = true };
                     db.Products.Add(p1);
                     await db.SaveChangesAsync();
 
-                    var sku1 = new ProductSku { ProductId = p1.Id, SKU = "TSHIRT-BLK-M", SkuCode = "TSHIRT-BLK-M", Color = "Black", Size = "M", SellingPrice = 199000, CostPrice = 100000, Stock = 100, IsActive = true, CreatedAt = DateTime.Now };
+                    var sku1 = new ProductSku { ProductId = p1.Id, SKU = "TSHIRT-BLK-M", SkuCode = "TSHIRT-BLK-M", Color = "Black", Size = "M", SellingPrice = 199000, CostPrice = 100000, Stock = 100, IsActive = true, CreatedAt = DateTime.UtcNow };
                     db.ProductSkus.Add(sku1);
                     await db.SaveChangesAsync();
                 }
 
-                // 5. CRM Data Seed (Manual or Auto Triggered)
-                await SeedSampleCrmData(db, userManager);
+                // 5. CRM Data Seed (only if not seeded)
+                if (!await db.Users.AnyAsync(u => u.Email != null && u.Email.Contains("@samplecrm.com")))
+                {
+                    await SeedSampleCrmData(db, userManager);
+                }
+
+                // 6. Professional HRM & Payroll Data Seed
+                await SeedHrmData(db, userManager);
 
                 Console.WriteLine("[DB_INIT] Initialization successful!");
             }
@@ -174,146 +190,17 @@ namespace FashionStoreIS.Data
             }
             }
 
-            // 4. Seeding Professional HRM & Payroll Data (Check if professional set exists)
-            if (!await db.Departments.AnyAsync(d => d.Name == "Ban Giám Đốc"))
-            {
-                Console.WriteLine("[DB_INIT] Seeding professional HRM hierarchy...");
-                
-                // Departments
-                var depts = new List<Department>
-                {
-                    new Department { Name = "Ban Giám Đốc", Description = "Điều hành chiến lược và quản trị hệ thống", IsActive = true, CreatedAt = DateTime.Now },
-                    new Department { Name = "Phòng Kinh Doanh & Marketing", Description = "Tăng trưởng doanh thu và nhận diện thương hiệu", IsActive = true, CreatedAt = DateTime.Now },
-                    new Department { Name = "Bộ Phận Vận Hành Store", Description = "Quản lý showroom và dịch vụ khách hàng", IsActive = true, CreatedAt = DateTime.Now },
-                    new Department { Name = "Hậu Cần & Kho Vận", Description = "Quản lý chuỗi cung ứng và tồn kho", IsActive = true, CreatedAt = DateTime.Now },
-                    new Department { Name = "Tài Chính & Hành Chính", Description = "Quản lý ngân sách, lương bổng và nhân sự", IsActive = true, CreatedAt = DateTime.Now }
-                };
-                db.Departments.AddRange(depts);
-                await db.SaveChangesAsync();
+        // Database Provider Connectivity Check
+            var provider = db.Database.ProviderName ?? "";
+            bool isPostgres = provider.Contains("Npgsql", StringComparison.OrdinalIgnoreCase);
 
-                // Salary Components
-                var components = new List<SalaryComponent>
-                {
-                    new SalaryComponent { Name = "Phụ cấp Ăn trưa", Type = SalaryComponentType.Addition, DefaultAmount = 750000, IsActive = true, CreatedAt = DateTime.Now },
-                    new SalaryComponent { Name = "Phụ cấp Xăng xe", Type = SalaryComponentType.Addition, DefaultAmount = 500000, IsActive = true, CreatedAt = DateTime.Now },
-                    new SalaryComponent { Name = "Thưởng KPI Doanh số", Type = SalaryComponentType.Addition, DefaultAmount = 2000000, IsActive = true, CreatedAt = DateTime.Now },
-                    new SalaryComponent { Name = "Khấu trừ Bảo hiểm (BHXH)", Type = SalaryComponentType.Deduction, DefaultAmount = 1500000, IsActive = true, CreatedAt = DateTime.Now }
-                };
-                db.SalaryComponents.AddRange(components);
-                await db.SaveChangesAsync();
-
-                // Employees
-                var primaryStore = await db.Stores.FirstOrDefaultAsync();
-                int storeId = primaryStore?.Id ?? 1;
-
-                var employees = new List<Employee>
-                {
-                    new Employee { 
-                        FullName = "Nguyễn Trần Minh Tâm", Position = "Giám đốc Điều hành", 
-                        Email = "tâm.ntm@bnstore.vn", Phone = "0901234001", 
-                        HireDate = DateTime.Now.AddYears(-3), BaseSalaryPerHour = 250000,
-                        DepartmentId = depts[0].Id, StoreId = storeId, IsActive = true 
-                    },
-                    new Employee { 
-                        FullName = "Lê Thị Hồng Hạnh", Position = "Trưởng phòng Kinh doanh", 
-                        Email = "hanh.lth@bnstore.vn", Phone = "0901234002", 
-                        HireDate = DateTime.Now.AddYears(-2), BaseSalaryPerHour = 120000,
-                        DepartmentId = depts[1].Id, StoreId = storeId, IsActive = true 
-                    },
-                    new Employee { 
-                        FullName = "Phạm Văn Dũng", Position = "Quản lý Cửa hàng", 
-                        Email = "dung.pv@bnstore.vn", Phone = "0901234003", 
-                        HireDate = DateTime.Now.AddYears(-1), BaseSalaryPerHour = 85000,
-                        DepartmentId = depts[2].Id, StoreId = storeId, IsActive = true 
-                    },
-                    new Employee { 
-                        FullName = "Trần Minh Hoàng", Position = "Nhân viên Kho", 
-                        Email = "hoang.tm@bnstore.vn", Phone = "0901234004", 
-                        HireDate = DateTime.Now.AddMonths(-6), BaseSalaryPerHour = 55000,
-                        DepartmentId = depts[3].Id, StoreId = storeId, IsActive = true 
-                    },
-                    new Employee { 
-                        FullName = "Nguyễn Bảo Ngọc", Position = "Chuyên viên Tư vấn", 
-                        Email = "ngoc.nb@bnstore.vn", Phone = "0901234005", 
-                        HireDate = DateTime.Now.AddMonths(-3), BaseSalaryPerHour = 45000,
-                        DepartmentId = depts[2].Id, StoreId = storeId, IsActive = true 
-                    },
-                    new Employee { 
-                        FullName = "Đặng Thu Thảo", Position = "Kế toán trưởng", 
-                        Email = "thao.dt@bnstore.vn", Phone = "0901234006", 
-                        HireDate = DateTime.Now.AddYears(-2), BaseSalaryPerHour = 110000,
-                        DepartmentId = depts[4].Id, StoreId = storeId, IsActive = true 
-                    }
-                };
-                db.Employees.AddRange(employees);
-                await db.SaveChangesAsync();
-                
-                Console.WriteLine("[DB_INIT] HRM & Payroll professional data seeded successfully.");
-            }
-
-        // Oracle Schema Auto-Patch for modern CRM fields
-            if (db.Database.ProviderName != null && db.Database.ProviderName.Contains("Oracle", StringComparison.OrdinalIgnoreCase))
-            {
-                Console.WriteLine("[DB_INIT] Running schema auto-patch for Oracle CRM readiness...");
-                var alterCmds = new[] {
-                    "ALTER TABLE CUSTOMERS ADD (TIER NUMBER(10) DEFAULT 0)",
-                    "ALTER TABLE CUSTOMERS ADD (LOYALTYPOINTS NUMBER(10) DEFAULT 0)",
-                    "ALTER TABLE CUSTOMERS ADD (JOINDATE TIMESTAMP(7))",
-                    "ALTER TABLE CUSTOMERS ADD (DATEOFBIRTH TIMESTAMP(7))",
-
-                    "ALTER TABLE ORDERS ADD (SUBTOTAL NUMBER(14,0) DEFAULT 0)",
-                    "ALTER TABLE ORDERS ADD (DISCOUNTAMOUNT NUMBER(14,0) DEFAULT 0)",
-                    "ALTER TABLE ORDERS ADD (POINTSEARNED NUMBER(10) DEFAULT 0)",
-                    "ALTER TABLE ORDERS ADD (CUSTOMERNAME NVARCHAR2(100))",
-                    "ALTER TABLE ORDERS ADD (PHONE NVARCHAR2(20))",
-                    "ALTER TABLE ORDERS ADD (ADDRESS NVARCHAR2(500))",
-                    "ALTER TABLE ORDERS ADD (NOTE NVARCHAR2(500))",
-
-                    "ALTER TABLE ORDERDETAILS ADD (SUBTOTAL NUMBER(14,0) DEFAULT 0)",
-                    "ALTER TABLE ORDERDETAILS ADD (DISCOUNTPERCENT NUMBER(14,4) DEFAULT 0)",
-                    
-                    // HRM & Payroll Patches
-                    "ALTER TABLE EMPLOYEES ADD (BASESALARYPERHOUR NUMBER(12,2) DEFAULT 0)",
-                    "ALTER TABLE EMPLOYEES ADD (BANKACCOUNTNUMBER NVARCHAR2(50))",
-                    "ALTER TABLE EMPLOYEES ADD (BANKNAME NVARCHAR2(100))",
-                    "ALTER TABLE EMPLOYEES ADD (BANKACCOUNTNAME NVARCHAR2(100))",
-                    "ALTER TABLE EMPLOYEES ADD (DEPARTMENTID NUMBER(10))"
-                };
-
-                foreach (var sql in alterCmds)
-                {
-                    try { await db.Database.ExecuteSqlRawAsync(sql); } catch { /* Ignore */ }
-                }
-
-                var createCmds = new[] {
-                    "CREATE SEQUENCE HILOSEQUENCE START WITH 1 INCREMENT BY 1",
-                    "CREATE TABLE LOYALTYTRANSACTIONS (ID NUMBER(10) PRIMARY KEY, CUSTOMERID NUMBER(10) NOT NULL, POINTS NUMBER(10) NOT NULL, DESCRIPTION NVARCHAR2(500), CREATEDAT TIMESTAMP(7) DEFAULT CURRENT_TIMESTAMP, UPDATEDAT TIMESTAMP(7), ISDELETED NUMBER(1) DEFAULT 0, CONSTRAINT FK_LT_CUST FOREIGN KEY (CUSTOMERID) REFERENCES CUSTOMERS(ID))",
-                    "CREATE TABLE NOTIFICATIONS (ID NUMBER(10) PRIMARY KEY, USERID VARCHAR2(450) NOT NULL, TITLE NVARCHAR2(200) NOT NULL, MESSAGE NVARCHAR2(1000) NOT NULL, ACTIONURL NVARCHAR2(255), ISREAD NUMBER(1) DEFAULT 0, CREATEDAT TIMESTAMP(7) DEFAULT CURRENT_TIMESTAMP, UPDATEDAT TIMESTAMP(7), ISDELETED NUMBER(1) DEFAULT 0, CONSTRAINT FK_NOTIF_USER FOREIGN KEY (USERID) REFERENCES ASPNETUSERS(ID))",
-                    "CREATE TABLE CAMPAIGNS (ID NUMBER(10) PRIMARY KEY, NAME NVARCHAR2(150) NOT NULL, DESCRIPTION NVARCHAR2(500), STARTDATE TIMESTAMP(7) NOT NULL, ENDDATE TIMESTAMP(7) NOT NULL, TARGETSEGMENT NVARCHAR2(50), NOTIFICATIONTITLE NVARCHAR2(200), NOTIFICATIONMESSAGE NVARCHAR2(1000), VOUCHERID NUMBER(10), ISSENT NUMBER(1) DEFAULT 0, SENTAT TIMESTAMP(7), RECIPIENTCOUNT NUMBER(10) DEFAULT 0, CREATEDAT TIMESTAMP(7) DEFAULT CURRENT_TIMESTAMP, UPDATEDAT TIMESTAMP(7), ISDELETED NUMBER(1) DEFAULT 0, CONSTRAINT FK_CAMP_VOUCHER FOREIGN KEY (VOUCHERID) REFERENCES VOUCHERS(ID))",
-                    "CREATE TABLE WISHLISTITEMS (ID NUMBER(10) PRIMARY KEY, USERID VARCHAR2(450) NOT NULL, PRODUCTID NUMBER(10) NOT NULL, CREATEDAT TIMESTAMP(7) DEFAULT CURRENT_TIMESTAMP, UPDATEDAT TIMESTAMP(7), ISDELETED NUMBER(1) DEFAULT 0, CONSTRAINT FK_WL_USER FOREIGN KEY (USERID) REFERENCES ASPNETUSERS(ID), CONSTRAINT FK_WL_PRODUCT FOREIGN KEY (PRODUCTID) REFERENCES PRODUCTS(ID), CONSTRAINT UQ_WL_USER_PROD UNIQUE (USERID, PRODUCTID))",
-                    
-                    // HRM & Payroll Tables
-                    "CREATE TABLE DEPARTMENTS (ID NUMBER(10) PRIMARY KEY, NAME NVARCHAR2(150) NOT NULL, DESCRIPTION NVARCHAR2(500), ISACTIVE NUMBER(1) DEFAULT 1, CREATEDAT TIMESTAMP(7) DEFAULT CURRENT_TIMESTAMP, UPDATEDAT TIMESTAMP(7), ISDELETED NUMBER(1) DEFAULT 0)",
-                    "CREATE TABLE ATTENDANCES (ID NUMBER(10) PRIMARY KEY, EMPLOYEEID NUMBER(10) NOT NULL, \"DATE\" TIMESTAMP(7) NOT NULL, CHECKIN INTERVAL DAY(0) TO SECOND(0), CHECKOUT INTERVAL DAY(0) TO SECOND(0), TOTALHOURS NUMBER(10,2) DEFAULT 0, STATUS NUMBER(10), NOTE NVARCHAR2(500), CREATEDAT TIMESTAMP(7) DEFAULT CURRENT_TIMESTAMP, UPDATEDAT TIMESTAMP(7), ISDELETED NUMBER(1) DEFAULT 0, CONSTRAINT FK_ATT_EMP FOREIGN KEY (EMPLOYEEID) REFERENCES EMPLOYEES(ID))",
-                    "CREATE TABLE LEAVEREQUESTS (ID NUMBER(10) PRIMARY KEY, EMPLOYEEID NUMBER(10) NOT NULL, STARTDATE TIMESTAMP(7) NOT NULL, ENDDATE TIMESTAMP(7) NOT NULL, TYPE NUMBER(10), STATUS NUMBER(10) DEFAULT 1, REASON NVARCHAR2(500), ADMINNOTE NVARCHAR2(500), APPROVEDBYID NVARCHAR2(450), CREATEDAT TIMESTAMP(7) DEFAULT CURRENT_TIMESTAMP, UPDATEDAT TIMESTAMP(7), ISDELETED NUMBER(1) DEFAULT 0, CONSTRAINT FK_LV_EMP FOREIGN KEY (EMPLOYEEID) REFERENCES EMPLOYEES(ID))",
-                    "CREATE TABLE SALARYCOMPONENTS (ID NUMBER(10) PRIMARY KEY, NAME NVARCHAR2(150) NOT NULL, TYPE NUMBER(10), DEFAULTAMOUNT NUMBER(12,2) DEFAULT 0, DESCRIPTION NVARCHAR2(500), ISACTIVE NUMBER(1) DEFAULT 1, CREATEDAT TIMESTAMP(7) DEFAULT CURRENT_TIMESTAMP, UPDATEDAT TIMESTAMP(7), ISDELETED NUMBER(1) DEFAULT 0)",
-                    "CREATE TABLE PAYROLLS (ID NUMBER(10) PRIMARY KEY, EMPLOYEEID NUMBER(10) NOT NULL, MONTH NUMBER(10), YEAR NUMBER(10), TOTALHOURSWORKED NUMBER(10,2) DEFAULT 0, BASEHOURLYRATE NUMBER(12,2) DEFAULT 0, TOTALBASESALARY NUMBER(12,2) DEFAULT 0, TOTALADDITIONS NUMBER(12,2) DEFAULT 0, TOTALDEDUCTIONS NUMBER(12,2) DEFAULT 0, NETSALARY NUMBER(12,2) DEFAULT 0, STATUS NUMBER(10) DEFAULT 1, PROCESSEDDATE TIMESTAMP(7), NOTE NVARCHAR2(500), CREATEDAT TIMESTAMP(7) DEFAULT CURRENT_TIMESTAMP, UPDATEDAT TIMESTAMP(7), ISDELETED NUMBER(1) DEFAULT 0, CONSTRAINT FK_PAY_EMP FOREIGN KEY (EMPLOYEEID) REFERENCES EMPLOYEES(ID))",
-                    "CREATE TABLE PAYROLLITEMS (ID NUMBER(10) PRIMARY KEY, PAYROLLID NUMBER(10) NOT NULL, SALARYCOMPONENTID NUMBER(10), AMOUNT NUMBER(12,2) DEFAULT 0, NOTE NVARCHAR2(500), CREATEDAT TIMESTAMP(7) DEFAULT CURRENT_TIMESTAMP, UPDATEDAT TIMESTAMP(7), ISDELETED NUMBER(1) DEFAULT 0, CONSTRAINT FK_PI_PAY FOREIGN KEY (PAYROLLID) REFERENCES PAYROLLS(ID), CONSTRAINT FK_PI_COMP FOREIGN KEY (SALARYCOMPONENTID) REFERENCES SALARYCOMPONENTS(ID))"
-                };
-
-                foreach (var sql in createCmds)
-                {
-                    try { await db.Database.ExecuteSqlRawAsync(sql); } catch { /* Ignore if exists */ }
-                }
-
-                Console.WriteLine("[DB_INIT] Oracle schema auto-patch applied.");
-            }
+            Console.WriteLine($"[DB_INIT] Using provider: {provider}");
 
             // 2. Foundation Verification
             var store = await db.Stores.FirstOrDefaultAsync();
             if (store == null)
             {
-                store = new Store { Name = "BN Fashion Flagship", Address = "HCM", Phone = "0900000000", IsActive = true };
+                store = new Store { Name = "BN Fashion Flagship", Address = "HCM", Phone = "0900000000", ManagerName = "Admin", IsActive = true };
                 db.Stores.Add(store);
                 await db.SaveChangesAsync();
             }
@@ -327,29 +214,29 @@ namespace FashionStoreIS.Data
             // 3. Strategic Seeding (20 High-Quality Profiles)
             var sampleCusList = new (string name, string email, DateTime join, string avatar, string phone)[]
             {
-                ("Nguyễn Quốc Bảo",   "bao.nq@samplecrm.com",  DateTime.Now.AddMonths(-12), "https://i.pravatar.cc/150?u=1", "0901234567"),
-                ("Trần Lê Minh",    "minh.tl@samplecrm.com", DateTime.Now.AddMonths(-11), "https://i.pravatar.cc/150?u=2", "0901234568"),
-                ("Phạm Hương Ly",   "ly.ph@samplecrm.com",   DateTime.Now.AddMonths(-10), "https://i.pravatar.cc/150?u=3", "0901234569"),
-                ("Lê Hoàng Dũng",   "dung.lh@samplecrm.com",  DateTime.Now.AddMonths(-9),  "https://i.pravatar.cc/150?u=4", "0901234570"),
-                ("Vũ Thành Trung",  "trung.vt@samplecrm.com", DateTime.Now.AddMonths(-8),  "https://i.pravatar.cc/150?u=5", "0901234571"),
-                ("Đặng Thu Thảo",   "thao.dt@samplecrm.com",  DateTime.Now.AddMonths(-7),  "https://i.pravatar.cc/150?u=6", "0901234572"),
-                ("Ngô Chí Hùng",    "hung.nc@samplecrm.com",  DateTime.Now.AddMonths(-6),  "https://i.pravatar.cc/150?u=7", "0901234573"),
-                ("Bùi Diệu Nhi",    "nhi.bd@samplecrm.com",   DateTime.Now.AddMonths(-5),  "https://i.pravatar.cc/150?u=8", "0901234574"),
-                ("Lý Quang Diệu",   "dieu.lq@samplecrm.com",  DateTime.Now.AddMonths(-4),  "https://i.pravatar.cc/150?u=9", "0901234575"),
-                ("Hồ Ngọc Hà",      "ha.hn@samplecrm.com",    DateTime.Now.AddMonths(-3),  "https://i.pravatar.cc/150?u=10", "0901234576"),
-                ("Trịnh Gia Bảo",   "bao.tg@samplecrm.com",   DateTime.Now.AddMonths(-11), "https://i.pravatar.cc/150?u=11", "0901234577"),
-                ("Mai Phương Thúy", "thuy.mp@samplecrm.com",  DateTime.Now.AddMonths(-10), "https://i.pravatar.cc/150?u=12", "0901234578"),
-                ("Nguyễn Cao Kỳ", "ky.nc@samplecrm.com",  DateTime.Now.AddMonths(-9),  "https://i.pravatar.cc/150?u=13", "0901234579"),
-                ("Thái Công Vinh",  "vinh.tc@samplecrm.com",  DateTime.Now.AddMonths(-8),  "https://i.pravatar.cc/150?u=14", "0901234580"),
-                ("Lương Bằng Quang","quang.lb@samplecrm.com", DateTime.Now.AddMonths(-7),  "https://i.pravatar.cc/150?u=15", "0901234581"),
-                ("Võ Hạ Trâm",      "tram.vh@samplecrm.com",  DateTime.Now.AddMonths(-6),  "https://i.pravatar.cc/150?u=16", "0901234582"),
-                ("Đào Anh Tuấn",    "tuan.da@samplecrm.com",  DateTime.Now.AddMonths(-5),  "https://i.pravatar.cc/150?u=17", "0901234583"),
-                ("Kiều Minh Tuấn",  "tuan.km@samplecrm.com",  DateTime.Now.AddMonths(-4),  "https://i.pravatar.cc/150?u=18", "0901234584"),
-                ("Trần Ngọc Trinh", "trinh.tn@samplecrm.com", DateTime.Now.AddMonths(-3),  "https://i.pravatar.cc/150?u=19", "0901234585"),
-                ("Nguyễn Quang Hải","hai.nq@samplecrm.com",   DateTime.Now.AddMonths(-2),  "https://i.pravatar.cc/150?u=20", "0901234586")
+                ("Nguyễn Quốc Bảo",   "bao.nq@samplecrm.com",  DateTime.UtcNow.AddMonths(-12), "https://i.pravatar.cc/150?u=1", "0901234567"),
+                ("Trần Lê Minh",    "minh.tl@samplecrm.com", DateTime.UtcNow.AddMonths(-11), "https://i.pravatar.cc/150?u=2", "0901234568"),
+                ("Phạm Hương Ly",   "ly.ph@samplecrm.com",   DateTime.UtcNow.AddMonths(-10), "https://i.pravatar.cc/150?u=3", "0901234569"),
+                ("Lê Hoàng Dũng",   "dung.lh@samplecrm.com",  DateTime.UtcNow.AddMonths(-9),  "https://i.pravatar.cc/150?u=4", "0901234570"),
+                ("Vũ Thành Trung",  "trung.vt@samplecrm.com", DateTime.UtcNow.AddMonths(-8),  "https://i.pravatar.cc/150?u=5", "0901234571"),
+                ("Đặng Thu Thảo",   "thao.dt@samplecrm.com",  DateTime.UtcNow.AddMonths(-7),  "https://i.pravatar.cc/150?u=6", "0901234572"),
+                ("Ngô Chí Hùng",    "hung.nc@samplecrm.com",  DateTime.UtcNow.AddMonths(-6),  "https://i.pravatar.cc/150?u=7", "0901234573"),
+                ("Bùi Diệu Nhi",    "nhi.bd@samplecrm.com",   DateTime.UtcNow.AddMonths(-5),  "https://i.pravatar.cc/150?u=8", "0901234574"),
+                ("Lý Quang Diệu",   "dieu.lq@samplecrm.com",  DateTime.UtcNow.AddMonths(-4),  "https://i.pravatar.cc/150?u=9", "0901234575"),
+                ("Hồ Ngọc Hà",      "ha.hn@samplecrm.com",    DateTime.UtcNow.AddMonths(-3),  "https://i.pravatar.cc/150?u=10", "0901234576"),
+                ("Trịnh Gia Bảo",   "bao.tg@samplecrm.com",   DateTime.UtcNow.AddMonths(-11), "https://i.pravatar.cc/150?u=11", "0901234577"),
+                ("Mai Phương Thúy", "thuy.mp@samplecrm.com",  DateTime.UtcNow.AddMonths(-10), "https://i.pravatar.cc/150?u=12", "0901234578"),
+                ("Nguyễn Cao Kỳ", "ky.nc@samplecrm.com",  DateTime.UtcNow.AddMonths(-9),  "https://i.pravatar.cc/150?u=13", "0901234579"),
+                ("Thái Công Vinh",  "vinh.tc@samplecrm.com",  DateTime.UtcNow.AddMonths(-8),  "https://i.pravatar.cc/150?u=14", "0901234580"),
+                ("Lương Bằng Quang","quang.lb@samplecrm.com", DateTime.UtcNow.AddMonths(-7),  "https://i.pravatar.cc/150?u=15", "0901234581"),
+                ("Võ Hạ Trâm",      "tram.vh@samplecrm.com",  DateTime.UtcNow.AddMonths(-6),  "https://i.pravatar.cc/150?u=16", "0901234582"),
+                ("Đào Anh Tuấn",    "tuan.da@samplecrm.com",  DateTime.UtcNow.AddMonths(-5),  "https://i.pravatar.cc/150?u=17", "0901234583"),
+                ("Kiều Minh Tuấn",  "tuan.km@samplecrm.com",  DateTime.UtcNow.AddMonths(-4),  "https://i.pravatar.cc/150?u=18", "0901234584"),
+                ("Trần Ngọc Trinh", "trinh.tn@samplecrm.com", DateTime.UtcNow.AddMonths(-3),  "https://i.pravatar.cc/150?u=19", "0901234585"),
+                ("Nguyễn Quang Hải","hai.nq@samplecrm.com",   DateTime.UtcNow.AddMonths(-2),  "https://i.pravatar.cc/150?u=20", "0901234586")
             };
 
-            string suffix = append ? $"+{DateTime.Now.Ticks}@samplecrm.com" : "@samplecrm.com";
+            string suffix = append ? $"+{DateTime.UtcNow.Ticks}@samplecrm.com" : "@samplecrm.com";
 
             Random rnd = new Random();
             foreach (var s in sampleCusList)
@@ -373,7 +260,7 @@ namespace FashionStoreIS.Data
                             FullName = s.name,
                             Email = uniqueEmail,
                             Phone = s.phone,
-                            Address = "Hồ Chí Minh, Việt Nam",
+                            Address = "H盻・Chﾃｭ Minh, Vi盻㏄ Nam",
                             LoyaltyPoints = user.MembershipPoints,
                             JoinDate = s.join,
                             Tier = user.MembershipPoints >= 1000 ? 2 : (user.MembershipPoints >= 500 ? 1 : 0)
@@ -385,7 +272,7 @@ namespace FashionStoreIS.Data
                         int orderCount = rnd.Next(3, 13);
                         for (int i = 0; i < orderCount; i++)
                         {
-                            DateTime orderDate = s.join.AddDays(rnd.Next(0, (int)(DateTime.Now - s.join).TotalDays));
+                            DateTime orderDate = s.join.AddDays(rnd.Next(0, (int)(DateTime.UtcNow - s.join).TotalDays));
                             var orderStatus = (OrderStatus)rnd.Next(1, 7); // Range 1-6
                             
                             var order = new Order {
@@ -399,7 +286,7 @@ namespace FashionStoreIS.Data
                                 PaymentStatus = (orderStatus == OrderStatus.Completed || orderStatus == OrderStatus.Shipped) ? PaymentStatus.Paid : PaymentStatus.Unpaid,
                                 CustomerName = user.FullName, 
                                 Phone = s.phone,
-                                Address = "Quận 1, TP. Hồ Chí Minh"
+                                Address = "Qu蘯ｭn 1, TP. H盻・Chﾃｭ Minh"
                             };
                             db.Orders.Add(order);
                             await db.SaveChangesAsync();
@@ -432,14 +319,14 @@ namespace FashionStoreIS.Data
                         db.LoyaltyTransactions.Add(new LoyaltyTransaction { 
                             CustomerId = customer.Id, 
                             Points = user.MembershipPoints, 
-                            Description = "Chào mừng thành viên & Tích lũy mua hàng", 
+                            Description = "Chﾃo m盻ｫng thﾃnh viﾃｪn & Tﾃｭch lﾅｩy mua hﾃng", 
                             CreatedAt = s.join.AddDays(1) 
                         });
                         
                         db.Notifications.Add(new Notification { 
                             UserId = user.Id, 
-                            Title = "Chào mừng!", 
-                            Message = $"Chào {s.name}, FashionStore tặng bạn {user.MembershipPoints} điểm thưởng!", 
+                            Title = "Chﾃo m盻ｫng!", 
+                            Message = $"Chﾃo {s.name}, FashionStore t蘯ｷng b蘯｡n {user.MembershipPoints} ﾄ訴盻ノ thﾆｰ盻殤g!", 
                             CreatedAt = s.join,
                             IsRead = true
                         });
@@ -455,12 +342,348 @@ namespace FashionStoreIS.Data
             db.Campaigns.RemoveRange(existingCamps);
             
             db.Campaigns.AddRange(
-                new Campaign { Name = "Siêu sale Hè rực rỡ", StartDate = DateTime.Now.AddMonths(-1), EndDate = DateTime.Now, TargetSegment = "Loyal", NotificationTitle = "Quà tặng Hè!", NotificationMessage = "Ưu đãi 20% cho bạn.", IsSent = true, SentAt = DateTime.Now.AddDays(-15), RecipientCount = 8, CreatedAt = DateTime.Now.AddMonths(-1) },
-                new Campaign { Name = "Bản tin Thu Đông 2026", StartDate = DateTime.Now.AddDays(-5), EndDate = DateTime.Now.AddDays(25), TargetSegment = "All", NotificationTitle = "BST Mới!", NotificationMessage = "Khám phá ngay phong cách Thu Đông.", IsSent = false, CreatedAt = DateTime.Now.AddDays(-5) }
+                new Campaign { Name = "Siêu sale Hè rực rỡ", StartDate = DateTime.UtcNow.AddMonths(-1), EndDate = DateTime.UtcNow, TargetSegment = "Loyal", NotificationTitle = "Quà tặng Hè!", NotificationMessage = "Ưu đãi 20% cho bạn.", IsSent = true, SentAt = DateTime.UtcNow.AddDays(-15), RecipientCount = 8, CreatedAt = DateTime.UtcNow.AddMonths(-1) },
+                new Campaign { Name = "Bản tin Thu Đông 2026", StartDate = DateTime.UtcNow.AddDays(-5), EndDate = DateTime.UtcNow.AddDays(25), TargetSegment = "All", NotificationTitle = "BST Mới!", NotificationMessage = "Khám phá ngay phong cách Thu Đông.", IsSent = false, CreatedAt = DateTime.UtcNow.AddDays(-5) }
             );
             await db.SaveChangesAsync();
 
             Console.WriteLine("[DB_INIT] Enterprise seeding complete (20 users).");
+        }
+
+        public static async Task SeedHrmData(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
+        {
+            Console.WriteLine("[DB_INIT] >>> Phase 4: Professional HRM & Payroll Data Seeding <<<");
+
+            // 0. Ensure Foundation Hierarchy exists
+            if (!await db.Departments.AnyAsync(d => d.Name == "Ban Giám Đốc"))
+            {
+                Console.WriteLine("[DB_INIT] Seeding professional HRM hierarchy...");
+                
+                // Departments
+                var depts = new List<Department>
+                {
+                    new Department { Name = "Ban Giám Đốc", Description = "Điều hành chiến lược và quản trị hệ thống", IsActive = true, CreatedAt = DateTime.UtcNow },
+                    new Department { Name = "Phòng Kinh Doanh & Marketing", Description = "Tăng trưởng doanh thu và nhận diện thương hiệu", IsActive = true, CreatedAt = DateTime.UtcNow },
+                    new Department { Name = "Bộ Phận Vận Hành Store", Description = "Quản lý showroom và dịch vụ khách hàng", IsActive = true, CreatedAt = DateTime.UtcNow },
+                    new Department { Name = "Hậu Cần & Kho Vận", Description = "Quản lý chuỗi cung ứng và tồn kho", IsActive = true, CreatedAt = DateTime.UtcNow },
+                    new Department { Name = "Tài Chính & Hành Chính", Description = "Quản lý ngân sách, lương bổng và nhân sự", IsActive = true, CreatedAt = DateTime.UtcNow }
+                };
+                db.Departments.AddRange(depts);
+                await db.SaveChangesAsync();
+
+                // Salary Components
+                var components = new List<SalaryComponent>
+                {
+                    new SalaryComponent { Name = "Phụ cấp Ăn trưa", Type = SalaryComponentType.Addition, DefaultAmount = 750000, IsActive = true, CreatedAt = DateTime.UtcNow },
+                    new SalaryComponent { Name = "Phụ cấp Xăng xe", Type = SalaryComponentType.Addition, DefaultAmount = 500000, IsActive = true, CreatedAt = DateTime.UtcNow },
+                    new SalaryComponent { Name = "Thưởng KPI Doanh số", Type = SalaryComponentType.Addition, DefaultAmount = 2000000, IsActive = true, CreatedAt = DateTime.UtcNow },
+                    new SalaryComponent { Name = "Khấu trừ Bảo hiểm (BHXH)", Type = SalaryComponentType.Deduction, DefaultAmount = 1500000, IsActive = true, CreatedAt = DateTime.UtcNow }
+                };
+                db.SalaryComponents.AddRange(components);
+                await db.SaveChangesAsync();
+
+                // Employees
+                var primaryStore = await db.Stores.FirstOrDefaultAsync();
+                int storeId = primaryStore?.Id ?? 1;
+
+                var employeesSeeding = new List<Employee>
+                {
+                    new Employee { 
+                        FullName = "Nguyễn Trần Minh Tâm", Position = "Giám đốc Điều hành", 
+                        Email = "tâm.ntm@bnstore.vn", Phone = "0901234001", 
+                        HireDate = DateTime.UtcNow.AddYears(-3), BaseSalaryPerHour = 250000,
+                        DepartmentId = depts[0].Id, StoreId = storeId, IsActive = true 
+                    },
+                    new Employee { 
+                        FullName = "Lê Thị Hồng Hạnh", Position = "Trưởng phòng Kinh doanh", 
+                        Email = "hanh.lth@bnstore.vn", Phone = "0901234002", 
+                        HireDate = DateTime.UtcNow.AddYears(-2), BaseSalaryPerHour = 120000,
+                        DepartmentId = depts[1].Id, StoreId = storeId, IsActive = true 
+                    },
+                    new Employee { 
+                        FullName = "Phạm Văn Dũng", Position = "Quản lý Cửa hàng", 
+                        Email = "dung.pv@bnstore.vn", Phone = "0901234003", 
+                        HireDate = DateTime.UtcNow.AddYears(-1), BaseSalaryPerHour = 85000,
+                        DepartmentId = depts[2].Id, StoreId = storeId, IsActive = true 
+                    },
+                    new Employee { 
+                        FullName = "Trần Minh Hoàng", Position = "Nhân viên Kho", 
+                        Email = "hoang.tm@bnstore.vn", Phone = "0901234004", 
+                        HireDate = DateTime.UtcNow.AddMonths(-6), BaseSalaryPerHour = 55000,
+                        DepartmentId = depts[3].Id, StoreId = storeId, IsActive = true 
+                    },
+                    new Employee { 
+                        FullName = "Nguyễn Bảo Ngọc", Position = "Chuyên viên Tư vấn", 
+                        Email = "ngoc.nb@bnstore.vn", Phone = "0901234005", 
+                        HireDate = DateTime.UtcNow.AddMonths(-3), BaseSalaryPerHour = 45000,
+                        DepartmentId = depts[2].Id, StoreId = storeId, IsActive = true 
+                    },
+                    new Employee { 
+                        FullName = "Đặng Thu Thảo", Position = "Kế toán trưởng", 
+                        Email = "thao.dt@bnstore.vn", Phone = "0901234006", 
+                        HireDate = DateTime.UtcNow.AddYears(-2), BaseSalaryPerHour = 110000,
+                        DepartmentId = depts[4].Id, StoreId = storeId, IsActive = true 
+                    }
+                };
+
+                db.Employees.AddRange(employeesSeeding);
+                await db.SaveChangesAsync();
+                
+                Console.WriteLine("[DB_INIT] HRM Foundation Hierarchy seeded.");
+            }
+
+            // 0b. Robust Identity User Linkage - Runs even if Employees already existed
+            var allEmployees = await db.Employees.ToListAsync();
+            bool hasChanges = false;
+            foreach (var emp in allEmployees)
+            {
+                var user = await userManager.FindByEmailAsync(emp.Email);
+                if (user == null)
+                {
+                    user = new ApplicationUser 
+                    { 
+                        UserName = emp.Email, 
+                        Email = emp.Email, 
+                        FullName = emp.FullName, 
+                        EmailConfirmed = true,
+                        JoinDate = emp.HireDate
+                    };
+                    var result = await userManager.CreateAsync(user, "Staff@123");
+                    if (result.Succeeded)
+                    {
+                        await userManager.AddToRoleAsync(user, "Staff");
+                        Console.WriteLine($"[DB_INIT] Created Staff account for: {emp.Email}");
+                    }
+                }
+                else if (!await userManager.IsInRoleAsync(user, "Staff"))
+                {
+                    await userManager.AddToRoleAsync(user, "Staff");
+                    Console.WriteLine($"[DB_INIT] Assigned Staff role to existing: {emp.Email}");
+                }
+
+                if (string.IsNullOrEmpty(emp.UserId))
+                {
+                    emp.UserId = user?.Id;
+                    hasChanges = true;
+                }
+            }
+            if (hasChanges) await db.SaveChangesAsync();
+
+            // 1. Foundation: Shifts (Ca làm việc)
+            if (!await db.Shifts.AnyAsync())
+            {
+                var store1 = await db.Stores.FirstOrDefaultAsync();
+                int storeId1 = store1?.Id ?? 1;
+
+                var shifts = new List<Shift>
+                {
+                    new Shift { Name = "Ca Sáng (Morning)", StartTime = new TimeSpan(8, 30, 0), EndTime = new TimeSpan(12, 30, 0), StoreId = storeId1, IsActive = true, CreatedAt = DateTime.UtcNow },
+                    new Shift { Name = "Ca Chiều (Afternoon)", StartTime = new TimeSpan(13, 30, 0), EndTime = new TimeSpan(17, 30, 0), StoreId = storeId1, IsActive = true, CreatedAt = DateTime.UtcNow },
+                    new Shift { Name = "Ca Tối (Evening)", StartTime = new TimeSpan(18, 0, 0), EndTime = new TimeSpan(22, 0, 0), StoreId = storeId1, IsActive = true, CreatedAt = DateTime.UtcNow }
+                };
+                db.Shifts.AddRange(shifts);
+                await db.SaveChangesAsync();
+                Console.WriteLine("[DB_INIT] Shifts seeded.");
+            }
+
+            var employees = await db.Employees.ToListAsync();
+            if (!employees.Any()) return;
+
+            // 2. Foundation: Leave Balances (Quỹ phép 2026)
+            if (!await db.LeaveBalances.AnyAsync(lb => lb.Year == 2026))
+            {
+                foreach (var emp in employees)
+                {
+                    db.LeaveBalances.Add(new LeaveBalance
+                    {
+                        EmployeeId = emp.Id,
+                        Year = 2026,
+                        AnnualDaysTotal = 12,
+                        AnnualDaysUsed = 0,
+                        SickDaysTotal = 5,
+                        SickDaysUsed = 0,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+                await db.SaveChangesAsync();
+                Console.WriteLine("[DB_INIT] Leave Balances seeded.");
+            }
+
+            // 3. Weekly Schedules (Xếp lịch: Tuần qua & Tuần tới)
+            var shiftsList = await db.Shifts.ToListAsync();
+            if (!await db.Schedules.AnyAsync())
+            {
+                Random rnd = new Random();
+                var startDate = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1).AddDays(-7); // Monday last week
+                
+                for (int i = 0; i < 14; i++) // 14 days
+                {
+                    var date = startDate.AddDays(i);
+                    foreach (var emp in employees)
+                    {
+                        // Randomly assign 1 shift per day for most employees
+                        if (rnd.Next(10) > 2) // 80% attendance
+                        {
+                            var shift = shiftsList[rnd.Next(shiftsList.Count)];
+                            db.Schedules.Add(new Schedule
+                            {
+                                EmployeeId = emp.Id,
+                                ShiftId = shift.Id,
+                                Date = date,
+                                Status = ScheduleStatus.Scheduled,
+                                CreatedAt = DateTime.UtcNow
+                            });
+                        }
+                    }
+                }
+                await db.SaveChangesAsync();
+                Console.WriteLine("[DB_INIT] Weekly Schedules seeded.");
+            }
+
+            // 4. Attendance (Chấm công dựa trên lịch - Bao gồm cả "Hôm nay")
+            if (!await db.Attendances.AnyAsync(a => a.Date == DateTime.Today))
+            {
+                var currentSchedules = await db.Schedules
+                    .Include(s => s.Shift)
+                    .Where(s => s.Date <= DateTime.Today) // Include today
+                    .ToListAsync();
+
+                Random rnd = new Random();
+                foreach (var sched in currentSchedules)
+                {
+                    // If it's today, only check-in for morning/afternoon shifts
+                    if (sched.Date == DateTime.Today && sched.Shift.StartTime > DateTime.UtcNow.TimeOfDay)
+                        continue; 
+
+                    // Mock check-in/out
+                    var checkIn = sched.Shift.StartTime.Add(TimeSpan.FromMinutes(rnd.Next(-10, 10)));
+                    var checkOut = sched.Date < DateTime.Today ? sched.Shift.EndTime.Add(TimeSpan.FromMinutes(rnd.Next(-5, 15))) : (TimeSpan?)null;
+                    double totalHours = checkOut.HasValue ? (checkOut.Value - checkIn).TotalHours : 0;
+
+                    db.Attendances.Add(new Attendance
+                    {
+                        EmployeeId = sched.EmployeeId,
+                        Date = sched.Date,
+                        CheckIn = checkIn,
+                        CheckOut = checkOut,
+                        TotalHours = totalHours,
+                        Status = sched.Date < DateTime.Today ? (totalHours >= 4 ? AttendanceStatus.Present : AttendanceStatus.Late) : AttendanceStatus.Present,
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
+                await db.SaveChangesAsync();
+                Console.WriteLine("[DB_INIT] Attendance data (including today) seeded.");
+            }
+
+            // 5. Leave Requests (Đơn nghỉ phép)
+            if (!await db.LeaveRequests.AnyAsync())
+            {
+                var admin = await userManager.Users.FirstOrDefaultAsync(u => u.Email == "admin@gmail.com");
+                
+                db.LeaveRequests.AddRange(
+                    new LeaveRequest { 
+                        EmployeeId = employees[3].Id, // Trần Minh Hoàng
+                        StartDate = DateTime.Today.AddDays(-5), EndDate = DateTime.Today.AddDays(-4), 
+                        Type = LeaveType.Sick, Status = LeaveStatus.Approved, 
+                        Reason = "Sốt siêu vi", AdminNote = "Đã nhận giấy báo y tế",
+                        ApprovedById = admin?.Id, CreatedAt = DateTime.UtcNow.AddDays(-6) 
+                    },
+                    new LeaveRequest { 
+                        EmployeeId = employees[4].Id, // Nguyễn Bảo Ngọc
+                        StartDate = DateTime.Today.AddDays(2), EndDate = DateTime.Today.AddDays(2), 
+                        Type = LeaveType.Annual, Status = LeaveStatus.Pending, 
+                        Reason = "Giải quyết việc gia đình", CreatedAt = DateTime.UtcNow 
+                    }
+                );
+                await db.SaveChangesAsync();
+                Console.WriteLine("[DB_INIT] Leave Requests seeded.");
+            }
+
+            // 6. KPI Reviews (Đánh giá tháng 3 & Tháng 4/2026)
+            if (!await db.KpiReviews.AnyAsync(k => k.Month == 4 && k.Year == 2026))
+            {
+                var reviewer = await userManager.Users.FirstOrDefaultAsync(u => u.Email == "admin@gmail.com");
+                if (reviewer != null)
+                {
+                    Random rnd = new Random();
+                    foreach (var month in new[] { 3, 4 })
+                    {
+                        if (await db.KpiReviews.AnyAsync(k => k.Month == month && k.Year == 2026)) continue;
+
+                        foreach (var emp in employees)
+                        {
+                            var sales = (decimal)(rnd.Next(70, 95) + rnd.NextDouble());
+                            var attitude = (decimal)(rnd.Next(80, 100) + rnd.NextDouble());
+                            var teamwork = (decimal)(rnd.Next(75, 100) + rnd.NextDouble());
+                            var total = (sales + attitude + teamwork) / 3;
+
+                            db.KpiReviews.Add(new KpiReview
+                            {
+                                EmployeeId = emp.Id,
+                                ReviewerId = reviewer.Id,
+                                Month = month,
+                                Year = 2026,
+                                SalesScore = sales,
+                                AttitudeScore = attitude,
+                                TeamworkScore = teamwork,
+                                TotalScore = total,
+                                Rank = total >= 90 ? KpiRank.A : (total >= 80 ? KpiRank.B : KpiRank.C),
+                                Notes = $"Đánh giá định kỳ tháng {month}.",
+                                CreatedAt = DateTime.UtcNow
+                            });
+                        }
+                    }
+                    await db.SaveChangesAsync();
+                }
+                Console.WriteLine("[DB_INIT] KPI Reviews (March & April) seeded.");
+            }
+
+            // 7. Payroll: March & April 2026
+            if (!await db.Payrolls.AnyAsync(p => p.Month == 4 && p.Year == 2026))
+            {
+                foreach (var month in new[] { 3, 4 })
+                {
+                    if (await db.Payrolls.AnyAsync(p => p.Month == month && p.Year == 2026)) continue;
+
+                    var monthAttendances = await db.Attendances
+                        .Where(a => a.Date.Month == month && a.Date.Year == 2026)
+                        .ToListAsync();
+
+                    foreach (var emp in employees)
+                    {
+                        var empAttendances = monthAttendances.Where(a => a.EmployeeId == emp.Id).ToList();
+                        var totalHours = empAttendances.Sum(a => a.TotalHours);
+                        if (totalHours == 0) totalHours = (month == 3 ? 160 : 24); // Default logic
+
+                        var hourlyRate = emp.BaseSalaryPerHour;
+                        var baseSalary = (decimal)totalHours * hourlyRate;
+                        var additions = 1250000m; 
+                        var deductions = baseSalary * 0.105m; 
+                        var netSalary = baseSalary + additions - deductions;
+
+                        db.Payrolls.Add(new Payroll
+                        {
+                            EmployeeId = emp.Id,
+                            Month = month,
+                            Year = 2026,
+                            TotalHoursWorked = totalHours,
+                            BaseHourlyRate = hourlyRate,
+                            TotalBaseSalary = baseSalary,
+                            TotalAdditions = additions,
+                            TotalDeductions = deductions,
+                            NetSalary = netSalary,
+                            Status = month == 3 ? PayrollStatus.Paid : PayrollStatus.Draft,
+                            ProcessedDate = month == 3 ? DateTime.UtcNow : (DateTime?)null,
+                            Note = $"Quyết toán lương tháng {month}/2026",
+                            CreatedAt = DateTime.UtcNow
+                        });
+                    }
+                }
+                await db.SaveChangesAsync();
+                Console.WriteLine("[DB_INIT] Payroll (March & April) seeded.");
+            }
+
+            Console.WriteLine("[DB_INIT] HRM & Payroll professional seeding complete.");
         }
     }
 }

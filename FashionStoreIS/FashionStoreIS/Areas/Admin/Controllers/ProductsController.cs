@@ -33,7 +33,12 @@ namespace FashionStoreIS.Areas.Admin.Controllers
 
             if (action == "delete" && User.IsInRole("SuperAdmin"))
             {
-                _db.Products.RemoveRange(products);
+                foreach (var p in products)
+                {
+                    p.IsDeleted = true;
+                    p.IsActive = false;
+                    p.UpdatedAt = DateTime.Now;
+                }
             }
             else if (action == "hide")
             {
@@ -87,6 +92,9 @@ namespace FashionStoreIS.Areas.Admin.Controllers
             var incomingSkus = NormalizeIncomingSkus(model);
             if (incomingSkus.Count > 0)
                 model.Stock = incomingSkus.Sum(s => s.Stock);
+
+            // Prevent EF from automatically inserting the raw, unnormalized Skus from the form
+            model.Skus?.Clear();
 
             _db.Products.Add(model);
             await _db.SaveChangesAsync(); // Get Product ID
@@ -226,7 +234,9 @@ namespace FashionStoreIS.Areas.Admin.Controllers
             var product = (await _db.Products.Where(p => p.Id == id).ToListAsync()).FirstOrDefault();
             if (product != null)
             {
-                _db.Products.Remove(product);
+                product.IsDeleted = true;
+                product.IsActive = false;
+                product.UpdatedAt = DateTime.Now;
                 await _db.SaveChangesAsync();
                 TempData["Success"] = "Đã xóa sản phẩm.";
             }
@@ -288,6 +298,10 @@ namespace FashionStoreIS.Areas.Admin.Controllers
                 var size = (raw.Size ?? "").Trim();
                 if (string.IsNullOrWhiteSpace(color) || string.IsNullOrWhiteSpace(size)) continue;
 
+                // Respect DB restrictions (Color: 50, Size: 10)
+                if (color.Length > 50) color = color.Substring(0, 50);
+                if (size.Length > 10) size = size.Substring(0, 10);
+
                 var skuCode = (raw.SKU ?? "").Trim();
                 if (string.IsNullOrWhiteSpace(skuCode))
                     skuCode = GenerateSkuCode(model.Slug, color, size);
@@ -319,9 +333,26 @@ namespace FashionStoreIS.Areas.Admin.Controllers
             var safeSlug = string.IsNullOrWhiteSpace(slug) ? "item" : slug.Trim();
             var safeColor = Regex.Replace(color.Trim().ToLowerInvariant(), @"\s+", "-");
             var safeSize = Regex.Replace(size.Trim().ToLowerInvariant(), @"\s+", "-");
-            var raw = $"{safeSlug}-{safeColor}-{safeSize}";
+            
+            // Ensure prefix matches max lengths, allowing slug some space 
+            // Total limit is 30, use up to 10 chars from slug, 8 from color, 4 from size
+            var shortSlug = safeSlug.Length > 10 ? safeSlug.Substring(0, 10) : safeSlug;
+            var shortColor = safeColor.Length > 8 ? safeColor.Substring(0, 8) : safeColor;
+            var shortSize = safeSize.Length > 4 ? safeSize.Substring(0, 4) : safeSize;
+            
+            var raw = $"{shortSlug}-{shortColor}-{shortSize}";
             raw = Regex.Replace(raw, @"[^a-z0-9\-]", "");
             raw = Regex.Replace(raw, @"\-{2,}", "-").Trim('-');
+            
+            // Cap at 25 length so we can append 5 characters "-XXXX"
+            if (raw.Length > 24)
+            {
+                raw = raw.Substring(0, 24).Trim('-');
+            }
+            
+            var uniqueSuffix = Guid.NewGuid().ToString("N").Substring(0, 4);
+            raw = $"{raw}-{uniqueSuffix}";
+            
             return raw.ToUpperInvariant();
         }
 

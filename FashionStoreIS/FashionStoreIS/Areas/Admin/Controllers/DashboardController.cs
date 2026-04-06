@@ -124,12 +124,19 @@ namespace FashionStoreIS.Areas.Admin.Controllers
 
         private async Task<List<TopProductData>> GetTopProducts()
         {
-            // Execute aggregation on server, but Take(5) in memory for Oracle 11g compatibility
-            var data = await _db.OrderDetails
-                .GroupBy(oi => new { oi.ProductSku!.Product.Id, ProductName = oi.ProductSku!.Product.Name, ImageUrl = oi.ProductSku!.Product.ImageUrl })
+            // Filter out items with null navigation properties to avoid "Nullable object must have a value" errors
+            var query = _db.OrderDetails
+                .Where(oi => oi.ProductSkuId != null && oi.ProductSku != null && oi.ProductSku.Product != null);
+
+            var data = await query
+                .GroupBy(oi => new { 
+                    ProductId = oi.ProductSku!.ProductId, 
+                    ProductName = oi.ProductSku!.Product.Name, 
+                    ImageUrl = oi.ProductSku!.Product.ImageUrl 
+                })
                 .Select(g => new TopProductData
                 {
-                    ProductId = g.Key.Id,
+                    ProductId = g.Key.ProductId,
                     ProductName = g.Key.ProductName ?? "",
                     ImageUrl = g.Key.ImageUrl ?? "",
                     TotalQuantity = g.Sum(oi => oi.Quantity),

@@ -1,0 +1,120 @@
+@model IEnumerable<FashionStoreIS.Models.KpiReview>
+
+@{
+    ViewData["Title"] = "Bảng xếp hạng KPI";
+    int month = (int)ViewData["Month"];
+    int year = (int)ViewData["Year"];
+}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h2 style="font-size: 24px; font-weight: 700; color: #fff;">KPI LEADERBOARD — THÁNG @month/@year</h2>
+    <form method="get" style="display: flex; gap: 10px;">
+        <select name="month" class="form-control" style="width: 100px;">
+            @for (int i = 1; i <= 12; i++)
+            {
+                <option value="@i" selected="@(i == month)">T@i</option>
+            }
+        </select>
+        <select name="year" class="form-control" style="width: 100px;">
+            @for (int i = DateTime.Now.Year - 1; i <= DateTime.Now.Year + 1; i++)
+            {
+                <option value="@i" selected="@(i == year)">@i</option>
+            }
+        </select>
+        <button type="submit" class="btn-admin btn-primary">XEM</button>
+    </form>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="stat-label">TỔNG NHÂN VIÊN ĐÁNH GIÁ</div>
+        <div class="stat-value">@Model.Count()</div>
+        <div class="stat-sub">Trong toàn hệ thống</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">HẠNG A (XUẤT SẮC)</div>
+        <div class="stat-value" style="color: #fbbf24;">@Model.Count(k => k.Rank == FashionStoreIS.Models.KpiRank.A)</div>
+        <div class="stat-sub">Thưởng +15% lương cơ sở</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">ĐIỂM TRUNG BÌNH CHUỖI</div>
+        <div class="stat-value" style="color: var(--admin-accent);">@(Model.Any() ? Model.Average(k => k.TotalScore).ToString("N1") : "0")</div>
+        <div class="stat-sub">Thang điểm 100</div>
+    </div>
+    <div class="stat-card" style="border-color: rgba(239, 68, 68, 0.3);">
+        <div class="stat-label">HẠNG D (CẦN CẢI THIỆN)</div>
+        <div class="stat-value" style="color: #ef4444;">@Model.Count(k => k.Rank == FashionStoreIS.Models.KpiRank.D)</div>
+        <div class="stat-sub">Yêu cầu đào tạo lại</div>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <div class="admin-card-title">TOP 10 NHÂN VIÊN XUẤT SẮC NHẤT</div>
+    </div>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th style="width: 60px; text-align: center;">HẠNG</th>
+                <th>Nhân viên</th>
+                <th>Chi nhánh</th>
+                <th style="text-align: center;">Doanh số</th>
+                <th style="text-align: center;">Thái độ</th>
+                <th style="text-align: center;">Teamwork</th>
+                <th style="text-align: center;">Tổng điểm</th>
+                <th style="text-align: center;">Xếp hạng</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{ int rank = 1; }
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td style="text-align: center;">
+                        @if (rank <= 3)
+                        {
+                            <span class="medal-badge medal-@rank">@rank</span>
+                        }
+                        else
+                        {
+                            <span style="font-weight: 700; color: var(--admin-muted);">@rank</span>
+                        }
+                    </td>
+                    <td>
+                        <div style="font-weight: 600; color: #fff;">@item.Employee?.FullName</div>
+                        <div style="font-size: 11px; color: var(--admin-muted);">@item.Employee?.Position</div>
+                    </td>
+                    <td>@(item.Employee?.Store?.Name ?? "N/A")</td>
+                    <td style="text-align: center;">@item.SalesScore.ToString("N0")</td>
+                    <td style="text-align: center;">@item.AttitudeScore.ToString("N0")</td>
+                    <td style="text-align: center;">@item.TeamworkScore.ToString("N0")</td>
+                    <td style="text-align: center; font-weight: 800; color: #fff;">@item.TotalScore.ToString("N1")</td>
+                    <td style="text-align: center;">
+                        <span class="kpi-rank-badge rank-@item.Rank.ToString().ToLower()">@item.Rank</span>
+                    </td>
+                </tr>
+                rank++;
+            }
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .medal-badge {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 32px; height: 32px; border-radius: 50%; font-weight: 900; font-size: 14px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    .medal-1 { background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); color: #000; border: 2px solid #fef3c7; }
+    .medal-2 { background: linear-gradient(135deg, #94a3b8 0%, #475569 100%); color: #fff; border: 2px solid #e2e8f0; }
+    .medal-3 { background: linear-gradient(135deg, #b45309 0%, #78350f 100%); color: #fff; border: 2px solid #fef3c7; }
+
+    .kpi-rank-badge { 
+        display: inline-block; padding: 4px 14px; border-radius: 4px; 
+        font-weight: 800; font-size: 12px; letter-spacing: 0.1em;
+    }
+    .rank-a { background: rgba(251,191,36,0.15); color: #fbbf24; border: 1px solid rgba(251,191,36,0.3); }
+    .rank-b { background: rgba(99,102,241,0.15); color: #6366f1; border: 1px solid rgba(99,102,241,0.3); }
+    .rank-c { background: rgba(148,163,184,0.15); color: #94a3b8; border: 1px solid rgba(148,163,184,0.3); }
+    .rank-d { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+</style>

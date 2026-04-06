@@ -1,40 +1,62 @@
 using FashionStoreIS.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Oracle.EntityFrameworkCore;
+
 
 using FashionStoreIS.Models;
 using FashionStoreIS.Services;
 
+// Enable legacy timestamp behavior for compatibility with existing local DateTime usages
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-if (string.IsNullOrWhiteSpace(connectionString))
-    connectionString = builder.Configuration["ConnectionStrings:DefaultConnection"];
-if (string.IsNullOrWhiteSpace(connectionString))
-    connectionString = builder.Configuration["ORACLE_CONNECTION_STRING"];
-if (string.IsNullOrWhiteSpace(connectionString))
+// Ensure the app listens on the PORT provided by Render
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrEmpty(port))
 {
-    if (!builder.Environment.IsDevelopment())
-        throw new InvalidOperationException("Connection string 'DefaultConnection' not found. Set it in appsettings or ORACLE_CONNECTION_STRING env var.");
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
 
-    var sqlitePath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "fashionstore-dev.db");
-    Directory.CreateDirectory(Path.GetDirectoryName(sqlitePath)!);
-    var sqliteConn = $"Data Source={sqlitePath}";
+// ─── Database Contexts Registration ─────────────────────────────────────
+var postgresConnectionString = builder.Configuration.GetConnectionString("PostgresConnection") 
+                             ?? builder.Configuration["POSTGRES_CONNECTION_STRING"];
+var analyticsConnectionString = builder.Configuration.GetConnectionString("AnalyticsConnection")
+                             ?? builder.Configuration["ANALYTICS_CONNECTION_STRING"];
 
+if (!string.IsNullOrWhiteSpace(postgresConnectionString))
+{
+    // Use Postgres for primary application data
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseSqlite(sqliteConn));
+        options.UseNpgsql(postgresConnectionString));
+
+    // Use Postgres for analytics and executive data if configured, otherwise use separate Postgres DBs
+    builder.Services.AddDbContext<AnalyticsDbContext>(options =>
+        options.UseNpgsql(analyticsConnectionString ?? postgresConnectionString));
+    
+    builder.Services.AddDbContext<ExecutiveDbContext>(options =>
+        options.UseNpgsql(analyticsConnectionString ?? postgresConnectionString));
 }
 else
 {
-    builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseOracle(connectionString));
-}
+    // Primary Application Db (SQLite fallback)
+    if (!builder.Environment.IsDevelopment())
+        throw new InvalidOperationException("No connection string found. Set 'POSTGRES_CONNECTION_STRING'.");
 
-var analyticsDbPath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "DataWarehouse.db");
-builder.Services.AddDbContext<AnalyticsDbContext>(options =>
-    options.UseSqlite($"Data Source={analyticsDbPath}"));
+    var sqlitePath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "fashionstore-dev.db");
+    Directory.CreateDirectory(Path.GetDirectoryName(sqlitePath)!);
+    builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        options.UseSqlite($"Data Source={sqlitePath}"));
+
+    // Secondary Db fallbacks (SQLite)
+    var analyticsDbPath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "DataWarehouse.db");
+    builder.Services.AddDbContext<AnalyticsDbContext>(options =>
+        options.UseSqlite($"Data Source={analyticsDbPath}"));
+
+    var executiveDbPath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "Executive.db");
+    builder.Services.AddDbContext<ExecutiveDbContext>(options =>
+        options.UseSqlite($"Data Source={executiveDbPath}"));
+}
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options => 
 {
@@ -62,8 +84,6 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
 });
 
-builder.Services.AddScoped<IUserStore<ApplicationUser>, OracleCompatibleUserStore>();
-builder.Services.AddScoped<IRoleStore<IdentityRole>, OracleCompatibleRoleStore>();
 builder.Services.AddScoped<IVnPayService, VnPayService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<RfmSegmentationService>();
@@ -74,10 +94,7 @@ builder.Services.AddScoped<IStrategicAnalyticsService, StrategicAnalyticsService
 builder.Services.AddScoped<IExternalDataIntegrationService, ExternalDataIntegrationService>();
 builder.Services.AddScoped<IPayrollService, PayrollService>();
 
-// Executive Database Context
-var executiveDbPath = Path.Combine(builder.Environment.ContentRootPath, "App_Data", "Executive.db");
-builder.Services.AddDbContext<ExecutiveDbContext>(options =>
-    options.UseSqlite($"Data Source={executiveDbPath}"));
+// Executive Support System Services already handled in conditional block above
 
 builder.Services.AddControllersWithViews();
 
@@ -115,6 +132,23 @@ using (var scope = app.Services.CreateScope())
     var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
     var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
     
+    // Auto-create/Migrate Database Tables
+    var analyticsContext = services.GetRequiredService<AnalyticsDbContext>();
+    var executiveContext = services.GetRequiredService<ExecutiveDbContext>();
+    
+    if (context.Database.IsNpgsql())
+    {
+        await context.Database.MigrateAsync();
+        await analyticsContext.Database.MigrateAsync();
+        await executiveContext.Database.MigrateAsync();
+    }
+    else
+    {
+        context.Database.EnsureCreated();
+        analyticsContext.Database.EnsureCreated();
+        executiveContext.Database.EnsureCreated();
+    }
+
     try
     {
         await DbInitializer.Seed(context, userManager, roleManager);
@@ -123,14 +157,6 @@ using (var scope = app.Services.CreateScope())
     {
         Console.WriteLine($"Database seeding error: {ex.Message}");
     }
-    
-    // Auto-create Analytics Data Warehouse Tables if missing
-    var analyticsContext = services.GetRequiredService<AnalyticsDbContext>();
-    analyticsContext.Database.EnsureCreated();
-    
-    // Auto-create Executive Database Tables if missing
-    var executiveContext = services.GetRequiredService<ExecutiveDbContext>();
-    executiveContext.Database.EnsureCreated();
 }
 
 app.UseHttpsRedirection();

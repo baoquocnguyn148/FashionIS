@@ -1,0 +1,58 @@
+@model FashionStoreIS.Models.Attendance
+
+@{
+    ViewData["Title"] = "Chỉnh sửa Chấm công";
+}
+
+<div style="margin-bottom: 24px;">
+    <a asp-action="Index" asp-route-date="@Model.Date.ToString("yyyy-MM-dd")" class="btn-admin btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> QUAY LẠI
+    </a>
+</div>
+
+<div class="admin-card" style="max-width: 600px; margin: 0 auto;">
+    <div class="admin-card-header">
+        <div class="admin-card-title">HIỆU CHỈNH CHẤM CÔNG THỦ CÔNG</div>
+    </div>
+    <div style="padding: 30px;">
+        <div style="margin-bottom: 24px; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+            <div style="font-size: 11px; color: var(--admin-muted); text-transform: uppercase; font-weight: 700;">Nhân viên</div>
+            <div style="font-size: 18px; font-weight: 700; color: #fff;">@Model.Employee?.FullName</div>
+            <div style="font-size: 13px; color: var(--admin-accent);">Ngày: @Model.Date.ToString("dd/MM/yyyy")</div>
+        </div>
+
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="alert alert-error"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="EmployeeId" />
+            <input type="hidden" asp-for="Date" />
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label asp-for="CheckIn" class="form-label">Giờ vào</label>
+                    <input asp-for="CheckIn" type="time" class="form-control" />
+                    <span asp-validation-for="CheckIn" style="color: var(--admin-red); font-size: 11px;"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="CheckOut" class="form-label">Giờ ra</label>
+                    <input asp-for="CheckOut" type="time" class="form-control" />
+                    <span asp-validation-for="CheckOut" style="color: var(--admin-red); font-size: 11px;"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Status" class="form-label">Trạng thái công</label>
+                <select asp-for="Status" class="form-control" asp-items="Html.GetEnumSelectList<AttendanceStatus>()"></select>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Note" class="form-label">Ghi chú / Lý do chỉnh sửa</label>
+                <textarea asp-for="Note" class="form-control" placeholder="Chỉnh sửa do máy lỗi, quên quét vân tay..."></textarea>
+            </div>
+
+            <div style="margin-top: 30px; display: flex; gap: 15px;">
+                <button type="submit" class="btn-admin btn-primary" style="flex: 1;">LƯU THAY ĐỔI</button>
+            </div>
+        </form>
+    </div>
+</div>

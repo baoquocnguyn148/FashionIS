@@ -88,4 +88,21 @@ namespace FashionStoreIS.Models
         Addition = 1,
         Deduction = 2
     }
+
+    public enum ScheduleStatus : byte 
+    { 
+        Scheduled = 1, 
+        Confirmed = 2, 
+        Swapped = 3, 
+        Absent = 4, 
+        Cancelled = 5 
+    }
+
+    public enum KpiRank : byte 
+    { 
+        A = 1, 
+        B = 2, 
+        C = 3, 
+        D = 4 
+    }
 }

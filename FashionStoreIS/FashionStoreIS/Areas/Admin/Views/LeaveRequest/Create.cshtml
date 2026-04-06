@@ -1,0 +1,55 @@
+@model FashionStoreIS.Models.LeaveRequest
+
+@{
+    ViewData["Title"] = "Nộp đơn nghỉ phép";
+}
+
+<div style="margin-bottom: 24px;">
+    <a asp-action="Index" class="btn-admin btn-secondary">
+        <i class="fa-solid fa-arrow-left"></i> QUAY LẠI
+    </a>
+</div>
+
+<div class="admin-card" style="max-width: 700px; margin: 0 auto;">
+    <div class="admin-card-header">
+        <div class="admin-card-title">ĐƠN ĐĂNG KÝ NGHỈ PHÉP</div>
+    </div>
+    <div style="padding: 30px;">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="alert alert-error"></div>
+            
+            <div class="form-group">
+                <label asp-for="EmployeeId" class="form-label">Nhân viên nghỉ phép</label>
+                <select asp-for="EmployeeId" class="form-control" asp-items="ViewBag.EmployeeId"></select>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Type" class="form-label">Loại hình nghỉ</label>
+                <select asp-for="Type" class="form-control" asp-items="Html.GetEnumSelectList<LeaveType>()"></select>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label asp-for="StartDate" class="form-label">Nghỉ từ ngày</label>
+                    <input asp-for="StartDate" type="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="StartDate" style="color: var(--admin-red); font-size: 11px;"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="EndDate" class="form-label">Đến hết ngày</label>
+                    <input asp-for="EndDate" type="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="EndDate" style="color: var(--admin-red); font-size: 11px;"></span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Reason" class="form-label">Lý do nghỉ phép</label>
+                <textarea asp-for="Reason" class="form-control" placeholder="Mô tả lý do: Nghỉ ốm, việc gia đình, du lịch..."></textarea>
+                <span asp-validation-for="Reason" style="color: var(--admin-red); font-size: 11px;"></span>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <button type="submit" class="btn-admin btn-primary" style="width: 100%;">GỬI ĐƠN NGHỈ PHÉP</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -25,6 +25,17 @@ namespace FashionStoreIS.Data
             modelBuilder.Entity<Fact_Sales>().Property(f => f.DiscountAmount).HasColumnType("decimal(18,2)");
             modelBuilder.Entity<Fact_Sales>().Property(f => f.COGS).HasColumnType("decimal(18,2)");
             modelBuilder.Entity<Fact_Sales>().Property(f => f.GrossProfit).HasColumnType("decimal(18,2)");
+
+            // Support PostgreSQL case-insensitivity conventions
+            if (Database.IsNpgsql())
+            {
+                foreach (var entity in modelBuilder.Model.GetEntityTypes())
+                {
+                    entity.SetTableName(entity.GetTableName()?.ToLower());
+                    foreach (var property in entity.GetProperties())
+                        property.SetColumnName(property.GetColumnName().ToLower());
+                }
+            }
         }
     }
 }

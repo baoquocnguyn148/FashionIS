@@ -78,6 +78,21 @@ namespace FashionStoreIS.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation($"User {Input.Email} logged in successfully.");
+
+                    var user = await _signInManager.UserManager.FindByEmailAsync(Input.Email);
+                    if (user != null)
+                    {
+                        var roles = await _signInManager.UserManager.GetRolesAsync(user);
+                        if (roles.Contains("Staff"))
+                        {
+                            return LocalRedirect("/EmployeePortal");
+                        }
+                        if (roles.Contains("SuperAdmin"))
+                        {
+                            return LocalRedirect("/Admin/Dashboard");
+                        }
+                    }
+
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)

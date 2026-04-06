@@ -1,0 +1,133 @@
+@using FashionStoreIS.Models
+@model List<IGrouping<FashionStoreIS.Models.Employee, FashionStoreIS.Models.Attendance>>
+
+@{
+    ViewData["Title"] = "Chấm công tháng";
+    int month = (int)ViewData["Month"];
+    int year = (int)ViewData["Year"];
+    int daysInMonth = DateTime.DaysInMonth(year, month);
+    var stores = (SelectList)ViewData["Stores"];
+}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h2 style="font-size: 24px; font-weight: 700; color: #fff;">BẢNG CHẤM CÔNG THÁNG @month/@year</h2>
+    <div style="display: flex; gap: 12px; align-items: center;">
+        <form method="get" class="search-bar" style="margin-bottom: 0;">
+            <select name="storeId" class="form-control" style="width: 180px;" asp-items="stores">
+                <option value="">Tất cả chi nhánh</option>
+            </select>
+            <select name="month" class="form-control" style="width: 100px;">
+                @for (int i = 1; i <= 12; i++)
+                {
+                    <option value="@i" selected="@(i == month)">T@i</option>
+                }
+            </select>
+            <select name="year" class="form-control" style="width: 100px;">
+                @for (int i = DateTime.Now.Year - 1; i <= DateTime.Now.Year + 1; i++)
+                {
+                    <option value="@i" selected="@(i == year)">@i</option>
+                }
+            </select>
+            <button type="submit" class="btn-admin btn-primary">XEM</button>
+        </form>
+    </div>
+</div>
+
+<div class="admin-card">
+    <div class="table-container" style="overflow-x: auto;">
+        <table class="admin-table attendance-grid">
+            <thead>
+                <tr>
+                    <th class="sticky-col">Nhân viên</th>
+                    @for (int d = 1; d <= daysInMonth; d++)
+                    {
+                        <th style="text-align: center; min-width: 35px; padding: 10px 5px;">@d</th>
+                    }
+                    <th style="padding-left: 15px; border-left: 2px solid var(--admin-border);">TỔNG</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var group in Model)
+                {
+                    var emp = group.Key;
+                    var atts = group.ToList();
+                    <tr>
+                        <td class="sticky-col">
+                            <div style="font-weight: 600; color: #fff;">@emp.FullName</div>
+                            <div style="font-size: 10px; color: var(--admin-muted);">@emp.Position</div>
+                        </td>
+                        @for (int d = 1; d <= daysInMonth; d++)
+                        {
+                            var date = new DateTime(year, month, d);
+                            var att = atts.FirstOrDefault(a => a.Date.Date == date.Date);
+                            <td style="text-align: center; padding: 5px;">
+                                @if (att != null)
+                                {
+                                    <a href="/Admin/Attendances/Edit/@att.Id" class="att-status @GetStatusClass(att.Status)" title="@att.CheckIn?.ToString(@"hh\:mm") - @att.CheckOut?.ToString(@"hh\:mm")">
+                                        @GetStatusLetter(att.Status)
+                                    </a>
+                                }
+                                else
+                                {
+                                    <span class="att-empty" title="Vắng mặt">·</span>
+                                }
+                            </td>
+                        }
+                        <td style="padding-left: 15px; border-left: 2px solid var(--admin-border); font-weight: 700; color: var(--admin-accent);">
+                            @atts.Sum(a => a.TotalHours).ToString("N1")h
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div style="margin-top: 20px; display: flex; gap: 20px; font-size: 12px; color: var(--admin-muted);">
+    <div style="display: flex; align-items: center; gap: 6px;"><span class="att-status status-present" style="width: 14px; height: 14px; display: inline-block;"></span> P: Đúng giờ</div>
+    <div style="display: flex; align-items: center; gap: 6px;"><span class="att-status status-late" style="width: 14px; height: 14px; display: inline-block;"></span> L: Đi muộn</div>
+    <div style="display: flex; align-items: center; gap: 6px;"><span class="att-status status-half" style="width: 14px; height: 14px; display: inline-block;"></span> H: Nửa ngày</div>
+    <div style="display: flex; align-items: center; gap: 6px;"><span class="att-status status-absent" style="width: 14px; height: 14px; display: inline-block;"></span> A: Vắng mặt</div>
+</div>
+
+<style>
+    .attendance-grid th, .attendance-grid td { white-space: nowrap; }
+    .sticky-col { 
+        position: sticky; left: 0; background: var(--admin-card) !important; 
+        z-index: 5; border-right: 2px solid var(--admin-border) !important;
+        width: 180px; min-width: 180px;
+    }
+    
+    .att-status { 
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 26px; height: 26px; border-radius: 4px; font-size: 11px; font-weight: 800;
+        text-decoration: none; transition: transform .2s;
+    }
+    .att-status:hover { transform: scale(1.15); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+    
+    .status-present { background: rgba(34,197,94,0.15); color: #22c55e; border: 1px solid rgba(34,197,94,0.3); }
+    .status-late { background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+    .status-half { background: rgba(99,102,241,0.15); color: #6366f1; border: 1px solid rgba(99,102,241,0.3); }
+    .status-absent { background: rgba(239,68,68,0.15); color: #ef4444; border: 1px solid rgba(239,68,68,0.3); }
+    .att-empty { color: #334155; font-weight: 900; }
+</style>
+
+@functions {
+    string GetStatusClass(AttendanceStatus status) => status switch
+    {
+        AttendanceStatus.Present => "status-present",
+        AttendanceStatus.Late => "status-late",
+        AttendanceStatus.HalfDay => "status-half",
+        AttendanceStatus.Absent => "status-absent",
+        _ => ""
+    };
+
+    string GetStatusLetter(AttendanceStatus status) => status switch
+    {
+        AttendanceStatus.Present => "P",
+        AttendanceStatus.Late => "L",
+        AttendanceStatus.HalfDay => "H",
+        AttendanceStatus.Absent => "A",
+        _ => "?"
+    };
+}

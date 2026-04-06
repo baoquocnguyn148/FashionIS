@@ -79,12 +79,9 @@
                                 </a>
                                 @if (isSuperAdmin)
                                 {
-                                    <form method="post" action="/Admin/Products/Delete/@p.Id" style="display:inline;" onsubmit="return confirm('Xóa vĩnh viễn sản phẩm này?')">
-                                        @Html.AntiForgeryToken()
-                                        <button type="submit" class="btn-admin btn-danger btn-sm" title="Xóa">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
-                                        </button>
-                                    </form>
+                                    <button type="submit" formaction="/Admin/Products/Delete/@p.Id" class="btn-admin btn-danger btn-sm" title="Xóa" onclick="return confirm('Xóa vĩnh viễn sản phẩm này?')">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path></svg>
+                                    </button>
                                 }
                             </div>
                         </td>

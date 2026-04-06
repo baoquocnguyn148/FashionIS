@@ -9,5 +9,7 @@ namespace FashionStoreIS.Services
         Task<Payroll> CalculateMonthlyPayrollAsync(int employeeId, int month, int year);
         Task<IEnumerable<Payroll>> GenerateAllPayrollsAsync(int month, int year);
         Task<bool> ProcessPaymentAsync(int payrollId);
+        Task<object> GetMonthSummaryAsync(int storeId, int month, int year);
+        Task<byte[]> ExportPayrollExcelAsync(int month, int year, int? storeId);
     }
 }

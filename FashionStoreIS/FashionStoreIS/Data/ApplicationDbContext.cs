@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using FashionStoreIS.Models;
 using Microsoft.EntityFrameworkCore.Metadata;
+using FashionStoreIS.Models;
 
 namespace FashionStoreIS.Data
 {
@@ -38,135 +38,96 @@ namespace FashionStoreIS.Data
         public DbSet<SalaryComponent> SalaryComponents { get; set; }
         public DbSet<Payroll> Payrolls { get; set; }
         public DbSet<PayrollItem> PayrollItems { get; set; }
+        public DbSet<Shift> Shifts { get; set; }
+        public DbSet<Schedule> Schedules { get; set; }
+        public DbSet<LeaveBalance> LeaveBalances { get; set; }
+        public DbSet<KpiReview> KpiReviews { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+            var isPostgres = Database.IsNpgsql();
 
-            var isOracle = Database.ProviderName?.Contains("Oracle", StringComparison.OrdinalIgnoreCase) == true;
+            // 1. Identity Tables (Matching schema.sql)
+            builder.Entity<ApplicationUser>(entity => {
+                entity.ToTable(isPostgres ? "aspnetusers" : "ASPNETUSERS");
+            });
 
-            // 0. Naming Convention
+            builder.Entity<IdentityRole>(entity => {
+                entity.ToTable(isPostgres ? "aspnetroles" : "ASPNETROLES");
+            });
+
+            builder.Entity<IdentityUserRole<string>>(entity => {
+                entity.ToTable(isPostgres ? "aspnetuserroles" : "ASPNETUSERROLES");
+                entity.Property(e => e.UserId).HasColumnName(isPostgres ? "userid" : "USERID");
+                entity.Property(e => e.RoleId).HasColumnName(isPostgres ? "roleid" : "ROLEID");
+            });
+
+            builder.Entity<IdentityUserClaim<string>>(entity => {
+                entity.ToTable(isPostgres ? "aspnetuserclaims" : "ASPNETUSERCLAIMS");
+                if (isPostgres)
+                    entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+                else
+                    entity.Property(e => e.Id).HasColumnName("ID");
+                entity.Property(e => e.UserId).HasColumnName(isPostgres ? "userid" : "USERID");
+                entity.Property(e => e.ClaimType).HasColumnName(isPostgres ? "claimtype" : "CLAIMTYPE");
+                entity.Property(e => e.ClaimValue).HasColumnName(isPostgres ? "claimvalue" : "CLAIMVALUE");
+            });
+
+            builder.Entity<IdentityUserLogin<string>>(entity => {
+                entity.ToTable(isPostgres ? "aspnetuserlogins" : "ASPNETUSERLOGINS");
+                entity.Property(e => e.LoginProvider).HasColumnName(isPostgres ? "loginprovider" : "LOGINPROVIDER");
+                entity.Property(e => e.ProviderKey).HasColumnName(isPostgres ? "providerkey" : "PROVIDERKEY");
+                entity.Property(e => e.UserId).HasColumnName(isPostgres ? "userid" : "USERID");
+            });
+
+            builder.Entity<IdentityRoleClaim<string>>(entity => {
+                entity.ToTable(isPostgres ? "aspnetroleclaims" : "ASPNETROLECLAIMS");
+                if (isPostgres)
+                    entity.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+                else
+                    entity.Property(e => e.Id).HasColumnName("ID");
+                entity.Property(e => e.RoleId).HasColumnName(isPostgres ? "roleid" : "ROLEID");
+            });
+
+
+            // 2. Business Entities Mapping
             foreach (var entity in builder.Model.GetEntityTypes())
             {
                 var tableName = entity.GetTableName();
                 if (tableName == null) continue;
-                var normalizedTableName = tableName.ToUpperInvariant();
+                
+                // For Postgres, we prefer lowercase to avoid double-quoting everything
+                var normalizedTableName = isPostgres ? tableName.ToLowerInvariant() : tableName.ToUpperInvariant();
                 entity.SetTableName(normalizedTableName);
 
                 foreach (var property in entity.GetProperties())
                 {
                     var storeObject = StoreObjectIdentifier.Table(normalizedTableName, entity.GetSchema());
                     var columnName = property.GetColumnName(storeObject);
-                    if (columnName != null) property.SetColumnName(columnName.ToUpperInvariant());
+                    if (columnName != null) 
+                        property.SetColumnName(isPostgres ? columnName.ToLowerInvariant() : columnName.ToUpperInvariant());
                 }
-            }
-            
-            if (isOracle)
-                builder.HasSequence<long>("HILOSEQUENCE").IncrementsBy(1).StartsAt(1).IsCyclic(false);
 
-            // 1. Identity Tables (Matching schema.sql)
-            builder.Entity<ApplicationUser>(entity => {
-                entity.ToTable("ASPNETUSERS");
-                if (isOracle)
+                if (typeof(BaseEntity).IsAssignableFrom(entity.ClrType))
                 {
-                    entity.Property(e => e.Id).HasColumnName("ID").HasColumnType("VARCHAR2(450)");
-                    entity.Property(e => e.UserName).HasColumnName("USERNAME").HasColumnType("VARCHAR2(256)");
-                    entity.Property(e => e.NormalizedUserName).HasColumnName("NORMALIZEDUSERNAME").HasColumnType("VARCHAR2(256)");
-                    entity.Property(e => e.Email).HasColumnName("EMAIL").HasColumnType("VARCHAR2(256)");
-                    entity.Property(e => e.NormalizedEmail).HasColumnName("NORMALIZEDEMAIL").HasColumnType("VARCHAR2(256)");
-                    entity.Property(e => e.EmailConfirmed).HasColumnName("EMAILCONFIRMED").HasColumnType("NUMBER(1)");
-                    entity.Property(e => e.PasswordHash).HasColumnName("PASSWORDHASH").HasColumnType("VARCHAR2(2000)");
-                    entity.Property(e => e.SecurityStamp).HasColumnName("SECURITYSTAMP").HasColumnType("VARCHAR2(2000)");
-                    entity.Property(e => e.ConcurrencyStamp).HasColumnName("CONCURRENCYSTAMP").HasColumnType("VARCHAR2(2000)");
-                    entity.Property(e => e.PhoneNumber).HasColumnName("PHONENUMBER").HasColumnType("VARCHAR2(2000)");
-                    entity.Property(e => e.PhoneNumberConfirmed).HasColumnName("PHONENUMBERCONFIRMED").HasColumnType("NUMBER(1)");
-                    entity.Property(e => e.TwoFactorEnabled).HasColumnName("TWOFACTORENABLED").HasColumnType("NUMBER(1)");
-                    entity.Property(e => e.LockoutEnd).HasColumnName("LOCKOUTEND").HasColumnType("TIMESTAMP WITH TIME ZONE");
-                    entity.Property(e => e.LockoutEnabled).HasColumnName("LOCKOUTENABLED").HasColumnType("NUMBER(1)");
-                    entity.Property(e => e.AccessFailedCount).HasColumnName("ACCESSFAILEDCOUNT").HasColumnType("NUMBER(10)");
-                    entity.Property(e => e.FullName).HasColumnName("FULLNAME").HasColumnType("NVARCHAR2(100)");
-                    entity.Property(e => e.Gender).HasColumnName("GENDER").HasColumnType("NVARCHAR2(20)");
-                    entity.Property(e => e.AvatarUrl).HasColumnName("AVATARURL").HasColumnType("NVARCHAR2(2000)");
-                    entity.Property(e => e.MembershipPoints).HasColumnName("MEMBERSHIPPOINTS").HasColumnType("NUMBER(10)");
-                }
-            });
-
-            builder.Entity<IdentityRole>(entity => {
-                entity.ToTable("ASPNETROLES");
-                if (isOracle)
-                {
-                    entity.Property(e => e.Id).HasColumnName("ID").HasColumnType("VARCHAR2(450)");
-                    entity.Property(e => e.Name).HasColumnName("NAME").HasColumnType("VARCHAR2(256)");
-                    entity.Property(e => e.NormalizedName).HasColumnName("NORMALIZEDNAME").HasColumnType("VARCHAR2(256)");
-                    entity.Property(e => e.ConcurrencyStamp).HasColumnName("CONCURRENCYSTAMP").HasColumnType("VARCHAR2(2000)");
-                }
-            });
-
-            builder.Entity<IdentityUserRole<string>>(entity => {
-                entity.ToTable("ASPNETUSERROLES");
-                entity.Property(e => e.UserId).HasColumnName("USERID");
-                entity.Property(e => e.RoleId).HasColumnName("ROLEID");
-            });
-
-            builder.Entity<IdentityUserClaim<string>>(entity => {
-                entity.ToTable("ASPNETUSERCLAIMS");
-                if (isOracle)
-                    entity.Property(e => e.Id).HasColumnName("ID").UseHiLo("HILOSEQUENCE");
-                else
-                    entity.Property(e => e.Id).HasColumnName("ID");
-                entity.Property(e => e.UserId).HasColumnName("USERID");
-                entity.Property(e => e.ClaimType).HasColumnName("CLAIMTYPE");
-                entity.Property(e => e.ClaimValue).HasColumnName("CLAIMVALUE");
-            });
-
-            builder.Entity<IdentityUserLogin<string>>(entity => {
-                entity.ToTable("ASPNETUSERLOGINS");
-                entity.Property(e => e.LoginProvider).HasColumnName("LOGINPROVIDER");
-                entity.Property(e => e.ProviderKey).HasColumnName("PROVIDERKEY");
-                entity.Property(e => e.UserId).HasColumnName("USERID");
-            });
-
-            builder.Entity<IdentityRoleClaim<string>>(entity => {
-                entity.ToTable("ASPNETROLECLAIMS");
-                if (isOracle)
-                    entity.Property(e => e.Id).HasColumnName("ID").UseHiLo("HILOSEQUENCE");
-                else
-                    entity.Property(e => e.Id).HasColumnName("ID");
-                entity.Property(e => e.RoleId).HasColumnName("ROLEID");
-            });
-
-            builder.Entity<IdentityUserToken<string>>(entity => {
-                entity.ToTable("ASPNETUSERTOKENS");
-                entity.Property(e => e.UserId).HasColumnName("USERID");
-                entity.Property(e => e.LoginProvider).HasColumnName("LOGINPROVIDER");
-                entity.Property(e => e.Name).HasColumnName("NAME");
-                entity.Property(e => e.Value).HasColumnName("VALUE");
-            });
-
-            // 2. Business Entities
-            foreach (var entityType in builder.Model.GetEntityTypes())
-            {
-                if (typeof(BaseEntity).IsAssignableFrom(entityType.ClrType))
-                {
-                    var b = builder.Entity(entityType.ClrType);
-                    if (isOracle)
-                        b.Property("Id").HasColumnName("ID").UseHiLo("HILOSEQUENCE");
+                    var b = builder.Entity(entity.ClrType);
+                    if (isPostgres)
+                        b.Property("Id").HasColumnName("id").UseIdentityByDefaultColumn();
                     else
                         b.Property("Id").HasColumnName("ID").ValueGeneratedOnAdd();
-                    b.Property("CreatedAt").HasColumnName("CREATEDAT");
-                    b.Property("UpdatedAt").HasColumnName("UPDATEDAT");
-                    if (isOracle)
-                        b.Property("IsDeleted").HasColumnName("ISDELETED").HasColumnType("NUMBER(1)");
-                    else
-                        b.Property("IsDeleted").HasColumnName("ISDELETED");
+                    
+                    b.Property("CreatedAt").HasColumnName(isPostgres ? "created_at" : "CREATEDAT");
+                    b.Property("UpdatedAt").HasColumnName(isPostgres ? "updated_at" : "UPDATEDAT");
+                    b.Property("IsDeleted").HasColumnName(isPostgres ? "is_deleted" : "ISDELETED");
 
-                    // 10. Global Query Filter for IsDeleted (Audit #32)
-                    var parameter = System.Linq.Expressions.Expression.Parameter(entityType.ClrType, "e");
+                    // Global Query Filter for IsDeleted
+                    var parameter = System.Linq.Expressions.Expression.Parameter(entity.ClrType, "e");
                     var propertyMethodInfo = typeof(Microsoft.EntityFrameworkCore.EF).GetMethod("Property")!.MakeGenericMethod(typeof(bool));
                     var isDeletedProperty = System.Linq.Expressions.Expression.Call(propertyMethodInfo, parameter, System.Linq.Expressions.Expression.Constant("IsDeleted"));
                     var compareExpression = System.Linq.Expressions.Expression.MakeBinary(System.Linq.Expressions.ExpressionType.Equal, isDeletedProperty, System.Linq.Expressions.Expression.Constant(false));
                     var lambda = System.Linq.Expressions.Expression.Lambda(compareExpression, parameter);
-                    builder.Entity(entityType.ClrType).HasQueryFilter(lambda);
+                    builder.Entity(entity.ClrType).HasQueryFilter(lambda);
                 }
             }
 
@@ -197,10 +158,8 @@ namespace FashionStoreIS.Data
                 b.ToTable("PRODUCTS");
                 b.Property(x => x.Name).HasColumnName("NAME").HasMaxLength(150).IsRequired();
                 b.Property(x => x.Slug).HasColumnName("SLUG").HasMaxLength(150).IsRequired();
-                b.Property(x => x.Price).HasColumnName("PRICE").HasColumnType("NUMBER(12,2)");
-                b.Property(x => x.Stock).HasColumnName("STOCK").HasColumnType("NUMBER(10)");
-                b.Property(x => x.CategoryId).HasColumnName("CATEGORYID");
-                b.Property(x => x.SupplierId).HasColumnName("SUPPLIERID");
+                b.Property(x => x.Price).HasColumnName(isPostgres ? "price" : "PRICE").HasColumnType("decimal(18,2)");
+                b.Property(x => x.Stock).HasColumnName("STOCK").HasColumnType("int");
                 
                 b.HasOne(x => x.Category).WithMany(c => c.Products).HasForeignKey(x => x.CategoryId).HasConstraintName("FK_PROD_CAT");
                 b.HasOne(x => x.Supplier).WithMany(s => s.Products).HasForeignKey(x => x.SupplierId).HasConstraintName("FK_PROD_SUP");
@@ -212,9 +171,9 @@ namespace FashionStoreIS.Data
                 b.Property(x => x.SkuCode).HasColumnName("SKUCODE").HasMaxLength(30);
                 b.Property(x => x.Size).HasColumnName("SIZE").HasMaxLength(10);
                 b.Property(x => x.Color).HasColumnName("COLOR").HasMaxLength(50);
-                b.Property(x => x.CostPrice).HasColumnName("COSTPRICE").HasColumnType("NUMBER(12,2)");
-                b.Property(x => x.SellingPrice).HasColumnName("SELLINGPRICE").HasColumnType("NUMBER(12,2)");
-                b.Property(x => x.PriceOverride).HasColumnName("PRICEOVERRIDE").HasColumnType("NUMBER(12,2)");
+                b.Property(x => x.CostPrice).HasColumnName("COSTPRICE").HasColumnType("decimal(18,2)");
+                b.Property(x => x.SellingPrice).HasColumnName("SELLINGPRICE").HasColumnType("decimal(18,2)");
+                b.Property(x => x.PriceOverride).HasColumnName("PRICEOVERRIDE").HasColumnType("decimal(18,2)");
                 b.Property(x => x.Stock).HasColumnName("STOCK").HasDefaultValue(0);
                 
                 // Dùng Stock làm concurrency token thay RowVersion
@@ -243,9 +202,9 @@ namespace FashionStoreIS.Data
                 b.ToTable("EMPLOYEES");
                 b.Property(x => x.FullName).HasColumnName("FULLNAME").HasMaxLength(100).IsRequired();
                 b.Property(x => x.Position).HasColumnName("POSITION").HasMaxLength(50);
-            b.HasOne(x => x.Store).WithMany().HasForeignKey(x => x.StoreId).HasConstraintName("FK_EMP_STORE");
+                b.HasOne(x => x.Store).WithMany().HasForeignKey(x => x.StoreId).HasConstraintName("FK_EMP_STORE");
                 b.HasOne(x => x.Department).WithMany(d => d.Employees).HasForeignKey(x => x.DepartmentId).HasConstraintName("FK_EMP_DEPT");
-                b.Property(x => x.BaseSalaryPerHour).HasColumnName("BASESALARYPERHOUR").HasColumnType("NUMBER(12,2)");
+                b.Property(x => x.BaseSalaryPerHour).HasColumnName("BASESALARYPERHOUR").HasColumnType("decimal(18,2)");
                 b.Property(x => x.BankAccountNumber).HasColumnName("BANKACCOUNTNUMBER").HasMaxLength(50);
                 b.Property(x => x.BankName).HasColumnName("BANKNAME").HasMaxLength(100);
                 b.Property(x => x.BankAccountName).HasColumnName("BANKACCOUNTNAME").HasMaxLength(100);
@@ -259,7 +218,7 @@ namespace FashionStoreIS.Data
             builder.Entity<Attendance>(b => {
                 b.ToTable("ATTENDANCES");
                 b.Property(x => x.Date).HasColumnName("DATE");
-                b.Property(x => x.TotalHours).HasColumnName("TOTALHOURS").HasColumnType("NUMBER(5,2)");
+                b.Property(x => x.TotalHours).HasColumnName("TOTALHOURS").HasColumnType("decimal(5,2)");
                 b.HasOne(x => x.Employee).WithMany().HasForeignKey(x => x.EmployeeId).HasConstraintName("FK_ATT_EMP");
             });
 
@@ -270,25 +229,25 @@ namespace FashionStoreIS.Data
 
             builder.Entity<SalaryComponent>(b => {
                 b.ToTable("SALARYCOMPONENTS");
-                b.Property(x => x.DefaultAmount).HasColumnName("DEFAULTAMOUNT").HasColumnType("NUMBER(12,2)");
+                b.Property(x => x.DefaultAmount).HasColumnName("DEFAULTAMOUNT").HasColumnType("decimal(18,2)");
             });
 
             builder.Entity<Payroll>(b => {
                 b.ToTable("PAYROLLS");
                 b.Property(x => x.Month).HasColumnName("MONTH");
                 b.Property(x => x.Year).HasColumnName("YEAR");
-                b.Property(x => x.TotalHoursWorked).HasColumnName("TOTALHOURSWORKED").HasColumnType("NUMBER(8,2)");
-                b.Property(x => x.BaseHourlyRate).HasColumnName("BASEHOURLYRATE").HasColumnType("NUMBER(12,2)");
-                b.Property(x => x.TotalBaseSalary).HasColumnName("TOTALBASESALARY").HasColumnType("NUMBER(14,2)");
-                b.Property(x => x.TotalAdditions).HasColumnName("TOTALADDITIONS").HasColumnType("NUMBER(14,2)");
-                b.Property(x => x.TotalDeductions).HasColumnName("TOTALDEDUCTIONS").HasColumnType("NUMBER(14,2)");
-                b.Property(x => x.NetSalary).HasColumnName("NETSALARY").HasColumnType("NUMBER(14,2)");
+                b.Property(x => x.TotalHoursWorked).HasColumnName("TOTALHOURSWORKED").HasColumnType("decimal(8,2)");
+                b.Property(x => x.BaseHourlyRate).HasColumnName("BASEHOURLYRATE").HasColumnType("decimal(18,2)");
+                b.Property(x => x.TotalBaseSalary).HasColumnName("TOTALBASESALARY").HasColumnType("decimal(14,2)");
+                b.Property(x => x.TotalAdditions).HasColumnName("TOTALADDITIONS").HasColumnType("decimal(14,2)");
+                b.Property(x => x.TotalDeductions).HasColumnName("TOTALDEDUCTIONS").HasColumnType("decimal(14,2)");
+                b.Property(x => x.NetSalary).HasColumnName("NETSALARY").HasColumnType("decimal(14,2)");
                 b.HasOne(x => x.Employee).WithMany().HasForeignKey(x => x.EmployeeId).HasConstraintName("FK_PAY_EMP");
             });
 
             builder.Entity<PayrollItem>(b => {
                 b.ToTable("PAYROLLITEMS");
-                b.Property(x => x.Amount).HasColumnName("AMOUNT").HasColumnType("NUMBER(12,2)");
+                b.Property(x => x.Amount).HasColumnName("AMOUNT").HasColumnType("decimal(12,2)");
                 b.HasOne(x => x.Payroll).WithMany(p => p.Items).HasForeignKey(x => x.PayrollId).HasConstraintName("FK_PI_PAY");
                 b.HasOne(x => x.SalaryComponent).WithMany().HasForeignKey(x => x.SalaryComponentId).HasConstraintName("FK_PI_SC");
             });
@@ -297,8 +256,8 @@ namespace FashionStoreIS.Data
                 b.ToTable("ORDERS");
                 b.Property(x => x.OrderCode).HasColumnName("ORDERCODE").HasMaxLength(20).IsRequired();
                 b.HasIndex(x => x.OrderCode).IsUnique();
-                b.Property(x => x.SubTotal).HasColumnName("SUBTOTAL").HasColumnType("NUMBER(14,0)");
-                b.Property(x => x.TotalAmount).HasColumnName("TOTALAMOUNT").HasColumnType("NUMBER(14,0)");
+                b.Property(x => x.SubTotal).HasColumnName("SUBTOTAL").HasColumnType("decimal(18,2)").HasDefaultValue(0m);
+                b.Property(x => x.TotalAmount).HasColumnName("TOTALAMOUNT").HasColumnType("decimal(18,2)").HasDefaultValue(0m);
                 b.Property(x => x.Status).HasColumnName("STATUS").HasConversion<byte>();
                 
                 // Nullable properties
@@ -307,9 +266,7 @@ namespace FashionStoreIS.Data
                 b.Property(e => e.Phone).IsRequired(false);
                 b.Property(e => e.Address).IsRequired(false);
                 b.Property(e => e.UserId).IsRequired(false);
-                b.Property(e => e.SubTotal).HasDefaultValue(0m);
                 b.Property(e => e.DiscountAmount).HasDefaultValue(0m);
-                b.Property(e => e.TotalAmount).HasDefaultValue(0m);
                 b.Property(e => e.PointsEarned).HasDefaultValue(0);
                 
                 b.HasOne(x => x.Store).WithMany(s => s.Orders).HasForeignKey(x => x.StoreId).HasConstraintName("FK_ORD_STORE");
@@ -332,8 +289,8 @@ namespace FashionStoreIS.Data
 
             builder.Entity<OrderDetail>(b => {
                 b.ToTable("ORDERDETAILS");
-                b.Property(x => x.UnitPrice).HasColumnName("UNITPRICE").HasColumnType("NUMBER(12,0)");
-                b.Property(x => x.Subtotal).HasColumnName("SUBTOTAL").HasColumnType("NUMBER(14,0)");
+                b.Property(x => x.UnitPrice).HasColumnName("UNITPRICE").HasColumnType("decimal(18,2)");
+                b.Property(x => x.Subtotal).HasColumnName("SUBTOTAL").HasColumnType("decimal(18,2)");
                 
                 // Nullable properties
                 b.Property(e => e.ProductSkuId).IsRequired(false);
@@ -367,21 +324,15 @@ namespace FashionStoreIS.Data
             builder.Entity<PurchaseOrder>(b => {
                 b.ToTable("PURCHASEORDERS");
                 b.Property(x => x.PoCode).HasColumnName("POCODE").HasMaxLength(20).IsRequired();
-                if (isOracle) b.Property(x => x.TotalCost).HasColumnName("TOTALCOST").HasColumnType("NUMBER(16,0)");
-                else b.Property(x => x.TotalCost).HasColumnName("TOTALCOST").HasColumnType("decimal(18,2)");
+                b.Property(x => x.TotalCost).HasColumnName("TOTALCOST").HasColumnType("decimal(18,2)");
                 b.HasOne(x => x.Supplier).WithMany(s => s.PurchaseOrders).HasForeignKey(x => x.SupplierId).HasConstraintName("FK_PO_SUP");
                 b.HasOne(x => x.Store).WithMany().HasForeignKey(x => x.StoreId).HasConstraintName("FK_PO_STORE");
             });
 
             builder.Entity<PurchaseOrderDetail>(b => {
                 b.ToTable("PURCHASEORDERDETAILS");
-                if (isOracle) {
-                    b.Property(x => x.UnitCost).HasColumnName("UNITCOST").HasColumnType("NUMBER(12,0)");
-                    b.Property(x => x.Subtotal).HasColumnName("SUBTOTAL").HasColumnType("NUMBER(14,0)");
-                } else {
-                    b.Property(x => x.UnitCost).HasColumnName("UNITCOST").HasColumnType("decimal(18,2)");
-                    b.Property(x => x.Subtotal).HasColumnName("SUBTOTAL").HasColumnType("decimal(18,2)");
-                }
+                b.Property(x => x.UnitCost).HasColumnName("UNITCOST").HasColumnType("decimal(18,2)");
+                b.Property(x => x.Subtotal).HasColumnName("SUBTOTAL").HasColumnType("decimal(18,2)");
                 b.HasOne(x => x.PurchaseOrder).WithMany(p => p.Details).HasForeignKey(x => x.PurchaseOrderId).HasConstraintName("FK_POD_PO");
                 b.HasOne(x => x.ProductSku).WithMany().HasForeignKey(x => x.ProductSkuId).HasConstraintName("FK_POD_SKU");
             });
@@ -393,28 +344,23 @@ namespace FashionStoreIS.Data
 
             builder.Entity<Banner>(b => {
                 b.ToTable("BANNERS");
-                if (isOracle)
-                    b.Property(e => e.Id).UseHiLo("HILOSEQUENCE").HasColumnName("ID");
+                if (isPostgres)
+                    b.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
                 else
                     b.Property(e => e.Id).HasColumnName("ID");
             });
 
             builder.Entity<Voucher>(b => {
                 b.ToTable("VOUCHERS");
-                if (isOracle)
-                    b.Property(e => e.Id).UseHiLo("HILOSEQUENCE").HasColumnName("ID");
+                if (isPostgres)
+                    b.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
                 else
                     b.Property(e => e.Id).HasColumnName("ID");
                 
                 b.Property(x => x.Code).HasColumnName("CODE").HasMaxLength(50).IsRequired();
                 b.HasIndex(x => x.Code).IsUnique();
-                if (isOracle) {
-                    b.Property(x => x.DiscountAmount).HasColumnName("DISCOUNTAMOUNT").HasColumnType("NUMBER(12,0)");
-                    b.Property(x => x.MinOrderAmount).HasColumnName("MINORDERAMOUNT").HasColumnType("NUMBER(12,0)");
-                } else {
-                    b.Property(x => x.DiscountAmount).HasColumnName("DISCOUNTAMOUNT").HasColumnType("decimal(18,2)");
-                    b.Property(x => x.MinOrderAmount).HasColumnName("MINORDERAMOUNT").HasColumnType("decimal(18,2)");
-                }
+                b.Property(x => x.DiscountAmount).HasColumnName("DISCOUNTAMOUNT").HasColumnType("decimal(18,2)");
+                b.Property(x => x.MinOrderAmount).HasColumnName("MINORDERAMOUNT").HasColumnType("decimal(18,2)");
                 b.Property(x => x.ExpiryDate).HasColumnName("EXPIRYDATE");
                 b.Property(x => x.IsActive).HasColumnName("ISACTIVE");
                 b.Property(x => x.MaxUsageCount).HasColumnName("MAXUSAGECOUNT");
@@ -423,7 +369,8 @@ namespace FashionStoreIS.Data
 
             builder.Entity<UserAddress>(b => {
                 b.ToTable("USERADDRESSES");
-                if (isOracle) b.Property(e => e.Id).UseHiLo("HILOSEQUENCE").HasColumnName("ID");
+                if (isPostgres) b.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+                else b.Property(e => e.Id).HasColumnName("ID");
                 b.Property(x => x.UserId).HasColumnName("USERID");
                 b.Property(x => x.FullName).HasColumnName("FULLNAME").HasMaxLength(100).IsRequired();
                 b.Property(x => x.PhoneNumber).HasColumnName("PHONENUMBER").HasMaxLength(15).IsRequired();
@@ -438,12 +385,11 @@ namespace FashionStoreIS.Data
 
             builder.Entity<ReturnRequest>(b => {
                 b.ToTable("RETURNREQUESTS");
-                if (isOracle) b.Property(e => e.Id).UseHiLo("HILOSEQUENCE").HasColumnName("ID");
+                if (isPostgres) b.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
                 b.Property(x => x.OrderId).HasColumnName("ORDERID");
                 b.Property(x => x.Reason).HasColumnName("REASON").HasMaxLength(500).IsRequired();
                 b.Property(x => x.Status).HasColumnName("STATUS").HasConversion<byte>();
-                if (isOracle) b.Property(x => x.RefundAmount).HasColumnName("REFUNDAMOUNT").HasColumnType("NUMBER(12,0)");
-                else b.Property(x => x.RefundAmount).HasColumnName("REFUNDAMOUNT").HasColumnType("decimal(18,2)");
+                b.Property(x => x.RefundAmount).HasColumnName("REFUNDAMOUNT").HasColumnType("decimal(18,2)");
                 b.Property(x => x.AdminNote).HasColumnName("ADMINNOTE").HasMaxLength(500);
                 b.Property(x => x.ProcessedAt).HasColumnName("PROCESSEDAT");
                 b.HasOne(x => x.Order)
@@ -455,7 +401,7 @@ namespace FashionStoreIS.Data
 
             builder.Entity<Notification>(b => {
                 b.ToTable("NOTIFICATIONS");
-                if (isOracle) b.Property(e => e.Id).UseHiLo("HILOSEQUENCE").HasColumnName("ID");
+                if (isPostgres) b.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
                 b.Property(x => x.UserId).HasColumnName("USERID");
                 b.Property(x => x.Title).HasColumnName("TITLE").HasMaxLength(200).IsRequired();
                 b.Property(x => x.Message).HasColumnName("MESSAGE").HasMaxLength(1000).IsRequired();
@@ -471,7 +417,7 @@ namespace FashionStoreIS.Data
             builder.Entity<Campaign>(b =>
             {
                 b.ToTable("CAMPAIGNS");
-                if (isOracle) b.Property(e => e.Id).UseHiLo("HILOSEQUENCE").HasColumnName("ID");
+                if (isPostgres) b.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
                 b.Property(x => x.Name).HasColumnName("NAME").HasMaxLength(150).IsRequired();
                 b.Property(x => x.Description).HasColumnName("DESCRIPTION").HasMaxLength(500);
                 b.Property(x => x.StartDate).HasColumnName("STARTDATE");
@@ -493,9 +439,9 @@ namespace FashionStoreIS.Data
             // ─── WishlistItem ─────────────────────────────────────────────────────
             builder.Entity<WishlistItem>(b =>
             {
-                b.ToTable("WISHLISTITEMS");
-                if (isOracle)
-                    b.Property(e => e.Id).UseHiLo("HILOSEQUENCE").HasColumnName("ID");
+                b.ToTable(isPostgres ? "wishlistitems" : "WISHLISTITEMS");
+                if (isPostgres)
+                    b.Property(e => e.Id).HasColumnName("id").UseIdentityByDefaultColumn();
                 else
                     b.Property(e => e.Id).HasColumnName("ID");
 
@@ -518,6 +464,33 @@ namespace FashionStoreIS.Data
                  .HasForeignKey(x => x.ProductId)
                  .OnDelete(DeleteBehavior.Cascade)
                  .HasConstraintName("FK_WL_PRODUCT");
+            });
+
+            // ─── HRM Scheduling & KPI (Oracle Config) ──────────────────────────
+            builder.Entity<Shift>(b => {
+                b.ToTable("SHIFTS");
+                b.HasOne(x => x.Store).WithMany().HasForeignKey(x => x.StoreId).HasConstraintName("FK_SHIFT_STORE");
+            });
+
+            builder.Entity<Schedule>(b => {
+                b.ToTable("SCHEDULES");
+                b.HasOne(x => x.Employee).WithMany().HasForeignKey(x => x.EmployeeId).HasConstraintName("FK_SCHED_EMP");
+                b.HasOne(x => x.Shift).WithMany().HasForeignKey(x => x.ShiftId).HasConstraintName("FK_SCHED_SHIFT");
+            });
+
+            builder.Entity<LeaveBalance>(b => {
+                b.ToTable("LEAVEBALANCES");
+                b.HasOne(x => x.Employee).WithMany().HasForeignKey(x => x.EmployeeId).HasConstraintName("FK_LB_EMP");
+            });
+
+            builder.Entity<KpiReview>(b => {
+                b.ToTable("KPIREVIEWS");
+                b.Property(x => x.SalesScore).HasColumnType("decimal(10,2)");
+                b.Property(x => x.AttitudeScore).HasColumnType("decimal(10,2)");
+                b.Property(x => x.TeamworkScore).HasColumnType("decimal(10,2)");
+                b.Property(x => x.TotalScore).HasColumnType("decimal(10,2)");
+                b.HasOne(x => x.Employee).WithMany().HasForeignKey(x => x.EmployeeId).HasConstraintName("FK_KPI_EMP");
+                b.HasOne(x => x.Reviewer).WithMany().HasForeignKey(x => x.ReviewerId).HasConstraintName("FK_KPI_REV");
             });
         }
     }

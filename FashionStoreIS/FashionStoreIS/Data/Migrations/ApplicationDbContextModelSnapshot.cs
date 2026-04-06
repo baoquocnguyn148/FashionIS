@@ -4,6 +4,7 @@ using FashionStoreIS.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -15,98 +16,102 @@ namespace FashionStoreIS.Data.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "10.0.4");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "10.0.4")
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
+
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("FashionStoreIS.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("ID");
+                        .HasColumnType("text")
+                        .HasColumnName("id");
 
                     b.Property<int>("AccessFailedCount")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ACCESSFAILEDCOUNT");
+                        .HasColumnType("integer")
+                        .HasColumnName("accessfailedcount");
 
                     b.Property<string>("AvatarUrl")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("AVATARURL");
+                        .HasColumnType("text")
+                        .HasColumnName("avatarurl");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CONCURRENCYSTAMP");
+                        .HasColumnType("text")
+                        .HasColumnName("concurrencystamp");
 
                     b.Property<DateTime?>("DateOfBirth")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("DATEOFBIRTH");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("dateofbirth");
 
                     b.Property<string>("Email")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("EMAIL");
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("email");
 
                     b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("EMAILCONFIRMED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("emailconfirmed");
 
                     b.Property<string>("FullName")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("FULLNAME");
+                        .HasColumnType("text")
+                        .HasColumnName("fullname");
 
                     b.Property<string>("Gender")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("GENDER");
+                        .HasColumnType("text")
+                        .HasColumnName("gender");
 
                     b.Property<DateTime>("JoinDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("JOINDATE");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("joindate");
 
                     b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("LOCKOUTENABLED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("lockoutenabled");
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("LOCKOUTEND");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("lockoutend");
 
                     b.Property<int>("MembershipPoints")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("MEMBERSHIPPOINTS");
+                        .HasColumnType("integer")
+                        .HasColumnName("membershippoints");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("NORMALIZEDEMAIL");
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("normalizedemail");
 
                     b.Property<string>("NormalizedUserName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("NORMALIZEDUSERNAME");
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("normalizedusername");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("PASSWORDHASH");
+                        .HasColumnType("text")
+                        .HasColumnName("passwordhash");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("PHONENUMBER");
+                        .HasColumnType("text")
+                        .HasColumnName("phonenumber");
 
                     b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("PHONENUMBERCONFIRMED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("phonenumberconfirmed");
 
                     b.Property<string>("SecurityStamp")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("SECURITYSTAMP");
+                        .HasColumnType("text")
+                        .HasColumnName("securitystamp");
 
                     b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("TWOFACTORENABLED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("twofactorenabled");
 
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("USERNAME");
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("username");
 
                     b.HasKey("Id");
 
@@ -117,59 +122,117 @@ namespace FashionStoreIS.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
 
-                    b.ToTable("ASPNETUSERS", (string)null);
+                    b.ToTable("aspnetusers", (string)null);
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.Attendance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<TimeSpan?>("CheckIn")
+                        .HasColumnType("interval")
+                        .HasColumnName("checkin");
+
+                    b.Property<TimeSpan?>("CheckOut")
+                        .HasColumnType("interval")
+                        .HasColumnName("checkout");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("DATE");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("employeeid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text")
+                        .HasColumnName("note");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
+
+                    b.Property<double>("TotalHours")
+                        .HasColumnType("decimal(5,2)")
+                        .HasColumnName("TOTALHOURS");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("ATTENDANCES", (string)null);
                 });
 
             modelBuilder.Entity("FashionStoreIS.Models.Banner", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<int>("DisplayOrder")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("DISPLAYORDER");
+                        .HasColumnType("integer")
+                        .HasColumnName("displayorder");
 
                     b.Property<string>("ImageUrl")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("IMAGEURL");
+                        .HasColumnType("text")
+                        .HasColumnName("imageurl");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISACTIVE");
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("LinkUrl")
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("LINKURL");
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("linkurl");
 
                     b.Property<string>("Position")
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("POSITION");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("position");
 
                     b.Property<string>("SubTitle")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("SUBTITLE");
+                        .HasColumnType("text")
+                        .HasColumnName("subtitle");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("TITLE");
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("title");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -180,73 +243,75 @@ namespace FashionStoreIS.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("DESCRIPTION");
 
                     b.Property<DateTime>("EndDate")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("timestamp without time zone")
                         .HasColumnName("ENDDATE");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<bool>("IsSent")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("boolean")
                         .HasColumnName("ISSENT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("NAME");
 
                     b.Property<string>("NotificationMessage")
                         .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("NOTIFICATIONMESSAGE");
 
                     b.Property<string>("NotificationTitle")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("NOTIFICATIONTITLE");
 
                     b.Property<int>("RecipientCount")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("RECIPIENTCOUNT");
 
                     b.Property<DateTime?>("SentAt")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("timestamp without time zone")
                         .HasColumnName("SENTAT");
 
                     b.Property<DateTime>("StartDate")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("timestamp without time zone")
                         .HasColumnName("STARTDATE");
 
                     b.Property<string>("TargetSegment")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("TARGETSEGMENT");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<int?>("VoucherId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("VOUCHERID");
+                        .HasColumnType("integer")
+                        .HasColumnName("voucherid");
 
                     b.HasKey("Id");
 
@@ -259,57 +324,59 @@ namespace FashionStoreIS.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("Description")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("DESCRIPTION");
 
                     b.Property<int>("DisplayOrder")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasDefaultValue(0)
                         .HasColumnName("DISPLAYORDER");
 
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(255)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("IMAGEURL");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("boolean")
                         .HasDefaultValue(true)
                         .HasColumnName("ISACTIVE");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("NAME");
 
                     b.Property<int?>("ParentCategoryId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("PARENTCATEGORYID");
 
                     b.Property<string>("Slug")
                         .HasMaxLength(150)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("SLUG");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -322,61 +389,63 @@ namespace FashionStoreIS.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Address")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("ADDRESS");
+                        .HasColumnType("text")
+                        .HasColumnName("address");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<DateTime?>("DateOfBirth")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("DATEOFBIRTH");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("dateofbirth");
 
                     b.Property<string>("Email")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("EMAIL");
 
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("FULLNAME");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<DateTime>("JoinDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("JOINDATE");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("joindate");
 
                     b.Property<int>("LoyaltyPoints")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("LOYALTYPOINTS");
+                        .HasColumnType("integer")
+                        .HasColumnName("loyaltypoints");
 
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasMaxLength(15)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(15)")
                         .HasColumnName("PHONE");
 
                     b.Property<int>("Tier")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("TIER");
+                        .HasColumnType("integer")
+                        .HasColumnName("tier");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<string>("UserId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("USERID");
+                        .HasColumnType("text")
+                        .HasColumnName("userid");
 
                     b.HasKey("Id");
 
@@ -386,112 +455,332 @@ namespace FashionStoreIS.Data.Migrations
                     b.ToTable("CUSTOMERS", (string)null);
                 });
 
+            modelBuilder.Entity("FashionStoreIS.Models.Department", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("NAME");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("DEPARTMENTS", (string)null);
+                });
+
             modelBuilder.Entity("FashionStoreIS.Models.Employee", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("BankAccountName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("BANKACCOUNTNAME");
+
+                    b.Property<string>("BankAccountNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("BANKACCOUNTNUMBER");
+
+                    b.Property<string>("BankName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("BANKNAME");
+
+                    b.Property<decimal>("BaseSalaryPerHour")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("BASESALARYPERHOUR");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("integer")
+                        .HasColumnName("departmentid");
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("EMAIL");
+                        .HasColumnType("text")
+                        .HasColumnName("email");
 
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("FULLNAME");
 
                     b.Property<DateTime>("HireDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("HIREDATE");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("hiredate");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISACTIVE");
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("PHONE");
+                        .HasColumnType("text")
+                        .HasColumnName("phone");
 
                     b.Property<string>("Position")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("POSITION");
 
                     b.Property<int>("StoreId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("STOREID");
+                        .HasColumnType("integer")
+                        .HasColumnName("storeid");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<string>("UserId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("USERID");
+                        .HasColumnType("text")
+                        .HasColumnName("userid");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DepartmentId");
 
                     b.HasIndex("StoreId");
 
                     b.ToTable("EMPLOYEES", (string)null);
                 });
 
+            modelBuilder.Entity("FashionStoreIS.Models.Executive.AlertAction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("ActionAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("actionat");
+
+                    b.Property<string>("ActionNotes")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("actionnotes");
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("actiontype");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("ExecutiveAlertId")
+                        .HasColumnType("integer")
+                        .HasColumnName("executivealertid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("TakenByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)")
+                        .HasColumnName("takenbyuserid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExecutiveAlertId");
+
+                    b.HasIndex("TakenByUserId");
+
+                    b.ToTable("alertactions");
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.Executive.ExecutiveAlert", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ActionRequired")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("actionrequired");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("category");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("expiresat");
+
+                    b.Property<decimal?>("Impact")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("impact");
+
+                    b.Property<bool>("IsArchived")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isarchived");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isread");
+
+                    b.Property<string>("Priority")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("priority");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("readat");
+
+                    b.Property<string>("SourceSystem")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("sourcesystem");
+
+                    b.Property<string>("SubCategory")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("subcategory");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("type");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)")
+                        .HasColumnName("userid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("executivealerts");
+                });
+
             modelBuilder.Entity("FashionStoreIS.Models.Inventory", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<DateTime>("LastUpdated")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("LASTUPDATED");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("lastupdated");
 
                     b.Property<int?>("MaxStockLevel")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("MAXSTOCKLEVEL");
+                        .HasColumnType("integer")
+                        .HasColumnName("maxstocklevel");
 
                     b.Property<int>("ProductSkuId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("PRODUCTSKUID");
+                        .HasColumnType("integer")
+                        .HasColumnName("productskuid");
 
                     b.Property<int>("QuantityOnHand")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("QUANTITYONHAND");
+                        .HasColumnType("integer")
+                        .HasColumnName("quantityonhand");
 
                     b.Property<int>("ReorderPoint")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("REORDERPOINT");
+                        .HasColumnType("integer")
+                        .HasColumnName("reorderpoint");
 
                     b.Property<int>("StoreId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("STOREID");
+                        .HasColumnType("integer")
+                        .HasColumnName("storeid");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -502,41 +791,226 @@ namespace FashionStoreIS.Data.Migrations
                     b.ToTable("INVENTORIES", (string)null);
                 });
 
+            modelBuilder.Entity("FashionStoreIS.Models.KpiReview", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AttitudeScore")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("attitudescore");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("employeeid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("integer")
+                        .HasColumnName("month");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text")
+                        .HasColumnName("notes");
+
+                    b.Property<byte>("Rank")
+                        .HasColumnType("smallint")
+                        .HasColumnName("rank");
+
+                    b.Property<string>("ReviewerId")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("reviewerid");
+
+                    b.Property<decimal>("SalesScore")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("salesscore");
+
+                    b.Property<decimal>("TeamworkScore")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("teamworkscore");
+
+                    b.Property<decimal>("TotalScore")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("totalscore");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer")
+                        .HasColumnName("year");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("ReviewerId");
+
+                    b.ToTable("KPIREVIEWS", (string)null);
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.LeaveBalance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AnnualDaysTotal")
+                        .HasColumnType("integer")
+                        .HasColumnName("annualdaystotal");
+
+                    b.Property<int>("AnnualDaysUsed")
+                        .HasColumnType("integer")
+                        .HasColumnName("annualdaysused");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("employeeid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<int>("SickDaysTotal")
+                        .HasColumnType("integer")
+                        .HasColumnName("sickdaystotal");
+
+                    b.Property<int>("SickDaysUsed")
+                        .HasColumnType("integer")
+                        .HasColumnName("sickdaysused");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer")
+                        .HasColumnName("year");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("LEAVEBALANCES", (string)null);
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.LeaveRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdminNote")
+                        .HasColumnType("text")
+                        .HasColumnName("adminnote");
+
+                    b.Property<string>("ApprovedById")
+                        .HasColumnType("text")
+                        .HasColumnName("approvedbyid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("employeeid");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("enddate");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("text")
+                        .HasColumnName("reason");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("startdate");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
+
+                    b.Property<byte>("Type")
+                        .HasColumnType("smallint")
+                        .HasColumnName("type");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("LEAVEREQUESTS", (string)null);
+                });
+
             modelBuilder.Entity("FashionStoreIS.Models.LoyaltyTransaction", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<int>("CustomerId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("CUSTOMERID");
+                        .HasColumnType("integer")
+                        .HasColumnName("customerid");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("DESCRIPTION");
+                        .HasColumnType("text")
+                        .HasColumnName("description");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<int?>("OrderId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ORDERID");
+                        .HasColumnType("integer")
+                        .HasColumnName("orderid");
 
                     b.Property<int>("Points")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("POINTS");
+                        .HasColumnType("integer")
+                        .HasColumnName("points");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -551,46 +1025,48 @@ namespace FashionStoreIS.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ActionUrl")
                         .HasMaxLength(255)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("ACTIONURL");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<bool>("IsRead")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("boolean")
                         .HasColumnName("ISREAD");
 
                     b.Property<string>("Message")
                         .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("MESSAGE");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("TITLE");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasMaxLength(450)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(450)")
                         .HasColumnName("USERID");
 
                     b.HasKey("Id");
@@ -604,94 +1080,96 @@ namespace FashionStoreIS.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Address")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("ADDRESS");
+                        .HasColumnType("text")
+                        .HasColumnName("address");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<int?>("CustomerId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("CUSTOMERID");
+                        .HasColumnType("integer")
+                        .HasColumnName("customerid");
 
                     b.Property<string>("CustomerName")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CUSTOMERNAME");
+                        .HasColumnType("text")
+                        .HasColumnName("customername");
 
                     b.Property<decimal>("DiscountAmount")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
+                        .HasColumnType("numeric")
                         .HasDefaultValue(0m)
-                        .HasColumnName("DISCOUNTAMOUNT");
+                        .HasColumnName("discountamount");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("Note")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("NOTE");
+                        .HasColumnType("text")
+                        .HasColumnName("note");
 
                     b.Property<string>("OrderCode")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("ORDERCODE");
 
                     b.Property<byte>("PaymentMethod")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("PAYMENTMETHOD");
+                        .HasColumnType("smallint")
+                        .HasColumnName("paymentmethod");
 
                     b.Property<byte>("PaymentStatus")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("PAYMENTSTATUS");
+                        .HasColumnType("smallint")
+                        .HasColumnName("paymentstatus");
 
                     b.Property<string>("Phone")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("PHONE");
+                        .HasColumnType("text")
+                        .HasColumnName("phone");
 
                     b.Property<int>("PointsEarned")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasDefaultValue(0)
-                        .HasColumnName("POINTSEARNED");
+                        .HasColumnName("pointsearned");
 
                     b.Property<byte>("Status")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("smallint")
                         .HasColumnName("STATUS");
 
                     b.Property<int>("StoreId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("STOREID");
+                        .HasColumnType("integer")
+                        .HasColumnName("storeid");
 
                     b.Property<decimal>("SubTotal")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(14,0)")
+                        .HasColumnType("decimal(18,2)")
                         .HasDefaultValue(0m)
                         .HasColumnName("SUBTOTAL");
 
                     b.Property<decimal>("TotalAmount")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("NUMBER(14,0)")
+                        .HasColumnType("decimal(18,2)")
                         .HasDefaultValue(0m)
                         .HasColumnName("TOTALAMOUNT");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<string>("UserId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("USERID");
+                        .HasColumnType("text")
+                        .HasColumnName("userid");
 
                     b.Property<int?>("VoucherId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("VOUCHERID");
+                        .HasColumnType("integer")
+                        .HasColumnName("voucherid");
 
                     b.HasKey("Id");
 
@@ -713,50 +1191,52 @@ namespace FashionStoreIS.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<decimal>("DiscountPercent")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT")
+                        .HasColumnType("numeric")
                         .HasDefaultValue(0m)
-                        .HasColumnName("DISCOUNTPERCENT");
+                        .HasColumnName("discountpercent");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<int>("OrderId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ORDERID");
+                        .HasColumnType("integer")
+                        .HasColumnName("orderid");
 
                     b.Property<int?>("ProductId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("PRODUCTID");
+                        .HasColumnType("integer")
+                        .HasColumnName("productid");
 
                     b.Property<int?>("ProductSkuId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("PRODUCTSKUID");
+                        .HasColumnType("integer")
+                        .HasColumnName("productskuid");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("QUANTITY");
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
 
                     b.Property<decimal>("Subtotal")
-                        .HasColumnType("NUMBER(14,0)")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("SUBTOTAL");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("NUMBER(12,0)")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("UNITPRICE");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -769,64 +1249,188 @@ namespace FashionStoreIS.Data.Migrations
                     b.ToTable("ORDERDETAILS", (string)null);
                 });
 
+            modelBuilder.Entity("FashionStoreIS.Models.Payroll", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("BaseHourlyRate")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("BASEHOURLYRATE");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("employeeid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("integer")
+                        .HasColumnName("MONTH");
+
+                    b.Property<decimal>("NetSalary")
+                        .HasColumnType("decimal(14,2)")
+                        .HasColumnName("NETSALARY");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text")
+                        .HasColumnName("note");
+
+                    b.Property<DateTime?>("ProcessedDate")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("processeddate");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
+
+                    b.Property<decimal>("TotalAdditions")
+                        .HasColumnType("decimal(14,2)")
+                        .HasColumnName("TOTALADDITIONS");
+
+                    b.Property<decimal>("TotalBaseSalary")
+                        .HasColumnType("decimal(14,2)")
+                        .HasColumnName("TOTALBASESALARY");
+
+                    b.Property<decimal>("TotalDeductions")
+                        .HasColumnType("decimal(14,2)")
+                        .HasColumnName("TOTALDEDUCTIONS");
+
+                    b.Property<double>("TotalHoursWorked")
+                        .HasColumnType("decimal(8,2)")
+                        .HasColumnName("TOTALHOURSWORKED");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer")
+                        .HasColumnName("YEAR");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("PAYROLLS", (string)null);
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.PayrollItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(12,2)")
+                        .HasColumnName("AMOUNT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text")
+                        .HasColumnName("note");
+
+                    b.Property<int>("PayrollId")
+                        .HasColumnType("integer")
+                        .HasColumnName("payrollid");
+
+                    b.Property<int?>("SalaryComponentId")
+                        .HasColumnType("integer")
+                        .HasColumnName("salarycomponentid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PayrollId");
+
+                    b.HasIndex("SalaryComponentId");
+
+                    b.ToTable("PAYROLLITEMS", (string)null);
+                });
+
             modelBuilder.Entity("FashionStoreIS.Models.Product", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("CategoryId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("CATEGORYID");
+                        .HasColumnType("integer")
+                        .HasColumnName("categoryid");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("Description")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("DESCRIPTION");
+                        .HasColumnType("text")
+                        .HasColumnName("description");
 
                     b.Property<string>("ImageUrl")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("IMAGEURL");
+                        .HasColumnType("text")
+                        .HasColumnName("imageurl");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISACTIVE");
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("NAME");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("NUMBER(12,2)")
-                        .HasColumnName("PRICE");
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("price");
 
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("SLUG");
 
                     b.Property<int>("Stock")
-                        .HasColumnType("NUMBER(10)")
+                        .HasColumnType("int")
                         .HasColumnName("STOCK");
 
                     b.Property<int>("SupplierId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("SUPPLIERID");
+                        .HasColumnType("integer")
+                        .HasColumnName("supplierid");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -841,110 +1445,114 @@ namespace FashionStoreIS.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<int>("DisplayOrder")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("DISPLAYORDER");
+                        .HasColumnType("integer")
+                        .HasColumnName("displayorder");
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("IMAGEURL");
+                        .HasColumnType("text")
+                        .HasColumnName("imageurl");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<int>("ProductId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("PRODUCTID");
+                        .HasColumnType("integer")
+                        .HasColumnName("productid");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("PRODUCTIMAGES");
+                    b.ToTable("productimages");
                 });
 
             modelBuilder.Entity("FashionStoreIS.Models.ProductSku", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Color")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("COLOR");
 
                     b.Property<decimal>("CostPrice")
-                        .HasColumnType("NUMBER(12,2)")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("COSTPRICE");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISACTIVE");
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<decimal?>("PriceOverride")
-                        .HasColumnType("NUMBER(12,2)")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("PRICEOVERRIDE");
 
                     b.Property<int>("ProductId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("PRODUCTID");
+                        .HasColumnType("integer")
+                        .HasColumnName("productid");
 
                     b.Property<string>("SKU")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("SKU");
 
                     b.Property<decimal>("SellingPrice")
-                        .HasColumnType("NUMBER(12,2)")
+                        .HasColumnType("decimal(18,2)")
                         .HasColumnName("SELLINGPRICE");
 
                     b.Property<string>("Size")
                         .IsRequired()
                         .HasMaxLength(10)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(10)")
                         .HasColumnName("SIZE");
 
                     b.Property<string>("SkuCode")
                         .IsRequired()
                         .HasMaxLength(30)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(30)")
                         .HasColumnName("SKUCODE");
 
                     b.Property<int>("Stock")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasDefaultValue(0)
                         .HasColumnName("STOCK");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -957,58 +1565,60 @@ namespace FashionStoreIS.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<DateTime?>("ExpectedDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("EXPECTEDDATE");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("expecteddate");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("Note")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("NOTE");
+                        .HasColumnType("text")
+                        .HasColumnName("note");
 
                     b.Property<DateTime>("OrderDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("ORDERDATE");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("orderdate");
 
                     b.Property<string>("PoCode")
                         .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(20)")
                         .HasColumnName("POCODE");
 
                     b.Property<DateTime?>("ReceivedDate")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("RECEIVEDDATE");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("receiveddate");
 
                     b.Property<byte>("Status")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("STATUS");
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
 
                     b.Property<int>("StoreId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("STOREID");
+                        .HasColumnType("integer")
+                        .HasColumnName("storeid");
 
                     b.Property<int>("SupplierId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("SUPPLIERID");
+                        .HasColumnType("integer")
+                        .HasColumnName("supplierid");
 
                     b.Property<decimal>("TotalCost")
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("TOTALCOST");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -1023,32 +1633,34 @@ namespace FashionStoreIS.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<int>("ProductSkuId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("PRODUCTSKUID");
+                        .HasColumnType("integer")
+                        .HasColumnName("productskuid");
 
                     b.Property<int>("PurchaseOrderId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("PURCHASEORDERID");
+                        .HasColumnType("integer")
+                        .HasColumnName("purchaseorderid");
 
                     b.Property<int>("QuantityOrdered")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("QUANTITYORDERED");
+                        .HasColumnType("integer")
+                        .HasColumnName("quantityordered");
 
                     b.Property<int>("QuantityReceived")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("QUANTITYRECEIVED");
+                        .HasColumnType("integer")
+                        .HasColumnName("quantityreceived");
 
                     b.Property<decimal>("Subtotal")
                         .HasColumnType("decimal(18,2)")
@@ -1059,8 +1671,8 @@ namespace FashionStoreIS.Data.Migrations
                         .HasColumnName("UNITCOST");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -1075,34 +1687,36 @@ namespace FashionStoreIS.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AdminNote")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("ADMINNOTE");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<int>("OrderId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("ORDERID");
 
                     b.Property<DateTime?>("ProcessedAt")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("timestamp without time zone")
                         .HasColumnName("PROCESSEDAT");
 
                     b.Property<string>("Reason")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("REASON");
 
                     b.Property<decimal>("RefundAmount")
@@ -1110,12 +1724,12 @@ namespace FashionStoreIS.Data.Migrations
                         .HasColumnName("REFUNDAMOUNT");
 
                     b.Property<byte>("Status")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("smallint")
                         .HasColumnName("STATUS");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -1124,52 +1738,200 @@ namespace FashionStoreIS.Data.Migrations
                     b.ToTable("RETURNREQUESTS", (string)null);
                 });
 
+            modelBuilder.Entity("FashionStoreIS.Models.SalaryComponent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal>("DefaultAmount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("DEFAULTAMOUNT");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<byte>("Type")
+                        .HasColumnType("smallint")
+                        .HasColumnName("type");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SALARYCOMPONENTS", (string)null);
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.Schedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("date");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer")
+                        .HasColumnName("employeeid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("text")
+                        .HasColumnName("note");
+
+                    b.Property<int>("ShiftId")
+                        .HasColumnType("integer")
+                        .HasColumnName("shiftid");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("smallint")
+                        .HasColumnName("status");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("ShiftId");
+
+                    b.ToTable("SCHEDULES", (string)null);
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.Shift", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("interval")
+                        .HasColumnName("endtime");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("interval")
+                        .HasColumnName("starttime");
+
+                    b.Property<int>("StoreId")
+                        .HasColumnType("integer")
+                        .HasColumnName("storeid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId");
+
+                    b.ToTable("SHIFTS", (string)null);
+                });
+
             modelBuilder.Entity("FashionStoreIS.Models.StockAdjustment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AdjustedByUserId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("ADJUSTEDBYUSERID");
+                        .HasColumnType("text")
+                        .HasColumnName("adjustedbyuserid");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<int>("InventoryId")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("INVENTORYID");
+                        .HasColumnType("integer")
+                        .HasColumnName("inventoryid");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("Note")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("NOTE");
+                        .HasColumnType("text")
+                        .HasColumnName("note");
 
                     b.Property<int>("QuantityAfter")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("QUANTITYAFTER");
+                        .HasColumnType("integer")
+                        .HasColumnName("quantityafter");
 
                     b.Property<int>("QuantityBefore")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("QUANTITYBEFORE");
+                        .HasColumnType("integer")
+                        .HasColumnName("quantitybefore");
 
                     b.Property<int>("QuantityChange")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("QUANTITYCHANGE");
+                        .HasColumnType("integer")
+                        .HasColumnName("quantitychange");
 
                     b.Property<byte>("Reason")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("REASON");
+                        .HasColumnType("smallint")
+                        .HasColumnName("reason");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -1182,47 +1944,49 @@ namespace FashionStoreIS.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Address")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("ADDRESS");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISACTIVE");
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("ManagerName")
                         .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("MANAGERNAME");
+                        .HasColumnType("text")
+                        .HasColumnName("managername");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("NAME");
 
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasMaxLength(15)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(15)")
                         .HasColumnName("PHONE");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -1233,53 +1997,55 @@ namespace FashionStoreIS.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Address")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("ADDRESS");
+                        .HasColumnType("text")
+                        .HasColumnName("address");
 
                     b.Property<string>("ContactPerson")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CONTACTPERSON");
+                        .HasColumnType("text")
+                        .HasColumnName("contactperson");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("Email")
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("EMAIL");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISACTIVE");
+                        .HasColumnType("boolean")
+                        .HasColumnName("isactive");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<int>("LeadTimeDays")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("LEADTIMEDAYS");
+                        .HasColumnType("integer")
+                        .HasColumnName("leadtimedays");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(150)")
                         .HasColumnName("NAME");
 
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasMaxLength(15)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(15)")
                         .HasColumnName("PHONE");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -1290,47 +2056,49 @@ namespace FashionStoreIS.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AddressLine")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(200)")
                         .HasColumnName("ADDRESSLINE");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("FULLNAME");
 
                     b.Property<bool>("IsDefault")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("boolean")
                         .HasColumnName("ISDEFAULT");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(15)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(15)")
                         .HasColumnName("PHONENUMBER");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasMaxLength(450)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(450)")
                         .HasColumnName("USERID");
 
                     b.HasKey("Id");
@@ -1344,37 +2112,39 @@ namespace FashionStoreIS.Data.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("CODE");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CREATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<decimal>("DiscountAmount")
                         .HasColumnType("decimal(18,2)")
                         .HasColumnName("DISCOUNTAMOUNT");
 
                     b.Property<DateTime>("ExpiryDate")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("timestamp without time zone")
                         .HasColumnName("EXPIRYDATE");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("boolean")
                         .HasColumnName("ISACTIVE");
 
                     b.Property<bool>("IsDeleted")
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ISDELETED");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<int>("MaxUsageCount")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("MAXUSAGECOUNT");
 
                     b.Property<decimal>("MinOrderAmount")
@@ -1382,11 +2152,11 @@ namespace FashionStoreIS.Data.Migrations
                         .HasColumnName("MINORDERAMOUNT");
 
                     b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("UPDATEDAT");
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
 
                     b.Property<int>("UsedCount")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("integer")
                         .HasColumnName("USEDCOUNT");
 
                     b.HasKey("Id");
@@ -1397,26 +2167,68 @@ namespace FashionStoreIS.Data.Migrations
                     b.ToTable("VOUCHERS", (string)null);
                 });
 
+            modelBuilder.Entity("FashionStoreIS.Models.WishlistItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("integer")
+                        .HasColumnName("PRODUCTID");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)")
+                        .HasColumnName("USERID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("UserId", "ProductId")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_WL_USER_PROD");
+
+                    b.ToTable("wishlistitems", (string)null);
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("ID");
+                        .HasColumnType("text")
+                        .HasColumnName("id");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CONCURRENCYSTAMP");
+                        .HasColumnType("text")
+                        .HasColumnName("concurrencystamp");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("NAME");
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("name");
 
                     b.Property<string>("NormalizedName")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("NORMALIZEDNAME");
+                        .HasColumnType("character varying(256)")
+                        .HasColumnName("normalizedname");
 
                     b.HasKey("Id");
 
@@ -1424,131 +2236,147 @@ namespace FashionStoreIS.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("RoleNameIndex");
 
-                    b.ToTable("ASPNETROLES", (string)null);
+                    b.ToTable("aspnetroles", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CLAIMTYPE");
+                        .HasColumnType("text")
+                        .HasColumnName("claimtype");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CLAIMVALUE");
+                        .HasColumnType("text")
+                        .HasColumnName("claimvalue");
 
                     b.Property<string>("RoleId")
                         .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("ROLEID");
+                        .HasColumnType("text")
+                        .HasColumnName("roleid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("ASPNETROLECLAIMS", (string)null);
+                    b.ToTable("aspnetroleclaims", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
-                        .HasColumnName("ID");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ClaimType")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CLAIMTYPE");
+                        .HasColumnType("text")
+                        .HasColumnName("claimtype");
 
                     b.Property<string>("ClaimValue")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("CLAIMVALUE");
+                        .HasColumnType("text")
+                        .HasColumnName("claimvalue");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("USERID");
+                        .HasColumnType("text")
+                        .HasColumnName("userid");
 
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ASPNETUSERCLAIMS", (string)null);
+                    b.ToTable("aspnetuserclaims", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
                     b.Property<string>("LoginProvider")
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("LOGINPROVIDER");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("loginprovider");
 
                     b.Property<string>("ProviderKey")
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("PROVIDERKEY");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("providerkey");
 
                     b.Property<string>("ProviderDisplayName")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("PROVIDERDISPLAYNAME");
+                        .HasColumnType("text")
+                        .HasColumnName("providerdisplayname");
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasColumnType("TEXT")
-                        .HasColumnName("USERID");
+                        .HasColumnType("text")
+                        .HasColumnName("userid");
 
                     b.HasKey("LoginProvider", "ProviderKey");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("ASPNETUSERLOGINS", (string)null);
+                    b.ToTable("aspnetuserlogins", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("USERID");
+                        .HasColumnType("text")
+                        .HasColumnName("userid");
 
                     b.Property<string>("RoleId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("ROLEID");
+                        .HasColumnType("text")
+                        .HasColumnName("roleid");
 
                     b.HasKey("UserId", "RoleId");
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("ASPNETUSERROLES", (string)null);
+                    b.ToTable("aspnetuserroles", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("USERID");
+                        .HasColumnType("text")
+                        .HasColumnName("userid");
 
                     b.Property<string>("LoginProvider")
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("LOGINPROVIDER");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("loginprovider");
 
                     b.Property<string>("Name")
                         .HasMaxLength(128)
-                        .HasColumnType("TEXT")
-                        .HasColumnName("NAME");
+                        .HasColumnType("character varying(128)")
+                        .HasColumnName("name");
 
                     b.Property<string>("Value")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("VALUE");
+                        .HasColumnType("text")
+                        .HasColumnName("value");
 
                     b.HasKey("UserId", "LoginProvider", "Name");
 
-                    b.ToTable("ASPNETUSERTOKENS", (string)null);
+                    b.ToTable("aspnetusertokens", (string)null);
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.Attendance", b =>
+                {
+                    b.HasOne("FashionStoreIS.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_ATT_EMP");
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("FashionStoreIS.Models.Campaign", b =>
@@ -1584,6 +2412,11 @@ namespace FashionStoreIS.Data.Migrations
 
             modelBuilder.Entity("FashionStoreIS.Models.Employee", b =>
                 {
+                    b.HasOne("FashionStoreIS.Models.Department", "Department")
+                        .WithMany("Employees")
+                        .HasForeignKey("DepartmentId")
+                        .HasConstraintName("FK_EMP_DEPT");
+
                     b.HasOne("FashionStoreIS.Models.Store", "Store")
                         .WithMany()
                         .HasForeignKey("StoreId")
@@ -1591,7 +2424,37 @@ namespace FashionStoreIS.Data.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_EMP_STORE");
 
+                    b.Navigation("Department");
+
                     b.Navigation("Store");
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.Executive.AlertAction", b =>
+                {
+                    b.HasOne("FashionStoreIS.Models.Executive.ExecutiveAlert", "ExecutiveAlert")
+                        .WithMany("AlertActions")
+                        .HasForeignKey("ExecutiveAlertId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FashionStoreIS.Models.ApplicationUser", "TakenByUser")
+                        .WithMany()
+                        .HasForeignKey("TakenByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ExecutiveAlert");
+
+                    b.Navigation("TakenByUser");
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.Executive.ExecutiveAlert", b =>
+                {
+                    b.HasOne("FashionStoreIS.Models.ApplicationUser", "User")
+                        .WithMany("ExecutiveAlerts")
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("FashionStoreIS.Models.Inventory", b =>
@@ -1613,6 +2476,51 @@ namespace FashionStoreIS.Data.Migrations
                     b.Navigation("ProductSku");
 
                     b.Navigation("Store");
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.KpiReview", b =>
+                {
+                    b.HasOne("FashionStoreIS.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_KPI_EMP");
+
+                    b.HasOne("FashionStoreIS.Models.ApplicationUser", "Reviewer")
+                        .WithMany()
+                        .HasForeignKey("ReviewerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_KPI_REV");
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Reviewer");
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.LeaveBalance", b =>
+                {
+                    b.HasOne("FashionStoreIS.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_LB_EMP");
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.LeaveRequest", b =>
+                {
+                    b.HasOne("FashionStoreIS.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_LEAVE_EMP");
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("FashionStoreIS.Models.LoyaltyTransaction", b =>
@@ -1700,6 +2608,37 @@ namespace FashionStoreIS.Data.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("ProductSku");
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.Payroll", b =>
+                {
+                    b.HasOne("FashionStoreIS.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_PAY_EMP");
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.PayrollItem", b =>
+                {
+                    b.HasOne("FashionStoreIS.Models.Payroll", "Payroll")
+                        .WithMany("Items")
+                        .HasForeignKey("PayrollId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_PI_PAY");
+
+                    b.HasOne("FashionStoreIS.Models.SalaryComponent", "SalaryComponent")
+                        .WithMany()
+                        .HasForeignKey("SalaryComponentId")
+                        .HasConstraintName("FK_PI_SC");
+
+                    b.Navigation("Payroll");
+
+                    b.Navigation("SalaryComponent");
                 });
 
             modelBuilder.Entity("FashionStoreIS.Models.Product", b =>
@@ -1798,6 +2737,39 @@ namespace FashionStoreIS.Data.Migrations
                     b.Navigation("Order");
                 });
 
+            modelBuilder.Entity("FashionStoreIS.Models.Schedule", b =>
+                {
+                    b.HasOne("FashionStoreIS.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_SCHED_EMP");
+
+                    b.HasOne("FashionStoreIS.Models.Shift", "Shift")
+                        .WithMany()
+                        .HasForeignKey("ShiftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_SCHED_SHIFT");
+
+                    b.Navigation("Employee");
+
+                    b.Navigation("Shift");
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.Shift", b =>
+                {
+                    b.HasOne("FashionStoreIS.Models.Store", "Store")
+                        .WithMany()
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_SHIFT_STORE");
+
+                    b.Navigation("Store");
+                });
+
             modelBuilder.Entity("FashionStoreIS.Models.StockAdjustment", b =>
                 {
                     b.HasOne("FashionStoreIS.Models.Inventory", "Inventory")
@@ -1818,6 +2790,27 @@ namespace FashionStoreIS.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_UA_USER");
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.WishlistItem", b =>
+                {
+                    b.HasOne("FashionStoreIS.Models.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_WL_PRODUCT");
+
+                    b.HasOne("FashionStoreIS.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_WL_USER");
+
+                    b.Navigation("Product");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -1875,6 +2868,8 @@ namespace FashionStoreIS.Data.Migrations
                 {
                     b.Navigation("Addresses");
 
+                    b.Navigation("ExecutiveAlerts");
+
                     b.Navigation("Notifications");
 
                     b.Navigation("Orders");
@@ -1887,6 +2882,16 @@ namespace FashionStoreIS.Data.Migrations
                     b.Navigation("SubCategories");
                 });
 
+            modelBuilder.Entity("FashionStoreIS.Models.Department", b =>
+                {
+                    b.Navigation("Employees");
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.Executive.ExecutiveAlert", b =>
+                {
+                    b.Navigation("AlertActions");
+                });
+
             modelBuilder.Entity("FashionStoreIS.Models.Inventory", b =>
                 {
                     b.Navigation("StockAdjustments");
@@ -1897,6 +2902,11 @@ namespace FashionStoreIS.Data.Migrations
                     b.Navigation("OrderDetails");
 
                     b.Navigation("ReturnRequests");
+                });
+
+            modelBuilder.Entity("FashionStoreIS.Models.Payroll", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("FashionStoreIS.Models.Product", b =>

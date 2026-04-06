@@ -1,0 +1,93 @@
+@model IEnumerable<FashionStoreIS.Models.KpiReview>
+
+@{
+    ViewData["Title"] = "Quản lý Đánh giá KPI";
+    int month = (int)ViewData["Month"];
+    int year = (int)ViewData["Year"];
+}
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h2 style="font-size: 24px; font-weight: 700; color: #fff;">QUẢN LÝ ĐÁNH GIÁ KPI</h2>
+    <div style="display: flex; gap: 12px;">
+        <a asp-action="Leaderboard" class="btn-admin btn-secondary">
+            <i class="fa-solid fa-trophy"></i> XEM BẢNG XẾP HẠNG
+        </a>
+        <a asp-action="Create" class="btn-admin btn-primary">
+            <i class="fa-solid fa-plus"></i> ĐÁNH GIÁ MỚI
+        </a>
+    </div>
+</div>
+
+<div class="admin-card" style="margin-bottom: 24px; padding: 20px;">
+    <form method="get" style="display: flex; gap: 15px; align-items: flex-end;">
+        <div style="width: 180px;">
+            <label class="form-label">Chi nhánh</label>
+            <select name="storeId" class="form-control" asp-items="@(ViewData["Stores"] as SelectList)">
+                <option value="">Tất cả chi nhánh</option>
+            </select>
+        </div>
+        <div style="width: 100px;">
+            <label class="form-label">Tháng</label>
+            <select name="month" class="form-control">
+                @for (int i = 1; i <= 12; i++)
+                {
+                    <option value="@i" selected="@(i == month)">T@i</option>
+                }
+            </select>
+        </div>
+        <div style="width: 100px;">
+            <label class="form-label">Năm</label>
+            <select name="year" class="form-control">
+                <option value="@year">@year</option>
+            </select>
+        </div>
+        <button type="submit" class="btn-admin btn-primary" style="height: 42px;">LỌC</button>
+    </form>
+</div>
+
+<div class="admin-card">
+    <div class="admin-card-header">
+        <div class="admin-card-title">LỊCH SỬ ĐÁNH GIÁ</div>
+    </div>
+    <table class="admin-table">
+        <thead>
+            <tr>
+                <th>Nhân viên</th>
+                <th>Người đánh giá</th>
+                <th style="text-align: center;">Điểm TB</th>
+                <th style="text-align: center;">Xếp hạng</th>
+                <th>Nhận xét</th>
+                <th>Ngày tạo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        <div style="font-weight: 600; color: #fff;">@item.Employee?.FullName</div>
+                        <div style="font-size: 11px; color: var(--admin-muted);">@item.Employee?.Position</div>
+                    </td>
+                    <td>@item.Reviewer?.FullName</td>
+                    <td style="text-align: center; font-weight: 700;">@item.TotalScore.ToString("N1")</td>
+                    <td style="text-align: center;">
+                        <span class="badge @GetRankClass(item.Rank)">@item.Rank</span>
+                    </td>
+                    <td><div style="max-width: 300px; font-size: 11px;">@item.Notes</div></td>
+                    <td>@item.CreatedAt.ToString("dd/MM HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@functions {
+    string GetRankClass(FashionStoreIS.Models.KpiRank rank) => rank switch
+    {
+        FashionStoreIS.Models.KpiRank.A => "badge-green",
+        FashionStoreIS.Models.KpiRank.B => "badge-green",
+        FashionStoreIS.Models.KpiRank.C => "badge-secondary",
+        FashionStoreIS.Models.KpiRank.D => "badge-red",
+        _ => ""
+    };
+}

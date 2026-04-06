@@ -1,0 +1,103 @@
+@model FashionStoreIS.ViewModels.EmployeePortal.PortalLeaveViewModel
+@{
+    Layout = "_EmployeeLayout";
+    ViewData["Title"] = "Quản lý nghỉ phép";
+}
+
+<div class="row mb-3">
+    <div class="col-12">
+        <h4 class="fw-bold"><i class="fas fa-file-signature text-primary me-2"></i>Nghỉ phép</h4>
+    </div>
+</div>
+
+<!-- Leave Balance Summary -->
+<div class="p-card border-0 mb-4 bg-primary text-white p-3 overflow-hidden position-relative">
+    <div style="position:absolute; top:-10px; right:-10px; font-size:80px; opacity:0.1;">
+        <i class="fas fa-plane-departure"></i>
+    </div>
+    
+    <div class="position-relative">
+        <div class="row text-center">
+            <div class="col-6 border-end border-white border-opacity-25">
+                <div class="small mb-1 opacity-75">PHÉP NĂM CÒN</div>
+                <div class="h2 fw-bold mb-0">@(Model.Balance?.AnnualDaysTotal - Model.Balance?.AnnualDaysUsed ?? 0)</div>
+                <div class="small opacity-50">/ @(Model.Balance?.AnnualDaysTotal ?? 12) ngày</div>
+            </div>
+            <div class="col-6">
+                <div class="small mb-1 opacity-75">PHÉP BỆNH CÒN</div>
+                <div class="h2 fw-bold mb-0">@(Model.Balance?.SickDaysTotal - Model.Balance?.SickDaysUsed ?? 0)</div>
+                <div class="small opacity-50">/ @(Model.Balance?.SickDaysTotal ?? 5) ngày</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Request Form -->
+<div class="p-card mb-4 border-0 shadow-sm">
+    <div class="p-card-title">
+        <span>GỬI ĐƠN NGHỈ PHÉP MỚI</span>
+        <i class="fas fa-plus-circle text-primary"></i>
+    </div>
+    <form asp-action="RequestLeave" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="NewRequest.EmployeeId" />
+        
+        <div class="mb-3">
+            <label class="form-label small fw-bold">Loại nghỉ phép</label>
+            <select asp-for="NewRequest.Type" class="form-select form-select-sm rounded-pill" asp-items="Html.GetEnumSelectList<FashionStoreIS.Models.LeaveType>()"></select>
+        </div>
+        
+        <div class="row g-2 mb-3">
+            <div class="col-6">
+                <label class="form-label small fw-bold">Từ ngày</label>
+                <input asp-for="NewRequest.StartDate" type="date" class="form-control form-control-sm rounded-pill" />
+            </div>
+            <div class="col-6">
+                <label class="form-label small fw-bold">Đến ngày</label>
+                <input asp-for="NewRequest.EndDate" type="date" class="form-control form-control-sm rounded-pill" />
+            </div>
+        </div>
+        
+        <div class="mb-3">
+            <label class="form-label small fw-bold">Lý do nghỉ</label>
+            <textarea asp-for="NewRequest.Reason" class="form-control form-control-sm rounded-3" rows="2" placeholder="Vui lòng nhập lý do..."></textarea>
+        </div>
+        
+        <button type="submit" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm">
+            GỬI YÊU CẦU DUYỆT
+        </button>
+    </form>
+</div>
+
+<!-- Request History -->
+<div class="p-card border-0 bg-white p-0 overflow-hidden shadow-sm">
+    <div class="p-3 bg-light border-bottom fw-bold">LỊCH SỬ ĐƠN NGHỈ</div>
+    <div class="p-0">
+        @if (Model.Requests.Any())
+        {
+            @foreach (var request in Model.Requests)
+            {
+                <div class="p-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="badge @(request.Status == LeaveStatus.Approved ? "bg-success" : (request.Status == LeaveStatus.Rejected ? "bg-danger" : "bg-warning text-dark")) rounded-pill">
+                            @request.Status
+                        </span>
+                        <span class="small text-muted">@request.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+                    <div class="fw-bold fs-6">@request.Type.ToString() (@request.StartDate.ToString("dd/MM/yy") - @request.EndDate.ToString("dd/MM/yy"))</div>
+                    <div class="small text-muted mt-1">Lý do: @request.Reason</div>
+                    @if (!string.IsNullOrEmpty(request.AdminNote))
+                    {
+                        <div class="bg-light p-2 mt-2 rounded small border-start border-primary border-4">
+                            <strong>HR Feedback:</strong> @request.AdminNote
+                        </div>
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <div class="p-4 text-center text-muted small">Chưa có lịch sử yêu cầu</div>
+        }
+    </div>
+</div>

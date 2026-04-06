@@ -1,0 +1,161 @@
+@model FashionStoreIS.ViewModels.EmployeePortal.PortalDashboardViewModel
+@{
+    Layout = "_EmployeeLayout";
+    ViewData["Title"] = "Bảng điều khiển";
+}
+
+<div class="row">
+    <div class="col-12">
+        <h4 class="mb-1 fw-bold">Chào buổi sáng, @Model.Employee.FullName.Split(' ').Last()! 👋</h4>
+        <p class="text-muted small">Cửa hàng: @Model.Employee.Store.Name</p>
+    </div>
+</div>
+
+<!-- Next Shift Card -->
+<div class="p-card shadow-sm border-0 bg-primary text-white mb-4 overflow-hidden position-relative">
+    <div style="position:absolute; top:-20px; right:-20px; font-size:120px; opacity:0.1; transform:rotate(-15deg);">
+        <i class="fas fa-calendar-alt"></i>
+    </div>
+    
+    <div class="position-relative">
+        <span class="badge bg-white text-primary mb-2">CA LÀM TIẾP THEO</span>
+        
+        @if (Model.NextShift != null)
+        {
+            <h2 class="fw-bold mb-1">@Model.NextShift.Shift.StartTime.ToString(@"hh\:mm") - @Model.NextShift.Shift.EndTime.ToString(@"hh\:mm")</h2>
+            <p class="mb-0">@Model.NextShift.Date.ToString("dddd, dd MMMM")</p>
+            <hr class="my-3" style="opacity:0.3" />
+            <div class="d-flex align-items-center">
+                <i class="fas fa-map-marker-alt me-2"></i>
+                <span class="small">Vị trí: @Model.Employee.Store.Address</span>
+            </div>
+        }
+        else
+        {
+            <h3 class="fw-bold mb-1">Hôm nay bạn nghỉ!</h3>
+            <p class="mb-0 text-white-50">Hãy tận hưởng ngày nghỉ của mình nhé.</p>
+        }
+    </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-3 mb-4">
+    <div class="col-6">
+        <div class="p-card text-center mb-0 h-100">
+            <div class="stat-circle bg-primary bg-opacity-10 text-primary mx-auto">
+                <i class="fas fa-plane-departure"></i>
+            </div>
+            <div class="fw-bold text-dark h4 mb-0">@(Model.LeaveBalance?.AnnualDaysTotal - Model.LeaveBalance?.AnnualDaysUsed ?? 0)</div>
+            <div class="text-muted small">Phép năm còn</div>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="p-card text-center mb-0 h-100">
+            <div class="stat-circle bg-success bg-opacity-10 text-success mx-auto">
+                <i class="fas fa-check-double"></i>
+            </div>
+            <div class="fw-bold text-dark h4 mb-0">100%</div>
+            <div class="text-muted small">Độ chuyên cần</div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activities / Attendance Today -->
+<div class="p-card mb-4" id="attendanceSection">
+    <div class="p-card-title">
+        <span>CHẤM CÔNG HÔM NAY</span>
+        <i class="fas fa-fingerprint text-primary"></i>
+    </div>
+    
+    <div id="attendanceStatus">
+        @if (Model.TodayAttendance != null)
+        {
+            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3 mb-3">
+                <div class="text-center">
+                    <div class="small text-muted mb-1">Vào</div>
+                    <div class="fw-bold text-primary h5 mb-0" id="checkInTime">@(Model.TodayAttendance.CheckIn?.ToString(@"hh\:mm") ?? "--:--")</div>
+                </div>
+                <div class="text-muted">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+                <div class="text-center">
+                    <div class="small text-muted mb-1">Ra</div>
+                    <div class="fw-bold text-success h5 mb-0" id="checkOutTime">@(Model.TodayAttendance.CheckOut?.ToString(@"hh\:mm") ?? "--:--")</div>
+                </div>
+            </div>
+            
+            @if (!Model.TodayAttendance.CheckOut.HasValue)
+            {
+                <button class="btn btn-warning rounded-pill w-100 fw-bold shadow text-white" onclick="handleAttendance('CheckOut')">
+                    <i class="fas fa-sign-out-alt me-2"></i> QUÉT MÃ CHECK-OUT
+                </button>
+            }
+            else
+            {
+                <div class="text-center">
+                    <button class="btn btn-outline-secondary btn-sm rounded-pill w-100" disabled>
+                        <i class="fas fa-check-circle me-1"></i> Đã hoàn thành công hôm nay (@Model.TodayAttendance.TotalHours h)
+                    </button>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-4 bg-light rounded-4 mb-3 border border-dashed">
+                <i class="fas fa-clock text-muted fa-2x mb-2 opacity-50"></i>
+                <p class="text-muted small mb-0">Chưa có bản ghi chấm công</p>
+            </div>
+            <button class="btn btn-primary rounded-pill w-100 fw-bold shadow" onclick="handleAttendance('CheckIn')">
+                 <i class="fas fa-sign-in-alt me-2"></i> QUÉT MÃ CHECK-IN
+            </button>
+        }
+    </div>
+</div>
+
+<!-- Scripts for Interactivity -->
+@section Scripts {
+    <script>
+        function handleAttendance(action) {
+            const btn = event.currentTarget;
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang xử lý...';
+
+            $.post('/EmployeePortal/' + action, function(data) {
+                if (data.success) {
+                    // Refresh the section or simple reload for now for consistency
+                    location.reload(); 
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            }).fail(function() {
+                alert('Không thể kết nối đến máy chủ.');
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            });
+        }
+    </script>
+}
+
+<!-- Pending Requests -->
+@if (Model.PendingLeaves.Any())
+{
+    <div class="p-card border-warning border-opacity-25 bg-warning bg-opacity-10">
+        <div class="p-card-title text-warning">
+            <span>ĐANG CHỜ DUYỆT</span>
+            <i class="fas fa-hourglass-half"></i>
+        </div>
+        @foreach (var leave in Model.PendingLeaves)
+        {
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div>
+                    <div class="fw-bold small">Ngày nghỉ: @leave.StartDate.ToString("dd/MM")</div>
+                    <div class="text-muted" style="font-size:0.7rem">Lý do: @leave.Reason</div>
+                </div>
+                <span class="badge bg-warning text-dark rounded-pill">Pending</span>
+            </div>
+        }
+    </div>
+}

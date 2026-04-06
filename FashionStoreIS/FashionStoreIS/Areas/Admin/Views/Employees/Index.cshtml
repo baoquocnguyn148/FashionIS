@@ -4,12 +4,51 @@
     ViewData["Title"] = "Quản lý Nhân sự";
 }
 
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h2 style="font-size: 24px; font-weight: 700; color: #fff;">QUẢN LÝ NHÂN SỰ</h2>
+    <div style="display: flex; gap: 12px;">
+        <a asp-action="Create" class="btn-admin btn-primary">
+            <i class="fa-solid fa-plus"></i> THÊM MỚI NHÂN VIÊN
+        </a>
+    </div>
+</div>
+
+<div class="admin-card" style="margin-bottom: 24px; padding: 20px;">
+    <form method="get" style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+        <div style="flex: 1; min-width: 200px;">
+            <label class="form-label">Tìm kiếm</label>
+            <input type="text" name="search" value="@ViewData["Search"]" class="form-control" placeholder="Tên, Email, SĐT...">
+        </div>
+        <div style="width: 180px;">
+            <label class="form-label">Chi nhánh</label>
+            <select name="storeId" class="form-control" asp-items="@(ViewData["Stores"] as SelectList)">
+                <option value="">Tất cả chi nhánh</option>
+            </select>
+        </div>
+        <div style="width: 180px;">
+            <label class="form-label">Phòng ban</label>
+            <select name="departmentId" class="form-control" asp-items="@(ViewData["Departments"] as SelectList)">
+                <option value="">Tất cả phòng ban</option>
+            </select>
+        </div>
+        <div style="width: 150px;">
+            <label class="form-label">Trạng thái</label>
+            <select name="isActive" class="form-control">
+                <option value="">Tất cả</option>
+                <option value="true" selected="@((bool?)ViewData["IsActive"] == true)">Đang làm việc</option>
+                <option value="false" selected="@((bool?)ViewData["IsActive"] == false)">Đã nghỉ</option>
+            </select>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <button type="submit" class="btn-admin btn-primary" style="height: 42px;">LỌC</button>
+            <a href="/Admin/Employees" class="btn-admin btn-secondary" style="height: 42px;">XÓA LỌC</a>
+        </div>
+    </form>
+</div>
+
 <div class="admin-card">
     <div class="admin-card-header">
-        <div class="admin-card-title">DANH SÁCH NHÂN VIÊN</div>
-        <a asp-action="Create" class="btn-admin btn-primary">
-            <i class="fa-solid fa-plus"></i> Thêm mới nhân viên
-        </a>
+        <div class="admin-card-title">DANH SÁCH NHÂN VIÊN (@Model.Count())</div>
     </div>
     <div class="table-container">
         <table class="admin-table">

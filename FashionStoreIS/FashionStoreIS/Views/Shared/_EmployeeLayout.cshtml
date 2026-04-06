@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>@ViewData["Title"] - BN Portal</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/ui-polish.css" asp-append-version="true" />
+    <style>
+        :root {
+            --portal-primary: #6366f1;
+            --portal-bg: #f8fafc;
+            --portal-card-bg: #ffffff;
+            --portal-text-main: #1e293b;
+            --portal-text-muted: #64748b;
+        }
+
+        body {
+            background-color: var(--portal-bg);
+            color: var(--portal-text-main);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding-bottom: 70px; /* Space for bottom nav */
+        }
+
+        .portal-header {
+            background: #fff;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .portal-logo {
+            font-weight: 800;
+            font-size: 1.2rem;
+            letter-spacing: -0.5px;
+            color: var(--portal-primary);
+        }
+
+        .portal-user-chip {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar-small {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 65px;
+            background: #fff;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border-top: 1px solid #e2e8f0;
+            z-index: 1000;
+        }
+
+        .nav-item-portal {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--portal-text-muted);
+            font-size: 0.7rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-item-portal i {
+            font-size: 1.3rem;
+            margin-bottom: 4px;
+        }
+
+        .nav-item-portal.active {
+            color: var(--portal-primary);
+        }
+
+        /* Portal Cards */
+        .p-card {
+            background: var(--portal-card-bg);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.01);
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+
+        .p-card-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--portal-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Helper Classes */
+        .text-portal-primary { color: var(--portal-primary); }
+        .bg-portal-light { background-color: #eef2ff; }
+        
+        /* Stats Circle */
+        .stat-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <header class="portal-header">
+        <div class="portal-logo">
+            <i class="fas fa-bolt me-1"></i> BN PORTAL
+        </div>
+        <a asp-action="Profile" class="portal-user-chip text-decoration-none">
+            <div class="user-avatar-small">
+                @User.Identity?.Name?.Substring(0, 1).ToUpper()
+            </div>
+        </a>
+    </header>
+
+    <div class="container py-3">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show rounded-pill px-4" role="alert">
+                <i class="fas fa-check-circle me-2"></i> @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+        @RenderBody()
+    </div>
+
+    <nav class="bottom-nav">
+        <a asp-action="Index" class="nav-item-portal @(ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+            <i class="fas fa-th-large"></i>
+            <span>Tổng quan</span>
+        </a>
+        <a asp-action="Schedules" class="nav-item-portal @(ViewContext.RouteData.Values["action"]?.ToString() == "Schedules" ? "active" : "")">
+            <i class="fas fa-calendar-alt"></i>
+            <span>Lịch trình</span>
+        </a>
+        <a asp-action="Leave" class="nav-item-portal @(ViewContext.RouteData.Values["action"]?.ToString() == "Leave" ? "active" : "")">
+            <i class="fas fa-file-signature"></i>
+            <span>Nghỉ phép</span>
+        </a>
+        <a asp-action="Payroll" class="nav-item-portal @(ViewContext.RouteData.Values["action"]?.ToString() == "Payroll" ? "active" : "")">
+            <i class="fas fa-wallet"></i>
+            <span>Tiền lương</span>
+        </a>
+    </nav>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

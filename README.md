@@ -1,4 +1,4 @@
-﻿# 🌟 BN STORE - E-Commerce Management Information System (MIS)
+# 🌟 BN STORE - E-Commerce Management Information System (MIS)
 
 **BN STORE (FashionStoreIS)** là hệ thống thương mại điện tử chuyên biệt được xây dựng trên nền tảng **ASP.NET Core MVC 8.0**. Dự án áp dụng kiến trúc **Clean Code & Monolith**, thiết kế giao diện Minimalist hiện đại nhằm tối ưu hóa trải nghiệm người dùng (UX) và hiệu suất hệ thống (Performance).
 
@@ -49,12 +49,25 @@ Sử dụng ASP.NET Core Identity tương thích với Oracle 11g. Tích hợp x
 
 ---
 
+## 🤖 AI Shopping Assistant (Trợ lý mua sắm AI)
+
+Hệ thống tích hợp một trợ lý ảo thông minh dựa trên mô hình ngôn ngữ lớn (LLM), giúp cá nhân hóa trải nghiệm khách hàng:
+- **Bilingual Search Strategy**: Tự động dịch thuật và tối ưu hóa từ khóa tìm kiếm giữa Tiếng Việt và Tiếng Anh để khớp với dữ liệu sản phẩm.
+- **Size Advice Expert**: Tư vấn kích cỡ (S, M, L, XL) dựa trên chỉ số chiều cao, cân nặng và form dáng sản phẩm.
+- **Order Tracking**: Tra cứu trạng thái đơn hàng thời gian thực thông qua mã vận đơn (HDxxxx).
+- **Interactive Product Cards**: Hiển thị sản phẩm dưới dạng thẻ Markdown sinh động, bao gồm hình ảnh, giá cả và liên kết trực tiếp đến trang chi tiết.
+- **Agentic Workflow**: Sử dụng LangGraph để xây dựng quy trình suy luận (Reasoning) và gọi công cụ (Tool Calling) chính xác theo ý định người dùng.
+
+---
+
 ## 🛠 Tech Stack (Công nghệ Sử dụng)
-- **Framework:** .NET 8.0 SDK, ASP.NET Core MVC
+- **Backend (Web):** .NET 8.0 SDK, ASP.NET Core MVC (C#)
+- **Backend (AI):** Python 3.11+, FastAPI, LangChain, LangGraph
 - **Database (OLTP):** Oracle Database 11g Express/Enterprise
 - **Database (OLAP):** SQLite (Local Analytics)
 - **ORM:** Entity Framework Core (Code-First Migration)
 - **Front-End:** HTML5, CSS3, JavaScript (hỗ trợ jQuery AJAX), Bootstrap 5, FontAwesome 6.
+- **LLM Engine:** LM Studio (Local Inference)
 
 ---
 
@@ -79,7 +92,13 @@ Sử dụng ASP.NET Core Identity tương thích với Oracle 11g. Tích hợp x
      `
    - Quá trình Data Seeding (`DbInitializer`) sẽ tự động sinh dữ liệu Dummy và phân quyền tài khoản Admin khởi tạo (`admin@bnstore.vn`).
 
-4. **Khởi Chạy Ứng Dụng:**
+4. **Cài đặt Chatbot AI (Tùy chọn):**
+   - Di chuyển vào thư mục chatbot: `cd chatbot`
+   - Cài đặt thư viện Python: `pip install -r requirements.txt`
+   - Khởi chạy LM Studio và load model (Vd: Gemma-3-4b) tại port 1234.
+   - Chạy server chatbot: `python main.py` (Mặc định chạy tại port 8000).
+
+5. **Khởi Chạy Ứng Dụng Web:**
    `ash
    dotnet run
    `

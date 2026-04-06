@@ -35,6 +35,98 @@ namespace FashionStoreIS.Areas.Admin.Controllers
             return View(attendances);
         }
 
+        // GET: Admin/Attendances/MonthView?month=&year=&storeId=
+        public async Task<IActionResult> MonthView(int? month, int? year, int? storeId)
+        {
+            int m = month ?? DateTime.Now.Month;
+            int y = year ?? DateTime.Now.Year;
+            
+            var query = _context.Attendances
+                .Include(a => a.Employee)
+                .Where(a => a.Date.Month == m && a.Date.Year == y);
+
+            if (storeId.HasValue)
+                query = query.Where(a => a.Employee.StoreId == storeId);
+
+            var attendances = await query.ToListAsync();
+            var grouped = attendances.GroupBy(a => a.Employee).ToList();
+
+            ViewData["Month"] = m;
+            ViewData["Year"] = y;
+            ViewData["StoreId"] = storeId;
+            ViewData["Stores"] = new SelectList(_context.Stores, "Id", "Name", storeId);
+
+            return View(grouped);
+        }
+
+        // GET: Admin/Attendances/Edit/5
+        public async Task<IActionResult> Edit(int? id)
+        {
+            if (id == null) return NotFound();
+
+            var attendance = await _context.Attendances.Include(a => a.Employee).FirstOrDefaultAsync(m => m.Id == id);
+            if (attendance == null) return NotFound();
+
+            return View(attendance);
+        }
+
+        // POST: Admin/Attendances/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("Id,EmployeeId,Date,CheckIn,CheckOut,Status,Note")] Attendance attendance)
+        {
+            if (id != attendance.Id) return NotFound();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    if (attendance.CheckIn.HasValue && attendance.CheckOut.HasValue)
+                    {
+                        var duration = attendance.CheckOut.Value - attendance.CheckIn.Value;
+                        attendance.TotalHours = duration.TotalHours > 0 ? duration.TotalHours : 0;
+                    }
+                    attendance.UpdatedAt = DateTime.Now;
+                    _context.Update(attendance);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!_context.Attendances.Any(e => e.Id == attendance.Id)) return NotFound();
+                    else throw;
+                }
+                return RedirectToAction(nameof(Index), new { date = attendance.Date.ToString("yyyy-MM-dd") });
+            }
+            return View(attendance);
+        }
+
+        // GET: Admin/Attendances/MonthSummary?month=&year=&storeId=
+        public async Task<IActionResult> MonthSummary(int? month, int? year, int? storeId)
+        {
+            int m = month ?? DateTime.Now.Month;
+            int y = year ?? DateTime.Now.Year;
+
+            var employees = await _context.Employees.Where(e => !e.IsDeleted && (!storeId.HasValue || e.StoreId == storeId)).ToListAsync();
+            var attendances = await _context.Attendances
+                .Where(a => a.Date.Month == m && a.Date.Year == y)
+                .ToListAsync();
+
+            var summary = employees.Select(e => {
+                var empAtt = attendances.Where(a => a.EmployeeId == e.Id).ToList();
+                return new {
+                    EmployeeName = e.FullName,
+                    WorkDays = empAtt.Count(a => a.Status == AttendanceStatus.Present || a.Status == AttendanceStatus.Late),
+                    TotalHours = empAtt.Sum(a => a.TotalHours),
+                    LateDays = empAtt.Count(a => a.Status == AttendanceStatus.Late),
+                    AbsentDays = empAtt.Count(a => a.Status == AttendanceStatus.Absent)
+                };
+            }).ToList();
+
+            ViewData["Month"] = m;
+            ViewData["Year"] = y;
+            return View(summary);
+        }
+
         // GET: Admin/Attendances/CheckIn
         public IActionResult CheckIn()
         {

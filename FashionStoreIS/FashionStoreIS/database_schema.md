@@ -1,178 +1,112 @@
-# FashionStoreIS - Database Schema Layout
+# FashionStoreIS - Enterprise Database Schema (PostgreSQL)
 
-Tài liệu này mô tả chi tiết kiến trúc Cơ sở dữ liệu (Database Schema) của dự án **FashionStoreIS (BN STORE)**. Dự án sử dụng **Entity Framework Core (EF Core)** với kỹ thuật Code-First trên nền tảng **Oracle 11g**.
+Tài liệu này mô tả chi tiết kiến trúc Cơ sở dữ liệu (Database Schema) của dự án **FashionStoreIS (BN STORE)**. Dự án sử dụng **Entity Framework Core (EF Core)** với kỹ thuật Code-First, tối ưu hóa cho **PostgreSQL** và tương thích ngược với **Oracle 11g**.
 
-Tất cả các bảng dưới đây đều kế thừa `BaseEntity` với các trường mặc định:
-- `Id` (INT, Primary Key)
-- `CreatedAt` (DATETIME2)
-- `UpdatedAt` (DATETIME2)
+Tất cả các bảng nghiệp vụ đều kế thừa `BaseEntity` với các trường mặc định:
+- `Id` (INT/SERIAL, Primary Key)
+- `CreatedAt` (TIMESTAMP): Thời điểm tạo bản ghi.
+- `UpdatedAt` (TIMESTAMP): Thời điểm cập nhật cuối cùng.
+- `IsDeleted` (BOOLEAN): Trạng thái xóa mềm (Soft Delete).
 
 ---
 
-## 1. Hệ thống Quản lý Sản phẩm (Catalog)
+## 1. Phân hệ Thương Mại & Sản Phẩm (Catalog & Sales)
 
-### `Categories` (Danh mục)
+### `Categories`
 Lưu trữ cây phân cấp danh mục sản phẩm.
-- `Name` (NVARCHAR): Tên danh mục (vd: Áo, Quần)
-- `Slug` (VARCHAR): Đường dẫn URL thân thiện
-- `Description` (NVARCHAR): Đoạn mô tả
-- `DisplayOrder` (INT): Thứ tự hiển thị
-- `IsActive` (BIT): Bật/Tắt
-- `ParentCategoryId` (INT, Lookup `Categories`): ID của danh mục cha (để tạo Sub-menu)
+- `Name`, `Slug`, `Description`, `ImageUrl`, `DisplayOrder`, `IsActive`
+- `ParentCategoryId` (Self-referencing FK): Danh mục cha.
 
-### `Products` (Sản phẩm)
-Thông tin tổng thể của một dòng sản phẩm.
-- `CategoryId` (INT, Foreign Key): ID của Danh mục
-- `Name` (NVARCHAR(200)): Tên sản phẩm
-- `Slug` (VARCHAR(200)): Đường dẫn thân thiện
-- `ShortDescription` (NVARCHAR): Mô tả ngắn
-- `Description` (NVARCHAR): Mô tả chi tiết (HTML)
-- `Price` (DECIMAL): Giá bán gốc
-- `SellingPrice` (DECIMAL): Giá khuyến mãi
-- `ImageUrl` (NVARCHAR): URL ảnh đại diện chính
-- `Stock` (INT): Số lượng tổng tồn kho
-- `IsActive` (BIT): Bật/Tắt hiển thị
+### `Products`
+Thông tin tổng thể của sản phẩm.
+- `Name`, `Slug`, `Price` (Base), `Description`, `ImageUrl`, `IsActive`
+- `CategoryId` (FK), `SupplierId` (FK)
 
-### `ProductSkus` (Biến thể Sản phẩm / SKU)
-Lưu trữ Size, Màu sắc và số lượng tồn kho chi tiết của từng thuộc tính cụ thể.
-- `ProductId` (INT, Foreign Key): Bảng `Products`
-- `SkuCode` (VARCHAR(50)): Mã SKU vạch
-- `Size` (NVARCHAR(50)): Kích thước (vd: S, M, L, XL, 40, 41)
-- `Color` (NVARCHAR(50)): Màu sắc
-- `Stock` (INT): Tồn kho của biến thể này
-- `PriceOverride` (DECIMAL, Nullable): Giá tiền ghi đè (nếu biến thể đắt/rẻ hơn)
-- `IsActive` (BIT): Bật/Tắt
-- `RowVersion` (BYTE[]): Dùng để xử lý Optimistic Concurrency (Xung đột tranh tiền khi Checkout)
+### `ProductSkus`
+Biến thể chi tiết (Size/Color) của sản phẩm.
+- `SKU`, `SkuCode`, `Size`, `Color`, `CostPrice`, `SellingPrice`, `PriceOverride`, `Stock`.
+- **Note**: `Stock` được dùng làm `Concurrency Token` để tránh xung tranh khi thanh toán.
 
-### `ProductImages` (Thư viện Ảnh Gallery)
-- `ProductId` (INT, Foreign Key): Bảng `Products`
-- `ImageUrl` (NVARCHAR(500)): URL ảnh
-- `DisplayOrder` (INT): Cấu hình thứ tự ảnh trên PDP (Product Detail Page)
+### `Orders` & `OrderDetails`
+- `Orders`: `OrderCode`, `TotalAmount`, `SubTotal`, `DiscountAmount`, `Status`, `PaymentMethod`, `UserId` (FK), `CustomerId` (FK), `VoucherId` (FK).
+- `OrderDetails`: `OrderId` (FK), `ProductId` (FK), `ProductSkuId` (FK), `Quantity`, `UnitPrice`, `Subtotal`, `DiscountPercent`.
+
+### `Vouchers`
+- `Code`, `DiscountAmount`, `MinOrderAmount`, `ExpiryDate`, `IsActive`, `MaxUsageCount`, `UsedCount`.
 
 ---
 
-## 2. Hệ thống Mua hàng & Vận hành (Order & Fulfillment)
+## 2. Phân Hệ Quản Trị Nhân Sự (HRM & Payroll)
 
-### `Orders` (Đơn hàng)
-Lưu trữ thông tin giỏ hàng đã thanh toán/đặt trước của khách.
-- `OrderCode` (VARCHAR): Mã hiển thị hóa đơn (HN-10023)
-- `UserId` (VARCHAR, FK): Trỏ tới `AspNetUsers` (Nếu đã đăng nhập)
-- `CustomerId` (INT, FK): Trỏ tới User Profile thông tin đầy đủ
-- `StoreId` (INT, FK): Chi nhánh chịu trách nhiệm
-- `VoucherId` (INT, Nullable FK): Mã KM áp dụng
-- `Status` (Enum): `Pending`, `Confirmed`, `Processing`, `Shipped`, `Completed`, `Cancelled`
-- `PaymentMethod` (Enum): `Cash` (COD), `Transfer`, `CreditCard`
-- `PaymentStatus` (Enum): `Unpaid`, `Paid`, `Refunded`
-- `TotalAmount` (DECIMAL): Tổng tiền thanh toán
-- `DiscountAmount` (DECIMAL): Số tiền được giảm 
-- `CustomerName`, `Phone`, `Address`: Lưu cứng địa chỉ giao hàng tại thời điểm đặt
+### `Employees` & `Departments`
+- `Employees`: `FullName`, `Position`, `BaseSalaryPerHour`, `Email`, `Phone`, `StoreId` (FK), `DepartmentId` (FK), `BankDetails`.
+- `Departments`: `Name` (Phòng ban: Sales, Marketing, IT, v.v.).
 
-### `OrderDetails` (Chi tiết Đơn hàng)
-- `OrderId` (INT, FK): ID Đơn hàng
-- `ProductId` (INT, Nullable FK): ID Sản phẩm gốc
-- `ProductSkuId` (INT, Nullable FK): ID Biến thể
-- `Quantity` (INT): Số lượng mua
-- `UnitPrice` (DECIMAL): Giá tiền 1 đơn vị
-- `DiscountPercent` (DECIMAL): % KM riêng lẻ (nếu có)
-- `Subtotal` (DECIMAL): `(UnitPrice * Quantity)`
+### `Attendances` (Chấm công)
+- `EmployeeId` (FK), `Date`, `CheckIn`, `CheckOut`, `TotalHours`.
 
-### `Vouchers` (Khuyến mãi)
-- `Code` (VARCHAR(50)): Mã Code giảm giá (vd: TET2026)
-- `Description` (NVARCHAR)
-- `DiscountType` (Enum): `Percent` (Phần trăm), `Amount` (Tiền mặt trực tiếp)
-- `DiscountValue` (DECIMAL): Giá trị giảm (vd: Tiền=20k, % = 10)
-- `MinOrderValue` (DECIMAL): Giá trị ĐH tối thiểu
-- `MaxDiscountAmount` (DECIMAL): Số tiền giảm tối đa (nếu dùng %)
-- `UsageLimit` (INT): Giới hạn lượt sử dụng tổng 
-- `UsedCount` (INT): Lượt đã dùng
-- `StartDate` (DATETIME2)
-- `EndDate` (DATETIME2)
+### `Payrolls` & `PayrollItems`
+- `Payrolls`: `Month`, `Year`, `TotalHoursWorked`, `BaseHourlyRate`, `TotalBaseSalary`, `TotalAdditions`, `TotalDeductions`, `NetSalary`, `Status`.
+- `PayrollItems`: `PayrollId` (FK), `SalaryComponentId` (FK), `Amount`, `Note`.
+
+### `SalaryComponents`
+Định nghĩa các khoản Phụ cấp/Khấu trừ (Ăn trưa, Bảo hiểm, Thưởng chuyên cần).
+- `Name`, `Type` (Addition/Deduction), `DefaultAmount`.
+
+### `Shifts` & `Schedules`
+- `Shifts`: Ca làm việc (Sáng, Chiều, Tối) kèm giờ bắt đầu/kết thúc.
+- `Schedules`: Phân lịch làm việc cho từng `Employee` tại các `Shift`.
+
+### `KpiReviews`
+- `EmployeeId` (FK), `ReviewerId` (FK), `Month`, `Year`, `SalesScore`, `TeamworkScore`, `TotalScore`, `Rank` (A/B/C/D).
+- **Note**: Rank này ảnh hưởng trực tiếp đến hệ số thưởng trong `Payroll`.
 
 ---
 
-## 3. Hệ thống Logistic Nội bộ (Supply Chain)
+## 3. Phân Hệ Kho Vận & Chuỗi Cung Ứng (SCM)
 
-### `PurchaseOrders` (Đơn Nhập Hàng)
-Quản lý luồng nhập sản phẩm/vật tư vào Kho chi nhánh từ Nhà cung cấp.
-- `PurchaseOrderCode` (VARCHAR)
-- `SupplierId` (INT, FK): Trỏ tới `Suppliers`
-- `StoreId` (INT, FK): Trỏ tới `Stores` (Chi nhánh nhập kho)
-- `ApplicationUserId` (VARCHAR, FK): Trỏ tới nhân viên thực hiện (Nhân viên kho)
-- `Status` (Enum): `Draft`, `Pending`, `Approved`, `Completed`, `Cancelled`
-- `TotalAmount` (DECIMAL): Tổng giá trị nhập
+### `Inventory` & `StockAdjustments`
+- `Inventory`: Liên kết `StoreId` (FK) với `ProductSkuId` (FK) để theo dõi tồn kho tại từng điểm bán.
+- `StockAdjustments`: Audit trail cho mọi thay đổi kho (Lý do: Bán hàng, Nhập hàng, Hao hụt, Hoàn trả).
 
-### `PurchaseOrderDetails` (Chi tiết đơn nhập)
-- `PurchaseOrderId` (INT)
-- `ProductId`, `ProductSkuId`: ID Sản phẩm/Biến thể
-- `UnitCost` (DECIMAL): Giá vốn nhập khẩu (Phục vụ đo lường COGS / Margin)
-- `Quantity` (INT): Số lượng lô hàng
-- `SubTotal` (DECIMAL)
+### `PurchaseOrders` & `PurchaseOrderDetails`
+- `PurchaseOrders`: Quản lý vận đơn nhập hàng từ Nhà cung cấp.
+- `PurchaseOrderDetails`: `UnitCost` (Giá vốn nhập), `Quantity`, `Subtotal`.
 
-### `Stores` (Chi nhánh Shop)
-- `Name`, `Address`, `Phone`, `Email`, `IsActive`
-
-### `Suppliers` (Nhà Cung Cấp)
-- `Name`, `ContactName`, `Phone`, `Email`, `Address`
+### `Suppliers` & `Stores`
+- Quản lý thông tin đối tác cung ứng và danh sách mạng lưới cửa hàng toàn hệ thống.
 
 ---
 
-## 4. Bảo mật và Người dùng (Identity & Users)
+## 4. Phân Hệ CRM & Marketing
 
-Dự án mở rộng dựa trên **ASP.NET Core Identity** (các bảng mặc định `AspNetUsers`, `AspNetRoles`, v.v..).
-Class `ApplicationUser` bổ sung thêm các thuộc tính:
-- `FullName` (NVARCHAR)
-- `AvatarUrl` (NVARCHAR): Link ảnh Profile
-- `DateOfBirth` (DATETIME)
-- `Gender` (VARCHAR)
-- `CustomerTier` (Enum): Cấp VIP của tài khoản
-- `MembershipPoints` (INT): Điểm thân thiết
+### `Customers`
+Mở rộng thông tin người dùng từ `ApplicationUser`.
+- `FullName`, `Phone`, `Email`, `UserId` (Identity FK).
 
-### `Customers` (Bản ghi Khách hàng Vật lý)
-- `ApplicationUserId` (VARCHAR, Nullable FK): Liên kết với tk Identity.
-- `UserId` (VARCHAR)
-- `FullName`, `Email`, `PhoneNumber`, `Address`, `City`, `District`, `Ward`
+### `LoyaltyTransactions`
+- Nhật ký tích/đổi điểm thưởng (`Points`) của khách hàng dựa trên hóa đơn.
 
-### `Employees` (Nhân sự & Nhân viên Cửa hàng)
-- `ApplicationUserId` (VARCHAR, FK): Liên kết với tk Identity (Admin/Staff).
-- `UserId` (VARCHAR)
-- `FullName`, `Email`, `PhoneNumber`, `Role` (Enum), `StoreId` (FK)
-
-### `LoyaltyTransactions` (Giao dịch Điểm thưởng)
-- `ApplicationUserId` (VARCHAR, FK): Trỏ tới User.
-- `Points` (INT): Khoản cộng/trừ điểm.
-- `Type` (Enum): `Earned` (Tích lũy), `Redeemed` (Tiêu thụ), `Refunded` (Hoàn trả).
-- `Description` (NVARCHAR), `ReferenceId` (INT - Đơn hàng liên quan)
+### `Campaigns` & `Notifications`
+- `Campaigns`: Quản lý các chiến dịch Marketing qua Email/App gửi đến các Segments (Champions, At Risk, v.v.).
+- `Notifications`: Hệ thống thông báo đẩy (Push notification) cho người dùng.
 
 ---
 
-## 5. Quản lý Tồn kho & Cấu hình Hiển thị Hệ thống (Misc)
-
-### `Banners` (Bảng rôn & Pop-up KM)
-Cấu hình đồ thị Hero banner trang chủ.
-- `Title` (NVARCHAR)
-- `ImageUrl` (NVARCHAR): File ảnh quảng cáo.
-- `LinkUrl` (VARCHAR): Trỏ tới list SP Sale
-- `IsActive` (BIT), `DisplayOrder` (INT)
-- `StartDate`, `EndDate` (DATETIME2)
-
-### `Inventory` (Kiểm kho)
-Giám sát chi tiết luồng tồn cho kho cụ thể (Support Multi-Store POS).
-- `StoreId` (INT, FK), `ProductId` (INT, FK), `ProductSkuId` (INT, FK)
-- `Stock` (INT): Tồn ở chi nhánh này.
-
-### `StockAdjustments` (Chi tiết Biến động Kho Cục Bộ)
-Audit Trail dùng để giải trình số tồn hao hụt.
-- `InventoryId` (INT, FK)
-- `Type` (Enum): `Addition` (Cộng vào), `Subtraction` (Trừ đi)
-- `Quantity` (INT)
-- `Reason` (Enum): `Restock`, `Sale`, `Return`, `Damage`, `Loss`.
+## 5. Metadata & Personalization
+- `Banners`: Cấu hình ảnh quảng cáo trang chủ.
+- `WishlistItems`: Danh sách sản phẩm yêu thích của khách hàng.
+- `UserAddresses`: Sổ địa chỉ giao hàng.
+- `ReturnRequests`: Quản lý quy trình đổi trả hàng.
 
 ---
 
-## 6. Phân hệ Data Warehouse Analytics (SQLite Độc lập)
-Không sử dụng Oracle mà lưu xuất song song sang DB `analytics.db` phục vụ PowerBI.
-Gồm các bảng **Star Schema**:
-- `Fact_Sales` (Sự kiện Mua Hàng)
-- `Dim_Product` (Chiều dữ liệu SP)
-- `Dim_Customer` (Khách hàng)
-- `Dim_Date` (Mốc thời gian)
+## 6. Phân Hệ Phân Tích (Analytics Data Warehouse)
+Lưu trữ tại `DataWarehouse.db` (SQLite) theo mô hình **Star Schema**:
+- **Fact_Sales**: Chứa các sự kiện bán hàng và chỉ số tài chính (SalesAmount, COGS, GrossProfit).
+- **Dim_Product**: Chiều thông tin sản phẩm (SCD Type 1/2).
+- **Dim_Customer**: Chiều thông tin khách hàng và vùng địa lý.
+- **Dim_Date**: Chiều thời gian (Ngày, Tháng, Quý, Năm, Cuối tuần).
+
+---
+*Tài liệu được cập nhật tự động dựa trên mã nguồn thực tế của ApplicationDbContext.*

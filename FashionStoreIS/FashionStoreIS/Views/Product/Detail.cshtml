@@ -46,7 +46,8 @@
     .var-section { margin-bottom: 18px; }
     .var-label { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; color: #555; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
     .var-label strong { color: #111; font-weight: 700; }
-    .size-chart-btn { font-size: 11px; color: #555; border: 1px solid #ccc; padding: 3px 8px; border-radius: 3px; cursor: pointer; background: none; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+    .size-chart-btn { font-size: 11px; color: #555; border: 1px solid #ccc; padding: 3px 8px; border-radius: 3px; cursor: pointer; background: none; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s; }
+    .size-chart-btn:hover { background: #111; color: #fff; border-color: #111; }
 
     /* Color options */
     .color-opts { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -102,6 +103,16 @@
     .acc-item.open .acc-header svg { transform: rotate(180deg); }
     .acc-body { display: none; padding-bottom: 14px; font-size: 13px; color: #555; line-height: 1.7; }
     .acc-item.open .acc-body { display: block; }
+
+    /* Voucher Modal Styles */
+    .voucher-item { border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 15px; position: relative; overflow: hidden; }
+    .voucher-left { background: #fff5f5; color: #e53935; width: 60px; height: 60px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+    .voucher-mid { flex: 1; }
+    .voucher-code { font-size: 15px; font-weight: 700; color: #111; margin-bottom: 2px; text-transform: uppercase; }
+    .voucher-desc { font-size: 12px; color: #666; margin-bottom: 4px; }
+    .voucher-expiry { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 0.05em; }
+    .btn-copy-voucher { background: #111; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
+    .btn-copy-voucher:hover { opacity: 0.8; }
 </style>
 
 <div class="pdp-wrap">
@@ -148,7 +159,7 @@
             <div class="pdp-price" id="display-price">@Model.Price.ToString("N0") ₫</div>
 
             <!-- Voucher -->
-            <div class="pdp-voucher">
+            <div class="pdp-voucher" data-bs-toggle="modal" data-bs-target="#modalVouchers">
                 <span>🎟️ Voucher của BN Store</span>
                 <span>›</span>
             </div>
@@ -181,7 +192,7 @@
                 <div class="var-section">
                     <div class="var-label">
                         Size:
-                        <a href="#" class="size-chart-btn" onclick="return false;">
+                        <a href="#" class="size-chart-btn" data-bs-toggle="modal" data-bs-target="#modalSizeGuide">
                             📏 Bảng size
                         </a>
                     </div>
@@ -247,6 +258,66 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
                     </div>
                     <div class="acc-body">Đổi hàng trong vòng 7 ngày nếu sản phẩm lỗi từ nhà sản xuất. Liên hệ hotline để được hỗ trợ.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal Bảng size ─────────────────────────── -->
+<div class="modal fade" id="modalSizeGuide" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" style="letter-spacing: 0.1em;">BẢNG SIZE</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="mb-5">
+                    <h6 class="fw-bold mb-3">SIZE ÁO (T-SHIRT / HOODIE)</h6>
+                    <table class="table table-bordered text-center align-middle" style="font-size: 13px;">
+                        <thead class="table-light">
+                            <tr><th>Size</th><th>Dài áo (cm)</th><th>Rộng áo (cm)</th><th>Chiều cao (cm)</th><th>Cân nặng (kg)</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>S</td><td>68</td><td>52</td><td>155-165</td><td>45-55</td></tr>
+                            <tr><td>M</td><td>70</td><td>54</td><td>165-172</td><td>55-65</td></tr>
+                            <tr><td>L</td><td>72</td><td>56</td><td>172-178</td><td>65-75</td></tr>
+                            <tr><td>XL</td><td>74</td><td>58</td><td>178-185</td><td>75-90</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-3">SIZE QUẦN (JEANS / SWEATPANTS)</h6>
+                    <table class="table table-bordered text-center align-middle" style="font-size: 13px;">
+                        <thead class="table-light">
+                            <tr><th>Size</th><th>Chiều dài (cm)</th><th>Eo (cm)</th><th>Của quần (cm)</th><th>Cân nặng (kg)</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>S</td><td>96</td><td>72</td><td>24</td><td>45-55</td></tr>
+                            <tr><td>M</td><td>98</td><td>76</td><td>25</td><td>55-65</td></tr>
+                            <tr><td>L</td><td>100</td><td>80</td><td>26</td><td>65-75</td></tr>
+                            <tr><td>XL</td><td>102</td><td>84</td><td>27</td><td>75-85</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Modal Voucher ────────────────────────────── -->
+<div class="modal fade" id="modalVouchers" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">VOUCHER CỦA BẠN</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="voucher-modal-content">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-dark" role="status"></div>
+                    <p class="mt-2 text-muted" style="font-size: 13px;">Đang tải mã giảm giá...</p>
                 </div>
             </div>
         </div>
@@ -486,5 +557,44 @@ function showPdpWlToast(msg) {
 
 // Initialize
 updateStockInfo();
+
+// ─── Modal Vouchers Logic ──────────────────────────────
+document.getElementById('modalVouchers').addEventListener('show.bs.modal', function () {
+    const $content = $('#voucher-modal-content');
+    $.get('/Product/GetActiveVouchers', function(res) {
+        if (res.success && res.vouchers.length > 0) {
+            let html = '';
+            res.vouchers.forEach(v => {
+                html += `
+                <div class="voucher-item">
+                    <div class="voucher-left">🏷️</div>
+                    <div class="voucher-mid">
+                        <div class="voucher-code">${v.code}</div>
+                        <div class="voucher-desc">Giảm ${v.amount.toLocaleString()}₫ cho đơn từ ${v.minOrder.toLocaleString()}₫</div>
+                        <div class="voucher-expiry">HSD: ${v.expiry}</div>
+                    </div>
+                    <button class="btn-copy-voucher" onclick="copyVoucherCode('${v.code}', this)">SAO CHÉP</button>
+                </div>`;
+            });
+            $content.html(html);
+        } else {
+            $content.html('<div class="text-center py-5 text-muted">Hiện chưa có voucher nào khả dụng.</div>');
+        }
+    }).fail(function() {
+        $content.html('<div class="text-center py-5 text-danger">Có lỗi khi tải voucher. Vui lòng thử lại.</div>');
+    });
+});
+
+function copyVoucherCode(code, btn) {
+    navigator.clipboard.writeText(code).then(() => {
+        const originalText = btn.textContent;
+        btn.textContent = 'ĐÃ LƯU';
+        btn.style.background = '#27ae60';
+        setTimeout(() => {
+            btn.textContent = originalText;
+            btn.style.background = '#111';
+        }, 2000);
+    });
+}
 </script>
 }

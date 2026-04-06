@@ -1,0 +1,94 @@
+@model FashionStoreIS.Models.Employee
+@{
+    Layout = "_EmployeeLayout";
+    ViewData["Title"] = "Hồ sơ cá nhân";
+}
+
+<div class="row mb-4 align-items-center">
+    <div class="col-8">
+        <h4 class="mb-0 fw-bold">Hồ sơ cá nhân</h4>
+        <p class="text-muted small mb-0">Quản lý thông tin tài khoản của bạn</p>
+    </div>
+    <div class="col-4 text-end">
+        <form asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })" method="post">
+            <button type="submit" class="btn btn-outline-danger btn-sm rounded-pill px-3">
+                <i class="fas fa-sign-out-alt me-1"></i> Đăng xuất
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="p-card mb-4">
+    <div class="p-card-title">
+        <span>THÔNG TIN CƠ BẢN</span>
+        <i class="fas fa-user-circle text-primary"></i>
+    </div>
+    
+    <div class="mb-3">
+        <label class="small text-muted d-block">Họ và tên</label>
+        <span class="fw-bold">@Model.FullName</span>
+    </div>
+    
+    <div class="mb-3">
+        <label class="small text-muted d-block">Mã nhân viên</label>
+        <span class="fw-bold text-portal-primary">#@Model.Id.ToString("D4")</span>
+    </div>
+
+    <div class="mb-3">
+        <label class="small text-muted d-block">Email liên hệ</label>
+        <span class="fw-bold">@Model.Email</span>
+    </div>
+
+    <div class="mb-0">
+        <label class="small text-muted d-block">Số điện thoại</label>
+        <span class="fw-bold">@Model.Phone</span>
+    </div>
+</div>
+
+<div class="p-card mb-4">
+    <div class="p-card-title">
+        <span>CÔNG VIỆC & LƯƠNG</span>
+        <i class="fas fa-briefcase text-primary"></i>
+    </div>
+    
+    <div class="mb-3">
+        <label class="small text-muted d-block">Phòng ban</label>
+        <span class="fw-bold">@Model.Department?.Name</span>
+    </div>
+    
+    <div class="mb-3">
+        <label class="small text-muted d-block">Nơi làm việc</label>
+        <span class="fw-bold">@Model.Store?.Name</span>
+    </div>
+
+    <div class="mb-0">
+        <label class="small text-muted d-block">Lương cơ bản (giờ)</label>
+        <span class="fw-bold text-success">@Model.BaseSalaryPerHour.ToString("N0") VNĐ/giờ</span>
+    </div>
+</div>
+
+<div class="p-card mb-4">
+    <div class="p-card-title">
+        <span>THÔNG TIN NGÂN HÀNG</span>
+        <i class="fas fa-university text-primary"></i>
+    </div>
+    
+    <div class="mb-3">
+        <label class="small text-muted d-block">Ngân hàng</label>
+        <span class="fw-bold">@Model.BankName</span>
+    </div>
+    
+    <div class="mb-3">
+        <label class="small text-muted d-block">Chủ tài khoản</label>
+        <span class="fw-bold">@Model.BankAccountName</span>
+    </div>
+
+    <div class="mb-0">
+        <label class="small text-muted d-block">Số tài khoản</label>
+        <span class="fw-bold overflow-hidden" style="letter-spacing: 2px;">@Model.BankAccountNumber</span>
+    </div>
+</div>
+
+<div class="p-3 text-center opacity-50">
+    <p class="small mb-0">BN STORE © 2026 - Version 1.2.0</p>
+</div>

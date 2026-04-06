@@ -1,0 +1,91 @@
+@model FashionStoreIS.Models.Payroll
+@{
+    Layout = "_EmployeeLayout";
+    ViewData["Title"] = $"Phiếu lương T{Model.Month}/{Model.Year}";
+}
+
+<div class="row mb-3 d-flex align-items-center">
+    <div class="col-2">
+        <a asp-action="Payroll" class="btn btn-outline-secondary btn-sm p-2 rounded-circle shadow-sm" style="width:36px; height:36px; display:flex; align-items:center; justify-content:center;">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+    </div>
+    <div class="col-10">
+        <h4 class="fw-bold mb-0">PHIẾU LƯƠNG T@Model.Month/@Model.Year</h4>
+    </div>
+</div>
+
+<div class="p-card border-0 mb-4 bg-white shadow-sm overflow-hidden p-0">
+    <!-- Header -->
+    <div class="bg-primary bg-opacity-10 p-4 border-bottom text-center">
+        <div class="text-primary small fw-bold mb-1">THỰC NHẬN</div>
+        <div class="h2 fw-bold text-dark mb-0">@Model.NetSalary.ToString("N0") <small style="font-size:0.5em">VNĐ</small></div>
+        <div class="small fw-bold text-muted opacity-75 mt-2">Ngày xử lý: @(Model.ProcessedDate?.ToString("dd/MM/yyyy") ?? "--/--/----")</div>
+    </div>
+    
+    <!-- Summary -->
+    <div class="p-4 bg-white">
+        <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Tổng giờ làm</span>
+            <span class="fw-bold fs-6">@Model.TotalHoursWorked giờ</span>
+        </div>
+        <div class="d-flex justify-content-between mb-4">
+            <span class="text-muted">Lương giờ cơ bản</span>
+            <span class="fw-bold fs-6">@Model.BaseHourlyRate.ToString("N0") đ/h</span>
+        </div>
+        
+        <div class="p-card-title mb-3 fs-6">
+            <span>CÁC KHOẢN CỘNG (+)</span>
+            <i class="fas fa-plus-circle text-success"></i>
+        </div>
+        
+        <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Lương cứng cơ bản</span>
+            <span class="fw-bold text-success fs-6">@Model.TotalBaseSalary.ToString("N0") đ</span>
+        </div>
+        
+        @if (Model.Items != null && Model.Items.Any(i => i.SalaryComponent.Type == SalaryComponentType.Addition))
+        {
+            @foreach (var item in Model.Items.Where(i => i.SalaryComponent.Type == SalaryComponentType.Addition))
+            {
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">@item.SalaryComponent.Name</span>
+                    <span class="fw-bold text-success fs-6">+@item.Amount.ToString("N0") đ</span>
+                </div>
+            }
+        }
+        
+        <hr class="my-4" />
+        
+        <div class="p-card-title mb-3 fs-6">
+            <span>KHOẢN KHẤU TRỪ (-)</span>
+            <i class="fas fa-minus-circle text-danger"></i>
+        </div>
+        
+        <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted d-flex align-items-center">
+                Bảo hiểm (BHXH, BHYT) <i class="fas fa-info-circle ms-1 small opacity-50"></i>
+            </span>
+            <span class="fw-bold text-danger fs-6">-@Model.TotalDeductions.ToString("N0") đ</span>
+        </div>
+        
+        @if (Model.Items != null && Model.Items.Any(i => i.SalaryComponent.Type == SalaryComponentType.Deduction))
+        {
+            @foreach (var item in Model.Items.Where(i => i.SalaryComponent.Type == SalaryComponentType.Deduction))
+            {
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">@item.SalaryComponent.Name</span>
+                    <span class="fw-bold text-danger fs-6">-@item.Amount.ToString("N0") đ</span>
+                </div>
+            }
+        }
+    </div>
+
+    <!-- Final -->
+    <div class="p-4 bg-light border-top text-center">
+        <p class="small text-muted mb-3 fst-italic">Mọi thắc mắc vui lòng liên hệ Bộ phận Nhân sự trong vòng 48h sau khi nhận phiếu lương.</p>
+        <button class="btn btn-outline-primary btn-sm rounded-pill w-100 fw-bold border-2" onclick="window.print()">
+            <i class="fas fa-print me-1"></i> TẢI XUỐNG PDF
+        </button>
+    </div>
+</div>

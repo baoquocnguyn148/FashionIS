@@ -165,5 +165,23 @@ namespace FashionStoreIS.Controllers
                 GetChildCategoryIds(childId, allCategories, ids);
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetActiveVouchers()
+        {
+            var now = DateTime.Now;
+            var vouchers = await _db.Vouchers
+                .Where(v => v.IsActive && (v.ExpiryDate == null || v.ExpiryDate > now))
+                .OrderByDescending(v => v.DiscountAmount)
+                .Select(v => new {
+                    code = v.Code,
+                    amount = v.DiscountAmount,
+                    minOrder = v.MinOrderAmount,
+                    expiry = v.ExpiryDate.ToString("dd/MM/yyyy")
+                })
+                .ToListAsync();
+
+            return Json(new { success = true, vouchers = vouchers });
+        }
     }
 }

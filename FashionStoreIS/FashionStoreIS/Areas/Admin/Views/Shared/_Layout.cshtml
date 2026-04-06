@@ -295,17 +295,37 @@
 
             <a href="/Admin/Employees" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Employees" ? "active" : "")">
                 <i class="fa-solid fa-user-tie" style="color:#10b981;"></i>
-                Nhân sự
+                Nhân viên
+            </a>
+
+            <a href="/Admin/Shifts" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Shifts" ? "active" : "")">
+                <i class="fa-solid fa-clock" style="color:#8b5cf6;"></i>
+                Quản lý ca
+            </a>
+
+            <a href="/Admin/Schedules" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Schedules" ? "active" : "")">
+                <i class="fa-solid fa-calendar-week" style="color:#0ea5e9;"></i>
+                Xếp lịch tuần
             </a>
 
             <a href="/Admin/Attendances" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Attendances" ? "active" : "")">
-                <i class="fa-solid fa-clock-rotate-left" style="color:#f59e0b;"></i>
+                <i class="fa-solid fa-fingerprint" style="color:#f59e0b;"></i>
                 Chấm công
             </a>
 
+            <a href="/Admin/LeaveRequest" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "LeaveRequest" ? "active" : "")">
+                <i class="fa-solid fa-file-circle-check" style="color:#ec4899;"></i>
+                Nghỉ phép
+            </a>
+
             <a href="/Admin/Payroll" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Payroll" ? "active" : "")">
-                <i class="fa-solid fa-file-invoice-dollar" style="color:#f43f5e;"></i>
-                Tiền lương
+                <i class="fa-solid fa-money-check-dollar" style="color:#f43f5e;"></i>
+                Bảng lương
+            </a>
+
+            <a href="/Admin/KpiReview/Leaderboard" class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "KpiReview" ? "active" : "")">
+                <i class="fa-solid fa-trophy" style="color:#fbbf24;"></i>
+                KPI & Xếp hạng
             </a>
 
             @if (User.IsInRole("SuperAdmin"))
