@@ -7,11 +7,11 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # Install dependencies
-COPY requirements.txt .
+COPY chatbot/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy source code
-COPY . .
+COPY chatbot/ .
 
 # Expose port (FastAPI usually defaults to 8000)
 # Render provides PORT which we override in CMD
