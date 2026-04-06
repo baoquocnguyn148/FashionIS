@@ -30,7 +30,7 @@ services:
     name: fashion-store-chatbot
     env: docker
     dockerContext: chatbot
-    dockerfilePath: Dockerfile.chatbot
+    dockerfilePath: chatbot/Dockerfile.chatbot
     plan: free
     region: singapore
     envVars:
