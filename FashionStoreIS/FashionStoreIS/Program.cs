@@ -19,9 +19,12 @@ if (!string.IsNullOrEmpty(port))
 }
 
 // ─── Database Contexts Registration ─────────────────────────────────────
-var postgresConnectionString = builder.Configuration["POSTGRES_CONNECTION_STRING"]
+// ─── Database Contexts Registration ─────────────────────────────────────
+var postgresConnectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")
+                             ?? builder.Configuration["POSTGRES_CONNECTION_STRING"]
                              ?? builder.Configuration.GetConnectionString("PostgresConnection");
-var analyticsConnectionString = builder.Configuration["ANALYTICS_CONNECTION_STRING"]
+var analyticsConnectionString = Environment.GetEnvironmentVariable("ANALYTICS_CONNECTION_STRING")
+                             ?? builder.Configuration["ANALYTICS_CONNECTION_STRING"]
                              ?? builder.Configuration.GetConnectionString("AnalyticsConnection");
 
 if (!string.IsNullOrWhiteSpace(postgresConnectionString))
