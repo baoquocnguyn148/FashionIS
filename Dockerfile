@@ -1,9 +1,8 @@
 # Stage 1: Build
-FROM mcr.microsoft.com/dotnet/sdk:10.0-alpine AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
 # Copy project file and restore dependencies
-# Relative paths from root for the multi-level structure
 COPY ["FashionStoreIS.slnx", "./"]
 COPY ["FashionStoreIS/FashionStoreIS/FashionStoreIS.csproj", "FashionStoreIS/FashionStoreIS/"]
 RUN dotnet restore "FashionStoreIS/FashionStoreIS/FashionStoreIS.csproj"
@@ -18,7 +17,7 @@ FROM build AS publish
 RUN dotnet publish "FashionStoreIS.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 # Stage 3: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 

@@ -29,7 +29,7 @@ services:
   - type: web
     name: fashion-store-chatbot
     env: docker
-    dockerContext: chatbot
+    dockerContext: .
     dockerfilePath: chatbot/Dockerfile.chatbot
     plan: free
     region: singapore
