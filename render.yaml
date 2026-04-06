@@ -55,4 +55,3 @@ databases:
     plan: free
     region: singapore
     databaseName: fashionstore_migrated
-    user: postgres
