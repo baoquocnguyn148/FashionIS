@@ -1036,9 +1036,9 @@
                 
                 chatHistory.push({ role: 'user', content: text });
                 
-                // Add a slightly longer timeout in case LLM is slow
+                // Forward message to backend proxy instead of hardcoded localhost
                 $.ajax({
-                    url: 'http://localhost:8000/chat',
+                    url: '/Chat/Message',
                     method: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(payload),

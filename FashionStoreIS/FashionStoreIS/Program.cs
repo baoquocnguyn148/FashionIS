@@ -97,6 +97,7 @@ builder.Services.AddScoped<IVnPayService, VnPayService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<RfmSegmentationService>();
 builder.Services.AddScoped<InventoryIntelligenceService>();
+builder.Services.AddHttpClient(); // Required for chatbot proxy
 
 // Executive Support System Services
 builder.Services.AddScoped<IStrategicAnalyticsService, StrategicAnalyticsService>();
