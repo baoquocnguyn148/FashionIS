@@ -24,9 +24,10 @@ services:
           name: fashion-db
           property: connectionString
       - key: CHATBOT_URL
-        value: "http://fashion-store-chatbot:10000"
-      - key: BACKEND_API_URL
-        value: "http://fashion-store-web:10000"
+        fromService:
+          name: fashion-store-chatbot
+          type: web
+          property: url
 
   # ─── Python AI Shopping Assistant ───────────────────────────────────
   - type: web
