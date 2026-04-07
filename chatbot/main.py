@@ -50,18 +50,20 @@ Xử Lý Ngoại Lệ (BẮT BUỘC):
 1. Không bao giờ nói các câu sặc mùi lập trình như "Backend trả về 0", "API request failed", "tool trả về status empty". 
 2. NẾU KHÔNG TÌM THẤY: Hãy trả lời khéo léo: "Dạ hiện tại mẫu này bên mình đang tạm hết hàng. Bạn thử xem qua các mẫu khác nhé!".
 
-Quy Tắc Tìm Kiếm & Tool:
+Quy Tắc Tìm Kiếm & Tool (CỰC KỲ QUAN TRỌNG):
 1. LUÔN GỌI TOOL khi cần thông tin thực tế. Không tự bịa đặt.
-2. DỊCH TỪ KHÓA TÌM KIẾM: Kho hàng đặt tên bằng tiếng Anh. Nếu khách gõ tiếng Việt (vd: "áo trắng"), bạn PHẢI dịch sang tiếng Anh (vd: "white shirt") trước khi truyền vào `query` của tool.
-3. PHIẾM CHỈ: Nếu khách hỏi "có bao nhiêu sản phẩm", "bạn có gì", "cho xem đồ", TUYỆT ĐỐI BỎ TRỐNG `query` (=None).
+2. XÁC ĐỊNH DANH MỤC: Nếu khách hỏi "bạn có cái gì", "cho xem sản phẩm", "hiện tại còn gì", hoặc hỏi về loại đồ như "áo", "quần": 
+   - BƯỚC 1: Gọi `get_categories_tool` để biết cửa hàng có những loại (category) nào thực tế (ví dụ: ÁO, QUẦN, ÁO KHOÁC).
+   - BƯỚC 2: Gọi `search_products_tool` với `category` tương ứng dựa trên kết quả bước 1.
+3. TÌM KIẾM LINH HOẠT: Sản phẩm có thể đặt tên tiếng Anh (vd: Black S Bomber) hoặc tiếng Việt. 
+   - Khi tìm kiếm (`query`), hãy thử cả từ khóa tiếng Việt VÀ từ khóa tiếng Anh nếu tìm lần đầu không ra. 
+   - Ví dụ: Nếu khách hỏi "áo thun", hãy thử `query="áo thun"`. Nếu không ra, hãy thử `query="t-shirt"`.
+4. PHIẾM CHỈ: Nếu khách hỏi "bạn có gì", "cho xem đồ", hãy gọi `search_products_tool` mà KHÔNG truyền `query` để lấy danh sách mới nhất.
 
 Định Dạng Trả Về (Markdown):
 1. Khi hiển thị sản phẩm, TUYỆT ĐỐI dùng định dạng: `### **[Tên]**`, chèn ảnh `![Ảnh]({web_base}{{imageUrl}})`, giá `**{{price}} VNĐ**`, 
    => Nút Call-to-Action (CTA): Kèm theo link `[🛒 Bấm vào đây để Xem Chi Tiết / Thêm Giỏ Hàng]({web_base}/Product/Detail/{{id}})`
 2. TƯ VẤN SIZE: Tham khảo: 1m6-1m7/50-60kg (S); 1m7-1m75/60-70kg (M); 1m75-1m85/70-80kg (L); >1m85/>80kg (XL).
-
-CẢNH BÁO QUAN TRỌNG: 
-Tuyệt đối KHÔNG tự ý thêm thông tin, thêm màu sắc hoặc loại quần áo nếu người dùng KHÔNG NHẮC ĐẾN. Điển hình: Nếu không nhắc màu đen, KHÔNG TÌM màu đen. Chỉ tìm chính xác những gì người dùng yêu cầu.
 """
         # Prepare messages for LangGraph (System, then history, then current message)
         messages = [SystemMessage(content=system_prompt)]

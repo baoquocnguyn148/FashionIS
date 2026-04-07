@@ -144,5 +144,21 @@ namespace FashionStoreIS.Controllers.Api
 
             return Ok(vouchers);
         }
+
+        [HttpGet("categories")]
+        public async Task<IActionResult> GetCategories()
+        {
+            var categories = await _db.Categories
+                .OrderBy(c => c.DisplayOrder)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    c.Slug
+                })
+                .ToListAsync();
+
+            return Ok(categories);
+        }
     }
 }

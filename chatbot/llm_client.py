@@ -61,6 +61,14 @@ async def get_store_policies_tool():
     """
     return await api_tools.get_store_policies()
 
+@tool
+async def get_categories_tool():
+    """
+    Lấy danh sách toàn bộ danh mục sản phẩm (Áo, Quần, Phụ kiện, v.v.). 
+    TUYỆT ĐỐI NÊN GỌI cái này nếu khách hàng hỏi chung chung như 'bạn bán gì', 'cho xem áo' mà bạn chưa chắc chắn slug.
+    """
+    return await api_tools.get_categories()
+
 # Setup LLM and Agent using Groq
 def get_chatbot_agent():
     llm = ChatGroq(
@@ -74,7 +82,8 @@ def get_chatbot_agent():
         get_product_details_tool,
         track_order_tool,
         get_vouchers_tool,
-        get_store_policies_tool
+        get_store_policies_tool,
+        get_categories_tool
     ]
     
     agent = create_react_agent(llm, tools_list)

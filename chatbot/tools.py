@@ -81,3 +81,16 @@ async def get_store_policies() -> Dict[str, str]:
             return {"status": "success", "content": content}
     except Exception as e:
         return {"status": "error", "message": f"Could not read policies: {str(e)}"}
+
+async def get_categories() -> List[Dict[str, Any]]:
+    """
+    Lấy danh sách toàn bộ danh mục sản phẩm của cửa hàng (Tên và Slug).
+    Sử dụng tool này khi bạn không chắc chắn về danh mục mà khách hàng đang hỏi.
+    """
+    async with httpx.AsyncClient(verify=False, follow_redirects=True) as client:
+        try:
+            response = await client.get(f"{BASE_URL}/categories")
+            response.raise_for_status()
+            return response.json()
+        except Exception as e:
+            return [{"error": f"Lỗi khi lấy danh mục: {str(e)}"}]
