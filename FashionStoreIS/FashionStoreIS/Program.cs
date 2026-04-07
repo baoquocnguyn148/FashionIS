@@ -19,13 +19,15 @@ if (!string.IsNullOrEmpty(port))
 }
 
 // ─── Database Contexts Registration ─────────────────────────────────────
-// ─── Database Contexts Registration ─────────────────────────────────────
-var postgresConnectionString = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")
+var postgresConnectionString = ParseRenderConnectionString(
+                                Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")
                              ?? builder.Configuration["POSTGRES_CONNECTION_STRING"]
-                             ?? builder.Configuration.GetConnectionString("PostgresConnection");
-var analyticsConnectionString = Environment.GetEnvironmentVariable("ANALYTICS_CONNECTION_STRING")
+                             ?? builder.Configuration.GetConnectionString("PostgresConnection"));
+
+var analyticsConnectionString = ParseRenderConnectionString(
+                                Environment.GetEnvironmentVariable("ANALYTICS_CONNECTION_STRING")
                              ?? builder.Configuration["ANALYTICS_CONNECTION_STRING"]
-                             ?? builder.Configuration.GetConnectionString("AnalyticsConnection");
+                             ?? builder.Configuration.GetConnectionString("AnalyticsConnection"));
 
 if (!string.IsNullOrWhiteSpace(postgresConnectionString))
 {
@@ -184,3 +186,27 @@ app.MapRazorPages()
 
 
 app.Run();
+
+// ─── Helper Methods ──────────────────────────────────────────────────────
+static string ParseRenderConnectionString(string? connectionUri)
+{
+    if (string.IsNullOrEmpty(connectionUri) || !connectionUri.StartsWith("postgres://"))
+        return connectionUri ?? "";
+
+    try
+    {
+        var uri = new Uri(connectionUri);
+        var userInfo = uri.UserInfo.Split(':');
+        var user = userInfo[0];
+        var password = userInfo.Length > 1 ? userInfo[1] : "";
+        var host = uri.Host;
+        var port = uri.Port;
+        var database = uri.AbsolutePath.TrimStart('/');
+
+        return $"Host={host};Port={port};Database={database};Username={user};Password={password};SSL Mode=Require;Trust Server Certificate=true";
+    }
+    catch
+    {
+        return connectionUri ?? "";
+    }
+}
