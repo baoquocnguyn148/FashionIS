@@ -6,7 +6,8 @@ import tools as api_tools
 
 # Groq API Configuration (set via Render environment variables)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+# Force the model to the valid one, ignoring stuck Render environment variables
+GROQ_MODEL = "llama-3.3-70b-versatile"
 
 # Define LangChain Tools
 @tool
