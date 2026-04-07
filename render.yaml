@@ -46,12 +46,12 @@ services:
         fromService:
           name: fashion-store-web
           type: web
-          property: host
+          property: url
       - key: WEB_BASE_URL
         fromService:
           name: fashion-store-web
           type: web
-          property: host
+          property: url
 
 databases:
   # Defining the DB in blueprint makes it easy for Render to link

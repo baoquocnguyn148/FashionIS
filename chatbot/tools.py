@@ -4,6 +4,8 @@ from typing import Optional, List, Dict, Any
 
 # C# Backend Base URL (Adjust to match your dev environment)
 BASE_URL = os.getenv("BACKEND_API_URL", "https://localhost:7290/api/chatbot")
+if not BASE_URL.endswith("/api/chatbot") and not BASE_URL.endswith("/api/chatbot/"):
+    BASE_URL = BASE_URL.rstrip("/") + "/api/chatbot"
 
 async def search_products(q: Optional[str] = None, category: Optional[str] = None, sort: Optional[str] = None, min_price: Optional[float] = None, max_price: Optional[float] = None) -> List[Dict[str, Any]]:
     """
