@@ -184,6 +184,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseHttpsRedirection();
+app.UseStaticFiles(); // Serve wwwroot files (CSS, JS, images)
 app.UseRouting();
 app.UseSession();
 app.UseAuthentication();
