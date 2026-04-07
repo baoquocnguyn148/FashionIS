@@ -9,9 +9,17 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 # Force the model to the valid one, ignoring stuck Render environment variables
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
+from typing import Optional
+
 # Define LangChain Tools
 @tool
-async def search_products_tool(query: str = None, category: str = None, sort: str = None, min_price: float = None, max_price: float = None):
+async def search_products_tool(
+    query: Optional[str] = None, 
+    category: Optional[str] = None, 
+    sort: Optional[str] = None, 
+    min_price: Optional[float] = None, 
+    max_price: Optional[float] = None
+):
     """
     Tool to search for products in the store or to get the full list of products.
     
