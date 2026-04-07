@@ -101,8 +101,8 @@ namespace FashionStoreIS.Data
                 if (!await db.Banners.AnyAsync())
                 {
                     db.Banners.AddRange(
-                        new Banner { Title = "NEW COLLECTION 2026", SubTitle = "FOR DREAMERS ONLY", ImageUrl = "/uploads/banners/banner1.png", Position = "Hero", LinkUrl = "/Product/List", IsActive = true, DisplayOrder = 1, CreatedAt = DateTime.UtcNow },
-                        new Banner { Title = "PREMIUM TOPS", SubTitle = "ESSENTIALS", ImageUrl = "/uploads/banners/banner2.png", Position = "Category1", LinkUrl = "/Product/List?cat=tops", IsActive = true, DisplayOrder = 2, CreatedAt = DateTime.UtcNow }
+                        new Banner { Title = "NEW COLLECTION 2026", SubTitle = "FOR DREAMERS ONLY", ImageUrl = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=80", Position = "Hero", LinkUrl = "/Product/List", IsActive = true, DisplayOrder = 1, CreatedAt = DateTime.UtcNow },
+                        new Banner { Title = "PREMIUM TOPS", SubTitle = "ESSENTIALS", ImageUrl = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1400&q=80", Position = "Category1", LinkUrl = "/Product/List?cat=tops", IsActive = true, DisplayOrder = 2, CreatedAt = DateTime.UtcNow }
                     );
                     await db.SaveChangesAsync();
                 }
@@ -110,20 +110,55 @@ namespace FashionStoreIS.Data
                 if (!await db.Products.AnyAsync())
                 {
                     // Basic Categories
-                    var catTops = new Category { Name = "Áo", Slug = "tops", DisplayOrder = 1, CreatedAt = DateTime.UtcNow };
-                    var catPants = new Category { Name = "Quần", Slug = "pants", DisplayOrder = 2, CreatedAt = DateTime.UtcNow };
-                    db.Categories.AddRange(catTops, catPants);
-                    
+                    var catTops    = new Category { Name = "Áo",    Slug = "tops",    DisplayOrder = 1, CreatedAt = DateTime.UtcNow };
+                    var catPants   = new Category { Name = "Quần",  Slug = "pants",   DisplayOrder = 2, CreatedAt = DateTime.UtcNow };
+                    var catOuter   = new Category { Name = "Áo Khoác", Slug = "outerwear", DisplayOrder = 3, CreatedAt = DateTime.UtcNow };
+                    db.Categories.AddRange(catTops, catPants, catOuter);
+
                     var supplier = new Supplier { Name = "Main Supplier", Phone = "0900000000", Email = "supplier@main.local", CreatedAt = DateTime.UtcNow };
                     db.Suppliers.Add(supplier);
                     await db.SaveChangesAsync();
 
-                    var p1 = new Product { Name = "Áo thun BN Basic", Slug = "ao-thun-bn-basic", CategoryId = catTops.Id, SupplierId = supplier.Id, Price = 199000, ImageUrl = "https://placehold.co/400x500", CreatedAt = DateTime.UtcNow, IsActive = true };
-                    db.Products.Add(p1);
+                    // --- Products with real fashion images ---
+                    var products = new List<Product>
+                    {
+                        new Product { Name = "Áo Thun BN Basic Trắng", Slug = "ao-thun-bn-basic-trang", CategoryId = catTops.Id, SupplierId = supplier.Id, Price = 199000, SellingPrice = 179000, ImageUrl = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true, ShortDescription = "Áo thun cotton 100% phong cách tối giản" },
+                        new Product { Name = "Áo Thun Oversize Đen", Slug = "ao-thun-oversize-den", CategoryId = catTops.Id, SupplierId = supplier.Id, Price = 249000, SellingPrice = 219000, ImageUrl = "https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true, ShortDescription = "Form oversize trendy, cổ tròn thời thượng" },
+                        new Product { Name = "Áo Polo BN Premium", Slug = "ao-polo-bn-premium", CategoryId = catTops.Id, SupplierId = supplier.Id, Price = 349000, SellingPrice = 299000, ImageUrl = "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true, ShortDescription = "Polo cotton pique cao cấp, dáng slim fit" },
+                        new Product { Name = "Áo Khoác Bomber BN", Slug = "ao-khoac-bomber-bn", CategoryId = catOuter.Id, SupplierId = supplier.Id, Price = 599000, SellingPrice = 499000, ImageUrl = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true, ShortDescription = "Áo khoác bomber dáng rộng, chống gió nhẹ" },
+                        new Product { Name = "Quần Jeans Slim BN", Slug = "quan-jeans-slim-bn", CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 499000, SellingPrice = 429000, ImageUrl = "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true, ShortDescription = "Jeans co giãn 4 chiều, dáng slim fit" },
+                        new Product { Name = "Quần Kaki Chinos BN", Slug = "quan-kaki-chinos-bn", CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 399000, SellingPrice = 349000, ImageUrl = "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true, ShortDescription = "Quần kaki chino dáng straight, vải mềm" },
+                        new Product { Name = "Áo Sơ Mi Trắng Công Sở", Slug = "ao-so-mi-trang-cong-so", CategoryId = catTops.Id, SupplierId = supplier.Id, Price = 299000, SellingPrice = 269000, ImageUrl = "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true, ShortDescription = "Sơ mi Oxford trắng Oxford, form regular" },
+                        new Product { Name = "Áo Hoodie BN Street", Slug = "ao-hoodie-bn-street", CategoryId = catOuter.Id, SupplierId = supplier.Id, Price = 449000, SellingPrice = 399000, ImageUrl = "https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true, ShortDescription = "Hoodie nỉ bông dày dặn, phong cách streetwear" },
+                        new Product { Name = "Quần Short Thể Thao BN", Slug = "quan-short-the-thao-bn", CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 199000, SellingPrice = 169000, ImageUrl = "https://images.unsplash.com/photo-1591195853828-11db59a44f43?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true, ShortDescription = "Short thể thao vải thun lạnh, thoáng khí" },
+                        new Product { Name = "Áo Khoác Gió Mỏng BN", Slug = "ao-khoac-gio-mong-bn", CategoryId = catOuter.Id, SupplierId = supplier.Id, Price = 499000, SellingPrice = 449000, ImageUrl = "https://images.unsplash.com/photo-1608234808654-2a8875faa7fd?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true, ShortDescription = "Windbreaker nhẹ, chống nước nhẹ" },
+                    };
+                    db.Products.AddRange(products);
                     await db.SaveChangesAsync();
 
-                    var sku1 = new ProductSku { ProductId = p1.Id, SKU = "TSHIRT-BLK-M", SkuCode = "TSHIRT-BLK-M", Color = "Black", Size = "M", SellingPrice = 199000, CostPrice = 100000, Stock = 100, IsActive = true, CreatedAt = DateTime.UtcNow };
-                    db.ProductSkus.Add(sku1);
+                    // Add SKUs for each product
+                    var sizes = new[] { "S", "M", "L", "XL" };
+                    var colors = new[] { "Black", "White", "Navy" };
+                    var rndSku = new Random();
+                    foreach (var p in products)
+                    {
+                        foreach (var size in sizes)
+                        {
+                            db.ProductSkus.Add(new ProductSku
+                            {
+                                ProductId = p.Id,
+                                SKU = $"{p.Slug.ToUpper()[..Math.Min(8, p.Slug.Length)]}-{size}",
+                                SkuCode = $"{p.Slug.ToUpper()[..Math.Min(8, p.Slug.Length)]}-{size}",
+                                Color = colors[rndSku.Next(colors.Length)],
+                                Size = size,
+                                SellingPrice = p.SellingPrice ?? p.Price,
+                                CostPrice = (p.SellingPrice ?? p.Price) * 0.5m,
+                                Stock = rndSku.Next(20, 100),
+                                IsActive = true,
+                                CreatedAt = DateTime.UtcNow
+                            });
+                        }
+                    }
                     await db.SaveChangesAsync();
                 }
 
