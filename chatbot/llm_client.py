@@ -1,13 +1,12 @@
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from langchain_core.tools import tool
 from langgraph.prebuilt import create_react_agent
-from langchain_core.messages import SystemMessage
 import os
 import tools as api_tools
 
-# LM Studio Configuration
-LM_STUDIO_URL = os.getenv("LM_STUDIO_URL", "http://127.0.0.1:1234/v1")
-MODEL_NAME = os.getenv("LLM_MODEL", "local-model")
+# Groq API Configuration (set via Render environment variables)
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 
 # Define LangChain Tools
 @tool
@@ -15,13 +14,8 @@ async def search_products_tool(query: str = None, category: str = None, sort: st
     """
     Tool to search for products in the store or to get the full list of products.
     
-    EXTREMELY IMPORTANT RULES FOR 4B/8B MODELS:
-    1. INTENTION SEPARATION: If the user asks a general question like "bạn có sản phẩm gì", "có bao nhiêu sản phẩm" or "xem tất cả", you MUST leave all parameters (including `query`) EMPTY (None). Do NOT put conversational phrases into the `query` field.
-    2. TRANSLATE TO ENGLISH: Our clothing database uses English names. If the user searches in Vietnamese (e.g., "trắng", "đen", "áo", "quần", "áo khoác"), YOU MUST translate it to English (e.g., "white", "black", "shirt", "pants", "jacket") before putting it into the `query` field. NEVER search using Vietnamese words!
-    3. If the user asks for a specific combination, use `query` (e.g. user says "áo trắng", set query="white shirt").
-    
     Parameters:
-    - query: Specific search terms IN ENGLISH ONLY (e.g., 'white shirt', 'polo'). If the user just wants to see all products, leave this EMPTY/None.
+    - query: Specific search terms IN ENGLISH ONLY (e.g., 'white shirt', 'polo'). Leave None to list all.
     - category: The product category ('tops', 'pants', 'outerwear', 'accessories').
     - sort: 'popular', 'newest', 'price_low', 'price_high'.
     - min_price: Integer minimum price.
@@ -39,8 +33,7 @@ async def get_product_details_tool(product_id: int):
 @tool
 async def track_order_tool(order_code: str):
     """
-    Check the status of a user's order. DO NOT guess the order code.
-    You MUST ask the user for their order code (e.g. 'HD1234') before calling this tool.
+    Check the status of a user's order. Ask the user for their order code (e.g. 'HD1234') before calling this.
     """
     return await api_tools.track_order(order_code)
 
@@ -54,23 +47,26 @@ async def get_vouchers_tool():
 @tool
 async def get_store_policies_tool():
     """
-    Truy xuất nội quy cửa hàng (địa chỉ, chính sách đổi trả, phí ship, bảo quản).
-    CHỈ DÙNG khi khách hỏi thông tin vận hành của cửa hàng.
-    TUYỆT ĐỐI KHÔNG DÙNG tool này nếu khách hỏi TÌM MUA quần áo, hỏi giá, hoặc hỏi xem sản phẩm.
+    Get store information: address, return policy, shipping fees.
+    Only use when the customer asks about store operations, NOT when searching for products.
     """
     return await api_tools.get_store_policies()
 
-# Setup LLM and Agent
+# Setup LLM and Agent using Groq
 def get_chatbot_agent():
-    llm = ChatOpenAI(
-        base_url=LM_STUDIO_URL,
-        api_key="lm-studio", # LM Studio doesn't require a strict key, but it needs something
-        model=MODEL_NAME,
+    llm = ChatGroq(
+        api_key=GROQ_API_KEY,
+        model=GROQ_MODEL,
         temperature=0.7,
-        streaming=True
     )
     
-    tools_list = [search_products_tool, get_product_details_tool, track_order_tool, get_vouchers_tool, get_store_policies_tool]
+    tools_list = [
+        search_products_tool,
+        get_product_details_tool,
+        track_order_tool,
+        get_vouchers_tool,
+        get_store_policies_tool
+    ]
     
     agent = create_react_agent(llm, tools_list)
     return agent
