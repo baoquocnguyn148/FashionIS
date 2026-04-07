@@ -145,26 +145,41 @@ using (var scope = app.Services.CreateScope())
     var analyticsContext = services.GetRequiredService<AnalyticsDbContext>();
     var executiveContext = services.GetRequiredService<ExecutiveDbContext>();
     
-    if (context.Database.IsNpgsql())
-    {
-        await context.Database.MigrateAsync();
-        await analyticsContext.Database.MigrateAsync();
-        await executiveContext.Database.MigrateAsync();
-    }
-    else
-    {
-        context.Database.EnsureCreated();
-        analyticsContext.Database.EnsureCreated();
-        executiveContext.Database.EnsureCreated();
-    }
-
     try
     {
-        await DbInitializer.Seed(context, userManager, roleManager);
+        if (context.Database.IsNpgsql())
+        {
+            Console.WriteLine("[STARTUP] Running PostgreSQL migrations...");
+            await context.Database.MigrateAsync();
+            Console.WriteLine("[STARTUP] App DB migration done.");
+            await analyticsContext.Database.MigrateAsync();
+            Console.WriteLine("[STARTUP] Analytics DB migration done.");
+            await executiveContext.Database.MigrateAsync();
+            Console.WriteLine("[STARTUP] Executive DB migration done.");
+        }
+        else
+        {
+            context.Database.EnsureCreated();
+            analyticsContext.Database.EnsureCreated();
+            executiveContext.Database.EnsureCreated();
+        }
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Database seeding error: {ex.Message}");
+        Console.WriteLine($"[STARTUP] Migration error (non-fatal): {ex.Message}");
+    }
+
+    // Seeding: Only seed essential data in Production to avoid OOM on free tier
+    try
+    {
+        Console.WriteLine("[STARTUP] Running DbInitializer.Seed...");
+        await DbInitializer.Seed(context, userManager, roleManager);
+        Console.WriteLine("[STARTUP] Seeding completed successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"[STARTUP] Seeding error (non-fatal, app will still start): {ex.Message}");
+        // Don't rethrow - app should start even if seeding fails
     }
 }
 
