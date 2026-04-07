@@ -19,15 +19,19 @@ if (!string.IsNullOrEmpty(port))
 }
 
 // ─── Database Contexts Registration ─────────────────────────────────────
-var postgresConnectionString = ParseRenderConnectionString(
-                                Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")
-                             ?? builder.Configuration["POSTGRES_CONNECTION_STRING"]
-                             ?? builder.Configuration.GetConnectionString("PostgresConnection"));
+// Priority order: Render env vars → appsettings → null
+var rawPostgres = Environment.GetEnvironmentVariable("POSTGRES_CONNECTION_STRING")
+                ?? Environment.GetEnvironmentVariable("DATABASE_URL")
+                ?? builder.Configuration["POSTGRES_CONNECTION_STRING"]
+                ?? builder.Configuration.GetConnectionString("PostgresConnection");
 
-var analyticsConnectionString = ParseRenderConnectionString(
-                                Environment.GetEnvironmentVariable("ANALYTICS_CONNECTION_STRING")
-                             ?? builder.Configuration["ANALYTICS_CONNECTION_STRING"]
-                             ?? builder.Configuration.GetConnectionString("AnalyticsConnection"));
+var rawAnalytics = Environment.GetEnvironmentVariable("ANALYTICS_CONNECTION_STRING")
+                 ?? Environment.GetEnvironmentVariable("DATABASE_URL")
+                 ?? builder.Configuration["ANALYTICS_CONNECTION_STRING"]
+                 ?? builder.Configuration.GetConnectionString("AnalyticsConnection");
+
+var postgresConnectionString = ParseRenderConnectionString(rawPostgres);
+var analyticsConnectionString = ParseRenderConnectionString(rawAnalytics);
 
 if (!string.IsNullOrWhiteSpace(postgresConnectionString))
 {
@@ -188,25 +192,32 @@ app.MapRazorPages()
 app.Run();
 
 // ─── Helper Methods ──────────────────────────────────────────────────────
-static string ParseRenderConnectionString(string? connectionUri)
+// Converts postgres:// or postgresql:// URI → Npgsql Key-Value format
+// Returns null if input is null/empty (so IsNullOrWhiteSpace check works correctly)
+static string? ParseRenderConnectionString(string? connectionUri)
 {
-    if (string.IsNullOrEmpty(connectionUri) || !connectionUri.StartsWith("postgres://"))
-        return connectionUri ?? "";
+    if (string.IsNullOrEmpty(connectionUri))
+        return null;
+
+    // Already in Key-Value format (Host=...)
+    if (!connectionUri.StartsWith("postgres://") && !connectionUri.StartsWith("postgresql://"))
+        return connectionUri;
 
     try
     {
         var uri = new Uri(connectionUri);
         var userInfo = uri.UserInfo.Split(':');
-        var user = userInfo[0];
-        var password = userInfo.Length > 1 ? userInfo[1] : "";
+        var user = Uri.UnescapeDataString(userInfo[0]);
+        var password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : "";
         var host = uri.Host;
-        var port = uri.Port;
+        var port = uri.Port > 0 ? uri.Port : 5432;
         var database = uri.AbsolutePath.TrimStart('/');
 
         return $"Host={host};Port={port};Database={database};Username={user};Password={password};SSL Mode=Require;Trust Server Certificate=true";
     }
-    catch
+    catch (Exception ex)
     {
-        return connectionUri ?? "";
+        Console.WriteLine($"[DB] Failed to parse connection URI: {ex.Message}");
+        return null;
     }
 }
