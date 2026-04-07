@@ -107,8 +107,26 @@ namespace FashionStoreIS.Data
                     await db.SaveChangesAsync();
                 }
 
-                if (!await db.Products.AnyAsync())
+                if (!await db.Products.AnyAsync() || await db.Products.AnyAsync(p => p.ImageUrl != null && p.ImageUrl.Contains("placehold.co")))
                 {
+                    Console.WriteLine("[DB_INIT] Found placeholder products or empty DB. Purging for fresh seed...");
+                    
+                    // Purge old specific data to avoid conflicts
+                    var oldProducts = await db.Products.Where(p => p.ImageUrl != null && p.ImageUrl.Contains("placehold.co")).ToListAsync();
+                    if (oldProducts.Any())
+                    {
+                        var oldIds = oldProducts.Select(p => p.Id).ToList();
+                        var oldSkus = await db.ProductSkus.Where(s => oldIds.Contains(s.ProductId)).ToListAsync();
+                        db.ProductSkus.RemoveRange(oldSkus);
+                        db.Products.RemoveRange(oldProducts);
+                        
+                        var oldBanners = await db.Banners.Where(b => b.ImageUrl.Contains("/uploads/")).ToListAsync();
+                        db.Banners.RemoveRange(oldBanners);
+                        
+                        await db.SaveChangesAsync();
+                        Console.WriteLine("[DB_INIT] Placeholder data purged.");
+                    }
+
                     // Basic Categories
                     var catTops    = new Category { Name = "Áo",    Slug = "tops",    DisplayOrder = 1, CreatedAt = DateTime.UtcNow };
                     var catPants   = new Category { Name = "Quần",  Slug = "pants",   DisplayOrder = 2, CreatedAt = DateTime.UtcNow };
