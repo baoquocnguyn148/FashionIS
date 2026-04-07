@@ -97,47 +97,56 @@ namespace FashionStoreIS.Data
                     if (res.Succeeded) await userManager.AddToRoleAsync(admin, "SuperAdmin");
                 }
 
-                // 4. Seeding Products & Banners (Baseline)
-                if (!await db.Banners.AnyAsync())
+                // 4. Seeding Products & Banners (Baseline) - Aggressive Auto-Purge for Broken Assets
+                bool hasBrokenBanners = await db.Banners.AnyAsync(b => b.ImageUrl.Contains("/uploads/") || b.ImageUrl.Contains("placehold.co"));
+                bool hasBrokenProducts = await db.Products.AnyAsync(p => p.ImageUrl != null && (p.ImageUrl.Contains("/uploads/") || p.ImageUrl.Contains("placehold.co")));
+
+                if (hasBrokenBanners || hasBrokenProducts || !await db.Banners.AnyAsync() || !await db.Products.AnyAsync())
                 {
+                    Console.WriteLine("[DB_INIT] Found broken local paths or empty DB. Purging for fresh seed...");
+                    
+                    // Purge Banners
+                    var allBanners = await db.Banners.ToListAsync();
+                    db.Banners.RemoveRange(allBanners);
+
+                    // Purge Products & Related
+                    var allSkus = await db.ProductSkus.ToListAsync();
+                    db.ProductSkus.RemoveRange(allSkus);
+                    
+                    var allImages = await db.ProductImages.ToListAsync();
+                    db.ProductImages.RemoveRange(allImages);
+
+                    var allProducts = await db.Products.ToListAsync();
+                    db.Products.RemoveRange(allProducts);
+
+                    // Purge Categories to avoid slug conflicts
+                    var allCats = await db.Categories.ToListAsync();
+                    db.Categories.RemoveRange(allCats);
+                    
+                    await db.SaveChangesAsync();
+                    Console.WriteLine("[DB_INIT] Old data purged completely.");
+
+                    // --- RE-SEED DATA ---
+                    
+                    // 1. Banners
                     db.Banners.AddRange(
                         new Banner { Title = "NEW COLLECTION 2026", SubTitle = "FOR DREAMERS ONLY", ImageUrl = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=80", Position = "Hero", LinkUrl = "/Product/List", IsActive = true, DisplayOrder = 1, CreatedAt = DateTime.UtcNow },
                         new Banner { Title = "PREMIUM TOPS", SubTitle = "ESSENTIALS", ImageUrl = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1400&q=80", Position = "Category1", LinkUrl = "/Product/List?cat=tops", IsActive = true, DisplayOrder = 2, CreatedAt = DateTime.UtcNow }
                     );
-                    await db.SaveChangesAsync();
-                }
 
-                if (!await db.Products.AnyAsync() || await db.Products.AnyAsync(p => p.ImageUrl != null && p.ImageUrl.Contains("placehold.co")))
-                {
-                    Console.WriteLine("[DB_INIT] Found placeholder products or empty DB. Purging for fresh seed...");
-                    
-                    // Purge old specific data to avoid conflicts
-                    var oldProducts = await db.Products.Where(p => p.ImageUrl != null && p.ImageUrl.Contains("placehold.co")).ToListAsync();
-                    if (oldProducts.Any())
-                    {
-                        var oldIds = oldProducts.Select(p => p.Id).ToList();
-                        var oldSkus = await db.ProductSkus.Where(s => oldIds.Contains(s.ProductId)).ToListAsync();
-                        db.ProductSkus.RemoveRange(oldSkus);
-                        db.Products.RemoveRange(oldProducts);
-                        
-                        var oldBanners = await db.Banners.Where(b => b.ImageUrl.Contains("/uploads/")).ToListAsync();
-                        db.Banners.RemoveRange(oldBanners);
-                        
-                        await db.SaveChangesAsync();
-                        Console.WriteLine("[DB_INIT] Placeholder data purged.");
-                    }
-
-                    // Basic Categories
+                    // 2. Categories
                     var catTops    = new Category { Name = "Áo",    Slug = "tops",    DisplayOrder = 1, CreatedAt = DateTime.UtcNow };
                     var catPants   = new Category { Name = "Quần",  Slug = "pants",   DisplayOrder = 2, CreatedAt = DateTime.UtcNow };
                     var catOuter   = new Category { Name = "Áo Khoác", Slug = "outerwear", DisplayOrder = 3, CreatedAt = DateTime.UtcNow };
                     db.Categories.AddRange(catTops, catPants, catOuter);
 
-                    var supplier = new Supplier { Name = "Main Supplier", Phone = "0900000000", Email = "supplier@main.local", CreatedAt = DateTime.UtcNow };
-                    db.Suppliers.Add(supplier);
+                    // 3. Supplier (Get existing or create)
+                    var supplier = await db.Suppliers.FirstOrDefaultAsync() ?? new Supplier { Name = "Main Supplier", Phone = "0900000000", Email = "supplier@main.local", CreatedAt = DateTime.UtcNow };
+                    if (supplier.Id == 0) db.Suppliers.Add(supplier);
+                    
                     await db.SaveChangesAsync();
 
-                    // --- Products with real fashion images ---
+                    // 4. Products with real fashion images
                     var products = new List<Product>
                     {
                         new Product { Name = "Áo Thun BN Basic Trắng",   Slug = "ao-thun-bn-basic-trang",  CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 179000, Description = "Áo thun cotton 100% phong cách tối giản",        ImageUrl = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=500&fit=crop&q=80",  CreatedAt = DateTime.UtcNow, IsActive = true },
