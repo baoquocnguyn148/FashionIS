@@ -32,6 +32,10 @@ class ChatRequest(BaseModel):
 @app.post("/chat")
 async def chat(request: ChatRequest):
     try:
+        import os
+        if not os.getenv("GROQ_API_KEY"):
+            return {"response": "Hệ thống AI chưa được cấu hình API Key. Vui lòng thiết lập biến môi trường GROQ_API_KEY trên Render Dashboard."}
+
         agent_executor = get_chatbot_agent()
         
         from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
