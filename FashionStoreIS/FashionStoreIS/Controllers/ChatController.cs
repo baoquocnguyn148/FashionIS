@@ -18,7 +18,14 @@ namespace FashionStoreIS.Controllers
             // Render injects CHATBOT_URL as a full URL when using `property: url`
             var url = Environment.GetEnvironmentVariable("CHATBOT_URL")
                       ?? configuration["CHATBOT_URL"]
-                      ?? "http://localhost:8000";
+                      ?? "https://fashion-store-chatbot.onrender.com";
+
+            // WORKAROUND: Free tier Render does not support internal networking.
+            // If the environment variable is stuck on the old :10000 value, force the public URL.
+            if (url.Contains(":10000") || url.Contains("localhost")) 
+            {
+                url = "https://fashion-store-chatbot.onrender.com";
+            }
 
             _chatbotUrl = url.TrimEnd('/');
             _logger.LogInformation("[ChatController] Chatbot URL configured as: {Url}", _chatbotUrl);
