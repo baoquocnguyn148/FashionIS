@@ -58,6 +58,7 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
+    web_base_url: Optional[str] = None
     history: List[ChatMessage] = []
 
 
@@ -105,12 +106,12 @@ def build_system_prompt(web_base: str) -> str:
 ══════════════════════════════════════
 📦 HIỂN THỊ SẢN PHẨM (MARKDOWN FORMAT)
 ══════════════════════════════════════
-Khi giới thiệu sản phẩm, LUÔN dùng định dạng này:
+Khi giới thiệu sản phẩm, LUÔN dùng định dạng này. BẠN PHẢI TỰ thay thế các giá trị trong ngoặc vuông [] bằng dữ liệu thực tế lấy được từ công cụ tìm kiếm:
 
-### **[Tên sản phẩm]**
-![Ảnh sản phẩm]({web_base}{{imageUrl}})
-💰 **{{price:,}} VNĐ** | 📦 Còn hàng: {{stock}} cái
-[🛒 Xem chi tiết & Thêm vào giỏ hàng →]({web_base}/Product/Detail/{{id}})
+### **[Điền tên sản phẩm thực tế]**
+![Ảnh sản phẩm]({web_base}[Điền imageUrl vào đây])
+💰 **[Điền giá sản phẩm] VNĐ** | 📦 Còn hàng: [Điền stock] cái
+[🛒 Xem chi tiết & Thêm vào giỏ hàng →]({web_base}/Product/Detail/[Điền id sản phẩm vào đây])
 
 Nếu có nhiều sản phẩm (>3), hỏi khách muốn xem chi tiết mẫu nào thay vì liệt kê hết.
 
@@ -161,7 +162,10 @@ async def chat(request: ChatRequest):
         agent_executor = get_or_create_agent()
 
         from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
-        web_base = os.getenv("WEB_BASE_URL", "https://fashion-store-web.onrender.com").rstrip("/")
+        
+        # Priority: Client provided WebBaseUrl > Environment Variable > Default Render Domain
+        web_base = request.web_base_url or os.getenv("WEB_BASE_URL", "https://fashion-store-web.onrender.com")
+        web_base = web_base.rstrip("/")
 
         system_prompt = build_system_prompt(web_base)
 
