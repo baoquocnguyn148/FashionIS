@@ -7,6 +7,9 @@ logger = logging.getLogger(__name__)
 
 # C# Backend Base URL
 BASE_URL = os.getenv("BACKEND_API_URL", "https://fashion-store-web.onrender.com/api/chatbot")
+if BASE_URL and not BASE_URL.startswith("http"):
+    BASE_URL = "http://" + BASE_URL
+
 if not BASE_URL.endswith("/api/chatbot") and not BASE_URL.endswith("/api/chatbot/"):
     BASE_URL = BASE_URL.rstrip("/") + "/api/chatbot"
 

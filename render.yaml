@@ -28,7 +28,7 @@ services:
         fromService:
           name: fashion-store-chatbot
           type: web
-          property: url
+          property: hostport
 
   # ─── Python AI Shopping Assistant ───────────────────────────────────
   - type: web
@@ -47,12 +47,12 @@ services:
         fromService:
           name: fashion-store-web
           type: web
-          property: url
+          property: hostport
       - key: WEB_BASE_URL
         fromService:
           name: fashion-store-web
           type: web
-          property: url
+          property: hostport
 
 databases:
   # Defining the DB in blueprint makes it easy for Render to link

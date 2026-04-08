@@ -20,8 +20,12 @@ namespace FashionStoreIS.Controllers
                       ?? configuration["CHATBOT_URL"]
                       ?? "https://fashion-store-chatbot.onrender.com";
 
-            // WORKAROUND: Free tier Render does not support internal networking.
-            // If the environment variable is stuck on the old :10000 value, force the public URL.
+            // WORKAROUND: Force protocol if Render property: hostport is used
+            if (!string.IsNullOrEmpty(url) && !url.StartsWith("http"))
+            {
+                url = "http://" + url;
+            }
+
             if (url.Contains(":10000") || url.Contains("localhost")) 
             {
                 url = "https://fashion-store-chatbot.onrender.com";
