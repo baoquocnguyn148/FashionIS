@@ -13,6 +13,11 @@
     {
         <meta name="csrf-token" content="@csrfToken" />
     }
+    @inject FashionStoreIS.Data.ApplicationDbContext DbContext
+    @{
+        // Fetch active categories dynamically
+        var layout_categories = DbContext.Categories.Where(c => !c.IsDeleted).OrderBy(c => c.DisplayOrder).ToList();
+    }
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -212,12 +217,10 @@
                 </div>
                 <ul class="drawer-submenu" style="display: none; padding-left: 0; list-style: none; margin: 0; background-color: #fcfcfc;">
                     <li><a href="/Product/List" class="menu-link" style="font-size: 13px; padding: 12px 30px; border-bottom: 1px solid #f0f0f0;">TẤT CẢ SẢN PHẨM</a></li>
-                    <li><a href="/Product/List?cat=tops" class="menu-link" style="font-size: 13px; padding: 12px 30px; border-bottom: 1px solid #f0f0f0;">ÁO</a></li>
-                    <li><a href="/Product/List?cat=pants" class="menu-link" style="font-size: 13px; padding: 12px 30px; border-bottom: 1px solid #f0f0f0;">QUẦN</a></li>
-                    <li><a href="/Product/List?cat=outerwear" class="menu-link" style="font-size: 13px; padding: 12px 30px; border-bottom: 1px solid #f0f0f0;">ÁO KHOÁC</a></li>
-                    <li><a href="/Product/List?cat=footwear" class="menu-link" style="font-size: 13px; padding: 12px 30px; border-bottom: 1px solid #f0f0f0;">GIÀY & DÉP</a></li>
-                    <li><a href="/Product/List?cat=dresses" class="menu-link" style="font-size: 13px; padding: 12px 30px; border-bottom: 1px solid #f0f0f0;">VÁY & ĐẦM</a></li>
-                    <li><a href="/Product/List?cat=accessories" class="menu-link" style="font-size: 13px; padding: 12px 30px;">PHỤ KIỆN</a></li>
+                    @foreach (var cat in layout_categories)
+                    {
+                        <li><a href="/Product/List?cat=@cat.Slug" class="menu-link" style="font-size: 13px; padding: 12px 30px; border-bottom: 1px solid #f0f0f0;">@cat.Name.ToUpper()</a></li>
+                    }
                 </ul>
             </li>
             @if (User.Identity?.IsAuthenticated == true)
@@ -744,12 +747,10 @@
                     <h4>Khám phá</h4>
                     <ul>
                         <li><a href="/Product/List">Tất cả sản phẩm</a></li>
-                        <li><a href="/Product/List?cat=tops">Áo</a></li>
-                        <li><a href="/Product/List?cat=pants">Quần</a></li>
-                        <li><a href="/Product/List?cat=outerwear">Áo khoác</a></li>
-                        <li><a href="/Product/List?cat=footwear">Giày & Dép</a></li>
-                        <li><a href="/Product/List?cat=dresses">Váy & Đầm</a></li>
-                        <li><a href="/Product/List?cat=accessories">Phụ kiện</a></li>
+                        @foreach (var cat in layout_categories)
+                        {
+                            <li><a href="/Product/List?cat=@cat.Slug">@cat.Name</a></li>
+                        }
                     </ul>
                 </div>
                 <div class="footer-col">
