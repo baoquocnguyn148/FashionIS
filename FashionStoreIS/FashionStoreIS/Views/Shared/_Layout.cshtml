@@ -1,3 +1,7 @@
+@inject FashionStoreIS.Data.ApplicationDbContext DbContext
+@{
+    var layout_categories = DbContext.Categories.Where(c => !c.IsDeleted).OrderBy(c => c.DisplayOrder).ToList();
+}
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -12,11 +16,6 @@
     @if (!string.IsNullOrEmpty(csrfToken))
     {
         <meta name="csrf-token" content="@csrfToken" />
-    }
-    @inject FashionStoreIS.Data.ApplicationDbContext DbContext
-    @{
-        // Fetch active categories dynamically
-        var layout_categories = DbContext.Categories.Where(c => !c.IsDeleted).OrderBy(c => c.DisplayOrder).ToList();
     }
 
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
