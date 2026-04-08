@@ -4,50 +4,40 @@
 }
 
 <!-- ── Hero Section ──────────────────────────────────── -->
-<section class="hero-section" @Html.Raw(banner != null && !string.IsNullOrEmpty(banner.ImageUrl) ? $"style=\"background-image: url('{banner.ImageUrl}'); background-size: cover; background-position: center;\"" : "")>
-    @if (banner == null || string.IsNullOrEmpty(banner.ImageUrl))
-    {
-        <div class="hero-gradient"></div>
-    }
+<section class="hero-section" style="background-image: url('/images/banners/hero-main.png'); background-size: cover; background-position: center;">
     <div class="hero-overlay"></div>
     <div class="hero-content">
-        <p class="hero-subtitle">@(banner?.Title ?? "NEW COLLECTION 2026")</p>
+        <p class="hero-subtitle">NEW COLLECTION 2026</p>
         <a href="/Product/List" class="hero-btn">XEM SẢN PHẨM</a>
     </div>
 </section>
 
 <!-- ── Category Banners ─────────────────────────────── -->
-@{
-    var catBanners = ViewBag.CategoryBanners as List<FashionStoreIS.Models.Banner> ?? new List<FashionStoreIS.Models.Banner>();
-    var cat1 = catBanners.FirstOrDefault(b => b.Position == "Category1");
-    var cat2 = catBanners.FirstOrDefault(b => b.Position == "Category2");
-    var cat3 = catBanners.FirstOrDefault(b => b.Position == "Category3");
-}
 <div class="page-container section-spacer">
     <div class="row g-4">
         <!-- Category 1 -->
         <div class="col-md-4">
-            <div class="category-card" style="background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url('@(cat1?.ImageUrl ?? "https://placehold.co/600x800/111/fff?text=TOPS")') center/cover;">
+            <div class="category-card" style="background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url('/images/banners/cat-tops.png') center/cover;">
                 <div class="category-content">
-                    <h3>@(cat1?.Title ?? "ÁO")</h3>
+                    <h3>ÁO</h3>
                     <a href="/Product/List?cat=tops" class="btn-minimal">XEM NGAY</a>
                 </div>
             </div>
         </div>
         <!-- Category 2 -->
         <div class="col-md-4">
-            <div class="category-card" style="background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url('@(cat2?.ImageUrl ?? "https://placehold.co/600x800/222/fff?text=PANTS")') center/cover;">
+            <div class="category-card" style="background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url('/images/banners/cat-bottoms.png') center/cover;">
                 <div class="category-content">
-                    <h3>@(cat2?.Title ?? "QUẦN")</h3>
+                    <h3>QUẦN</h3>
                     <a href="/Product/List?cat=pants" class="btn-minimal">XEM NGAY</a>
                 </div>
             </div>
         </div>
         <!-- Category 3 -->
         <div class="col-md-4">
-            <div class="category-card" style="background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url('@(cat3?.ImageUrl ?? "https://placehold.co/600x800/333/fff?text=ACC")') center/cover;">
+            <div class="category-card" style="background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.4)), url('/images/banners/cat-acc.png') center/cover;">
                 <div class="category-content">
-                    <h3>@(cat3?.Title ?? "PHỤ KIỆN")</h3>
+                    <h3>PHỤ KIỆN</h3>
                     <a href="/Product/List?cat=accessories" class="btn-minimal">XEM NGAY</a>
                 </div>
             </div>
