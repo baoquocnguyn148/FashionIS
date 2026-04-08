@@ -86,11 +86,27 @@ namespace FashionStoreIS.Areas.Admin.Controllers
         public async Task<IActionResult> Delete(int id)
         {
             var cat = (await _db.Categories.Where(c => c.Id == id).ToListAsync()).FirstOrDefault();
-            if (cat != null)
+            if (cat == null) return RedirectToAction("Index");
+
+            // Kiểm tra xem có sản phẩm nào đang thuộc danh mục này không
+            bool hasProducts = await _db.Products.AnyAsync(p => p.CategoryId == id);
+            if (hasProducts)
             {
-                _db.Categories.Remove(cat);
-                await _db.SaveChangesAsync();
+                TempData["Error"] = $"Không thể xóa danh mục \"{cat.Name}\" vì còn sản phẩm đang thuộc danh mục này. Vui lòng chuyển hoặc xóa hết sản phẩm trước.";
+                return RedirectToAction("Index");
             }
+
+            // Kiểm tra xem có danh mục con không
+            bool hasSubCategories = await _db.Categories.AnyAsync(c => c.ParentCategoryId == id);
+            if (hasSubCategories)
+            {
+                TempData["Error"] = $"Không thể xóa danh mục \"{cat.Name}\" vì còn danh mục con bên trong. Vui lòng xóa danh mục con trước.";
+                return RedirectToAction("Index");
+            }
+
+            _db.Categories.Remove(cat);
+            await _db.SaveChangesAsync();
+            TempData["Success"] = $"Đã xóa danh mục \"{cat.Name}\" thành công.";
             return RedirectToAction("Index");
         }
     }
