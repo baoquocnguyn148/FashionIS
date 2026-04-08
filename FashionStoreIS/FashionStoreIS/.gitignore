@@ -400,7 +400,7 @@ bld/
 .vs/
 
 # Uncomment if you have tasks that create the project's static files in wwwroot
-wwwroot/
+#wwwroot/
 
 # User-specific files
 *.rsuser
@@ -432,7 +432,7 @@ bld/
 # Visual Studio 2015/2017 cache/options directory
 .vs/
 # Uncomment if you have tasks that create the project's static files in wwwroot
-wwwroot/
+#wwwroot/
 
 # NuGet Packages
 *.nupkg

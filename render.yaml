@@ -8,6 +8,7 @@ services:
     # Render's Free Plan doesn't support persisting everything, but we can try
     plan: free
     region: singapore
+    healthCheckPath: /
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
         value: Production

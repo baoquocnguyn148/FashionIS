@@ -168,11 +168,16 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         Console.WriteLine($"[STARTUP] Migration error (non-fatal): {ex.Message}");
+        if (ex.InnerException != null) Console.WriteLine($"[STARTUP] Inner: {ex.InnerException.Message}");
     }
 
     // Seeding: Only seed essential data in Production to avoid OOM on free tier
     try
     {
+        Console.WriteLine("[STARTUP] Checking for existing data before seed...");
+        var hasProducts = await context.Products.AnyAsync();
+        Console.WriteLine($"[STARTUP] Products exist: {hasProducts}");
+        
         Console.WriteLine("[STARTUP] Running DbInitializer.Seed...");
         await DbInitializer.Seed(context, userManager, roleManager);
         Console.WriteLine("[STARTUP] Seeding completed successfully.");

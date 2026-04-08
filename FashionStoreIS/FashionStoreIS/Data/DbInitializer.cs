@@ -138,7 +138,8 @@ namespace FashionStoreIS.Data
                     var catTops    = new Category { Name = "Áo",    Slug = "tops",    DisplayOrder = 1, CreatedAt = DateTime.UtcNow };
                     var catPants   = new Category { Name = "Quần",  Slug = "pants",   DisplayOrder = 2, CreatedAt = DateTime.UtcNow };
                     var catOuter   = new Category { Name = "Áo Khoác", Slug = "outerwear", DisplayOrder = 3, CreatedAt = DateTime.UtcNow };
-                    db.Categories.AddRange(catTops, catPants, catOuter);
+                    var catAccess  = new Category { Name = "Phụ Kiện", Slug = "accessories", DisplayOrder = 4, CreatedAt = DateTime.UtcNow };
+                    db.Categories.AddRange(catTops, catPants, catOuter, catAccess);
 
                     // 3. Supplier (Get existing or create)
                     var supplier = await db.Suppliers.FirstOrDefaultAsync() ?? new Supplier { Name = "Main Supplier", Phone = "0900000000", Email = "supplier@main.local", CreatedAt = DateTime.UtcNow };
@@ -146,19 +147,27 @@ namespace FashionStoreIS.Data
                     
                     await db.SaveChangesAsync();
 
-                    // 4. Products with real fashion images
+                    // 4. Products with high-quality local images
                     var products = new List<Product>
                     {
-                        new Product { Name = "Áo Thun BN Basic Trắng",   Slug = "ao-thun-bn-basic-trang",  CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 179000, Description = "Áo thun cotton 100% phong cách tối giản",        ImageUrl = "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=500&fit=crop&q=80",  CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Áo Thun Oversize Đen",      Slug = "ao-thun-oversize-den",    CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 219000, Description = "Form oversize trendy, cổ tròn thời thượng",       ImageUrl = "https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Áo Polo BN Premium",        Slug = "ao-polo-bn-premium",      CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 299000, Description = "Polo cotton pique cao cấp, dáng slim fit",         ImageUrl = "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Áo Khoác Bomber BN",        Slug = "ao-khoac-bomber-bn",      CategoryId = catOuter.Id, SupplierId = supplier.Id, Price = 499000, Description = "Áo khoác bomber dáng rộng, chống gió nhẹ",        ImageUrl = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Quần Jeans Slim BN",        Slug = "quan-jeans-slim-bn",      CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 429000, Description = "Jeans co giãn 4 chiều, dáng slim fit",             ImageUrl = "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Quần Kaki Chinos BN",       Slug = "quan-kaki-chinos-bn",     CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 349000, Description = "Quần kaki chino dáng straight, vải mềm",           ImageUrl = "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Áo Sơ Mi Trắng Công Sở",   Slug = "ao-so-mi-trang-cong-so",  CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 269000, Description = "Sơ mi Oxford trắng, form regular",                ImageUrl = "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Áo Hoodie BN Street",       Slug = "ao-hoodie-bn-street",     CategoryId = catOuter.Id, SupplierId = supplier.Id, Price = 399000, Description = "Hoodie nỉ bông dày dặn, phong cách streetwear",   ImageUrl = "https://images.unsplash.com/photo-1556821840-3a63f15732ce?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Quần Short Thể Thao BN",    Slug = "quan-short-the-thao-bn",  CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 169000, Description = "Short thể thao vải thun lạnh, thoáng khí",        ImageUrl = "https://images.unsplash.com/photo-1591195853828-11db59a44f43?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Áo Khoác Gió Mỏng BN",     Slug = "ao-khoac-gio-mong-bn",    CategoryId = catOuter.Id, SupplierId = supplier.Id, Price = 449000, Description = "Windbreaker nhẹ, chống nước nhẹ",                 ImageUrl = "https://images.unsplash.com/photo-1608234808654-2a8875faa7fd?w=400&h=500&fit=crop&q=80", CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Áo Thun BN Blank Black",    Slug = "ao-thun-blank-black", CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 350000, Description = "Premium cotton blank black shirt", ImageUrl = "/images/products/BLANKSHIRTBLACK_main.png", CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Áo Thun BN Blank White",    Slug = "ao-thun-blank-white", CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 350000, Description = "Premium cotton blank white shirt", ImageUrl = "/images/products/BlankShirtWhite_main.png", CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Áo Coach Shirt Green",      Slug = "coach-shirt-green",   CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 450000, Description = "Modern coach shirt in vibrant green", ImageUrl = "/images/products/COACHSHIRT-GREEN_main.png", CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Áo Sweater Gray FW25",       Slug = "sweater-gray-fw25",   CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 590000, Description = "Winter 2025 Oversize Sweater", ImageUrl = "/images/products/FW25OSMSWEATER_GRAY_main.png", CreatedAt = DateTime.UtcNow, IsActive = true },
+                        
+                        new Product { Name = "Quần Tracksuit Coach",      Slug = "tracksuit-pant-coach", CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 550000, Description = "Comfortable tracksuit pants", ImageUrl = "/images/products/Coachtracksuitpant.png", CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Quần Sport Sweatpant Gray", Slug = "sport-sweatpant-gray", CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 420000, Description = "Sporty gray sweatpants", ImageUrl = "/images/products/sportsweetpant_gray.png", CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Quần Vital Trank Blue",     Slug = "vital-trank-blue",    CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 480000, Description = "Vital edition blue trank pants", ImageUrl = "/images/products/vitaltrankpants_blue.png", CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Quần Vital Trank Red",      Slug = "vital-trank-red",     CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 480000, Description = "Vital edition red trank pants", ImageUrl = "/images/products/vitaltrankpants_red.png", CreatedAt = DateTime.UtcNow, IsActive = true },
+                        
+                        new Product { Name = "Áo Bomber BN S-Black",      Slug = "bomber-s-black",      CategoryId = catOuter.Id, SupplierId = supplier.Id, Price = 890000, Description = "S-Class Black Bomber Jacket", ImageUrl = "/images/products/BlackSBomber.png", CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Áo Hoodie Jeans Zip Black", Slug = "hoodie-jeans-zip",    CategoryId = catOuter.Id, SupplierId = supplier.Id, Price = 750000, Description = "Black Zip Hoodie Jeans Style", ImageUrl = "/images/products/W25SSMAJEANSZIPHOODIE_BLACK_main.png", CreatedAt = DateTime.UtcNow, IsActive = true },
+                        
+                        new Product { Name = "Túi Da Cowhide Black",       Slug = "cowhide-bag-black",   CategoryId = catAccess.Id, SupplierId = supplier.Id, Price = 1200000, Description = "Premium embossed black cowhide leather bag", ImageUrl = "/images/products/COWHIDELEATHERBAG-EMBOSSEDBLACK.png", CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Túi Da Cowhide White",       Slug = "cowhide-bag-white",   CategoryId = catAccess.Id, SupplierId = supplier.Id, Price = 1200000, Description = "Premium embossed white cowhide leather bag", ImageUrl = "/images/products/COWHIDELEATHERBAG-EMBOSSEDWHITE.png", CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Túi Da Cowhide Brown",       Slug = "cowhide-bag-brown",   CategoryId = catAccess.Id, SupplierId = supplier.Id, Price = 1350000, Description = "Hairon brown cowhide leather bag", ImageUrl = "/images/products/COWHIDELEATHERBAG-HAIRON BROWN.png", CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Mũ Papa Cap Red",            Slug = "papa-cap-red",        CategoryId = catAccess.Id, SupplierId = supplier.Id, Price = 250000, Description = "Classic red papa cap", ImageUrl = "/images/products/Papacap_red.png", CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Mũ IGIFMS Cap",               Slug = "igifms-cap",          CategoryId = catAccess.Id, SupplierId = supplier.Id, Price = 290000, Description = "Limited edition IGIFMS cap", ImageUrl = "/images/products/igifms_cap.png", CreatedAt = DateTime.UtcNow, IsActive = true },
                     };
                     db.Products.AddRange(products);
                     await db.SaveChangesAsync();
@@ -167,11 +176,13 @@ namespace FashionStoreIS.Data
                     var sizes = new[] { "S", "M", "L", "XL" };
                     var colors = new[] { "Black", "White", "Navy" };
                     var rndSku = new Random();
+                    var skusToAdd = new List<ProductSku>();
+
                     foreach (var p in products)
                     {
                         foreach (var size in sizes)
                         {
-                            db.ProductSkus.Add(new ProductSku
+                            skusToAdd.Add(new ProductSku
                             {
                                 ProductId = p.Id,
                                 SKU = $"{p.Slug.ToUpper()[..Math.Min(8, p.Slug.Length)]}-{size}",
@@ -186,6 +197,7 @@ namespace FashionStoreIS.Data
                             });
                         }
                     }
+                    db.ProductSkus.AddRange(skusToAdd);
                     await db.SaveChangesAsync();
                 }
 
@@ -322,7 +334,7 @@ namespace FashionStoreIS.Data
                             FullName = s.name,
                             Email = uniqueEmail,
                             Phone = s.phone,
-                            Address = "H盻・Chﾃｭ Minh, Vi盻㏄ Nam",
+                            Address = "Hồ Chí Minh, Việt Nam",
                             LoyaltyPoints = user.MembershipPoints,
                             JoinDate = s.join,
                             Tier = user.MembershipPoints >= 1000 ? 2 : (user.MembershipPoints >= 500 ? 1 : 0)
@@ -332,6 +344,7 @@ namespace FashionStoreIS.Data
 
                         // Orders Seeding (3 to 12 orders per user)
                         int orderCount = rnd.Next(3, 13);
+                        var userOrders = new List<Order>();
                         for (int i = 0; i < orderCount; i++)
                         {
                             DateTime orderDate = s.join.AddDays(rnd.Next(0, (int)(DateTime.UtcNow - s.join).TotalDays));
@@ -348,10 +361,9 @@ namespace FashionStoreIS.Data
                                 PaymentStatus = (orderStatus == OrderStatus.Completed || orderStatus == OrderStatus.Shipped) ? PaymentStatus.Paid : PaymentStatus.Unpaid,
                                 CustomerName = user.FullName, 
                                 Phone = s.phone,
-                                Address = "Qu蘯ｭn 1, TP. H盻・Chﾃｭ Minh"
+                                Address = "Quận 1, TP. Hồ Chí Minh",
+                                OrderDetails = new List<OrderDetail>()
                             };
-                            db.Orders.Add(order);
-                            await db.SaveChangesAsync();
 
                             // 1 to 5 SKUs per order
                             int itemsCount = rnd.Next(1, 6);
@@ -362,8 +374,7 @@ namespace FashionStoreIS.Data
                                 var qty = rnd.Next(1, 4);
                                 var price = sku.PriceOverride > 0 ? sku.PriceOverride.Value : sku.SellingPrice;
                                 
-                                db.OrderDetails.Add(new OrderDetail { 
-                                    OrderId = order.Id, 
+                                order.OrderDetails.Add(new OrderDetail { 
                                     ProductSkuId = sku.Id, 
                                     ProductId = sku.ProductId, 
                                     Quantity = qty, 
@@ -374,21 +385,22 @@ namespace FashionStoreIS.Data
                             }
                             order.SubTotal = total; 
                             order.TotalAmount = total;
-                            await db.SaveChangesAsync();
+                            userOrders.Add(order);
                         }
+                        db.Orders.AddRange(userOrders);
 
                         // Loyalty & Notifications
                         db.LoyaltyTransactions.Add(new LoyaltyTransaction { 
                             CustomerId = customer.Id, 
                             Points = user.MembershipPoints, 
-                            Description = "Chﾃo m盻ｫng thﾃnh viﾃｪn & Tﾃｭch lﾅｩy mua hﾃng", 
+                            Description = "Chào mừng thành viên & Tích lũy mua hàng", 
                             CreatedAt = s.join.AddDays(1) 
                         });
                         
                         db.Notifications.Add(new Notification { 
                             UserId = user.Id, 
-                            Title = "Chﾃo m盻ｫng!", 
-                            Message = $"Chﾃo {s.name}, FashionStore t蘯ｷng b蘯｡n {user.MembershipPoints} ﾄ訴盻ノ thﾆｰ盻殤g!", 
+                            Title = "Chào mừng!", 
+                            Message = $"Chào {s.name}, FashionStore tặng bạn {user.MembershipPoints} điểm thưởng!", 
                             CreatedAt = s.join,
                             IsRead = true
                         });
@@ -577,7 +589,8 @@ namespace FashionStoreIS.Data
             {
                 Random rnd = new Random();
                 var startDate = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek + 1).AddDays(-7); // Monday last week
-                
+                var schedulesToAdd = new List<Schedule>();
+
                 for (int i = 0; i < 14; i++) // 14 days
                 {
                     var date = startDate.AddDays(i);
@@ -587,7 +600,7 @@ namespace FashionStoreIS.Data
                         if (rnd.Next(10) > 2) // 80% attendance
                         {
                             var shift = shiftsList[rnd.Next(shiftsList.Count)];
-                            db.Schedules.Add(new Schedule
+                            schedulesToAdd.Add(new Schedule
                             {
                                 EmployeeId = emp.Id,
                                 ShiftId = shift.Id,
@@ -598,6 +611,7 @@ namespace FashionStoreIS.Data
                         }
                     }
                 }
+                db.Schedules.AddRange(schedulesToAdd);
                 await db.SaveChangesAsync();
                 Console.WriteLine("[DB_INIT] Weekly Schedules seeded.");
             }
@@ -611,6 +625,7 @@ namespace FashionStoreIS.Data
                     .ToListAsync();
 
                 Random rnd = new Random();
+                var attendancesToAdd = new List<Attendance>();
                 foreach (var sched in currentSchedules)
                 {
                     // If it's today, only check-in for morning/afternoon shifts
@@ -622,7 +637,7 @@ namespace FashionStoreIS.Data
                     var checkOut = sched.Date < DateTime.Today ? sched.Shift.EndTime.Add(TimeSpan.FromMinutes(rnd.Next(-5, 15))) : (TimeSpan?)null;
                     double totalHours = checkOut.HasValue ? (checkOut.Value - checkIn).TotalHours : 0;
 
-                    db.Attendances.Add(new Attendance
+                    attendancesToAdd.Add(new Attendance
                     {
                         EmployeeId = sched.EmployeeId,
                         Date = sched.Date,
@@ -633,6 +648,7 @@ namespace FashionStoreIS.Data
                         CreatedAt = DateTime.UtcNow
                     });
                 }
+                db.Attendances.AddRange(attendancesToAdd);
                 await db.SaveChangesAsync();
                 Console.WriteLine("[DB_INIT] Attendance data (including today) seeded.");
             }
