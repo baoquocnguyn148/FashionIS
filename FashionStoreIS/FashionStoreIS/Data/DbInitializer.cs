@@ -98,8 +98,8 @@ namespace FashionStoreIS.Data
                 }
 
                 // 4. Seeding Products & Banners (Baseline) - Aggressive Auto-Purge for Broken Assets
-                bool hasBrokenBanners = await db.Banners.AnyAsync(b => b.ImageUrl.Contains("/uploads/") || b.ImageUrl.Contains("placehold.co"));
-                bool hasBrokenProducts = await db.Products.AnyAsync(p => p.ImageUrl != null && (p.ImageUrl.Contains("/uploads/") || p.ImageUrl.Contains("placehold.co")));
+                bool hasBrokenBanners = await db.Banners.AnyAsync(b => b.ImageUrl.Contains("/uploads/") || b.ImageUrl.Contains("placehold.co") || b.ImageUrl.Contains("unsplash.com"));
+                bool hasBrokenProducts = await db.Products.AnyAsync(p => p.ImageUrl != null && (p.ImageUrl.Contains("/uploads/") || p.ImageUrl.Contains("placehold.co") || p.ImageUrl.Contains("unsplash.com")));
 
                 if (hasBrokenBanners || hasBrokenProducts || !await db.Banners.AnyAsync() || !await db.Products.AnyAsync())
                 {
