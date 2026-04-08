@@ -1051,7 +1051,15 @@
                     },
                     error: function(xhr, status, error) {
                         removeTypingIndicator();
-                        appendMessage('assistant', 'Xin lỗi, tôi đang gặp sự cố kết nối với hệ thống AI. Vui lòng kiểm tra xem server Python đã được khởi động chưa.');
+                        let errorMsg = 'Xin lỗi, hệ thống AI đang tạm thời gián đoạn. ';
+                        if (xhr.status === 502 || xhr.status === 504) {
+                            errorMsg += 'Có vẻ máy chủ đang "khởi động" lại sau thời gian nghỉ. Bạn vui lòng đợi 15-30 giây rồi thử gửi lại tin nhắn nhé! ✨';
+                        } else if (xhr.status === 429) {
+                            errorMsg += 'Hệ thống đang xử lý quá nhiều yêu cầu. Bạn vui lòng đợi một chút rồi thử lại nhé!';
+                        } else {
+                            errorMsg += 'Vui lòng kiểm tra kết nối mạng hoặc thử lại sau ít phút.';
+                        }
+                        appendMessage('assistant', errorMsg);
                     },
                     complete: function() {
                         $input.prop('disabled', false);

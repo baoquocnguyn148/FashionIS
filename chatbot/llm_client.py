@@ -6,8 +6,8 @@ import tools as api_tools
 
 # Groq API Configuration (set via Render environment variables)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-# Force the model to the valid one, ignoring stuck Render environment variables
-GROQ_MODEL = "llama-3.3-70b-versatile"
+# Force a stable, high-limit model for free tier
+GROQ_MODEL = "llama-3.1-8b-instant"
 
 from typing import Optional
 
