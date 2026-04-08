@@ -100,8 +100,10 @@ namespace FashionStoreIS.Data
                 // 4. Seeding Products & Banners (Baseline) - Aggressive Auto-Purge for Broken Assets
                 bool hasBrokenBanners = await db.Banners.AnyAsync(b => b.ImageUrl.Contains("/uploads/") || b.ImageUrl.Contains("placehold.co") || b.ImageUrl.Contains("unsplash.com"));
                 bool hasBrokenProducts = await db.Products.AnyAsync(p => p.ImageUrl != null && (p.ImageUrl.Contains("/uploads/") || p.ImageUrl.Contains("placehold.co") || p.ImageUrl.Contains("unsplash.com")));
+                // Force purge if legacy categories still exist (Giày dép, Váy đầm)
+                bool hasLegacyCategories = await db.Categories.AnyAsync(c => c.Slug == "giay-dep" || c.Slug == "vay-dam" || c.Name == "Giày dép" || c.Name == "Váy đầm");
 
-                if (hasBrokenBanners || hasBrokenProducts || !await db.Banners.AnyAsync() || !await db.Products.AnyAsync())
+                if (hasBrokenBanners || hasBrokenProducts || hasLegacyCategories || !await db.Banners.AnyAsync() || !await db.Products.AnyAsync())
                 {
                     Console.WriteLine("[DB_INIT] Found broken local paths or empty DB. Purging for fresh seed...");
                     

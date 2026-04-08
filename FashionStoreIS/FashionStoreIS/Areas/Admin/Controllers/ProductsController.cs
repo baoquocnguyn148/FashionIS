@@ -126,14 +126,12 @@ namespace FashionStoreIS.Areas.Admin.Controllers
             return RedirectToAction("Index");
         }
 
-        [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            var product = (await _db.Products
+            var product = await _db.Products
                 .Include(p => p.Images)
-                .Include(p => p.Skus)
-                .Where(p => p.Id == id)
-                .ToListAsync()).FirstOrDefault();
+                .Include(p => p.Skus.Where(s => s.IsActive == true))
+                .FirstOrDefaultAsync(p => p.Id == id);
             
             if (product == null) return NotFound();
             
@@ -184,7 +182,12 @@ namespace FashionStoreIS.Areas.Admin.Controllers
 
             var incomingIds = incomingSkus.Where(s => s.Id > 0).Select(s => s.Id).Distinct().ToHashSet();
             var toRemove = existingSkus.Where(es => !incomingIds.Contains(es.Id)).ToList();
-            _db.ProductSkus.RemoveRange(toRemove);
+            
+            // Use SOFT DELETE to prevent FOREIGN KEY constraint crashes if SKUs are in orders/carts
+            foreach (var skuToRemove in toRemove)
+            {
+                skuToRemove.IsActive = false;
+            }
 
             foreach (var incoming in incomingSkus)
             {
