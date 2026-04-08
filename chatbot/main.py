@@ -94,7 +94,8 @@ def build_system_prompt(web_base: str) -> str:
 
 3. XÁC ĐỊNH DANH MỤC:
    - Nếu khách hỏi chung chung "bạn có gì", "cho xem đồ" → Gọi `get_categories_tool` trước để biết danh mục thực tế, sau đó gợi ý.
-   - Nếu khách hỏi cụ thể về loại đồ → Gọi `search_products_tool` ngay với `category` phù hợp.
+   - Nếu khách tìm tên, màu sắc, khoảng giá (vd: "màu xám", "giá 1400000") → BẮT BUỘC gọi `search_products_tool` với `q="xám"` (hoặc "grey") HOẶC `max_price`/`min_price`. 
+   - TUYỆT ĐỐI KHÔNG TỰ Ý KẾT LUẬN LÀ HẾT HÀNG KHI CHƯA GỌI TOOL TÌM KIẾM. KHÔNG BAO GIỜ TRẢ LỜI "CHƯA CÓ" MÀ KHÔNG DÙNG TOOL.
 
 4. Khi gọi `search_products_tool` mà KHÔNG có query cụ thể → lấy toàn bộ sản phẩm để xem.
 
