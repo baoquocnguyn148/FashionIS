@@ -74,7 +74,7 @@ def get_chatbot_agent():
     llm = ChatGroq(
         api_key=GROQ_API_KEY,
         model=GROQ_MODEL,
-        temperature=0.7,
+        temperature=0.0,
     )
     
     tools_list = [
