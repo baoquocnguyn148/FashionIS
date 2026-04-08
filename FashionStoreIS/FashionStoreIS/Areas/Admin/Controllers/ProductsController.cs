@@ -78,10 +78,12 @@ namespace FashionStoreIS.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Product model, IFormFile? imageFile, List<IFormFile>? galleryFiles)
+        public async Task<IActionResult> Create(Product model, string? ImageUrlInput, IFormFile? imageFile, List<IFormFile>? galleryFiles)
         {
             if (imageFile != null && imageFile.Length > 0)
                 model.ImageUrl = await SaveImage(imageFile);
+            else if (!string.IsNullOrWhiteSpace(ImageUrlInput))
+                model.ImageUrl = ImageUrlInput;
 
             model.CreatedAt = DateTime.Now;
             if (string.IsNullOrWhiteSpace(model.Slug))
@@ -142,7 +144,7 @@ namespace FashionStoreIS.Areas.Admin.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(Product model, IFormFile? imageFile, List<IFormFile>? galleryFiles)
+        public async Task<IActionResult> Edit(Product model, string? ImageUrlInput, IFormFile? imageFile, List<IFormFile>? galleryFiles)
         {
             var existing = (await _db.Products
                 .Include(p => p.Images)
@@ -164,6 +166,8 @@ namespace FashionStoreIS.Areas.Admin.Controllers
 
             if (imageFile != null && imageFile.Length > 0)
                 existing.ImageUrl = await SaveImage(imageFile);
+            else if (!string.IsNullOrWhiteSpace(ImageUrlInput))
+                existing.ImageUrl = ImageUrlInput;
 
             // Handle Gallery
             if (galleryFiles != null)
@@ -253,6 +257,33 @@ namespace FashionStoreIS.Areas.Admin.Controllers
                 product.IsActive = !product.IsActive;
                 await _db.SaveChangesAsync();
             }
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> FixBrokenImages()
+        {
+            var brokenProducts = await _db.Products
+                .Where(p => p.ImageUrl != null && p.ImageUrl.Contains("/uploads/products/"))
+                .ToListAsync();
+
+            if (brokenProducts.Any())
+            {
+                foreach (var p in brokenProducts)
+                {
+                    // Random unsplash placeholder based on category
+                    string term = p.CategoryId == 1 ? "t-shirt" : (p.CategoryId == 2 ? "pants" : "jacket");
+                    p.ImageUrl = $"https://source.unsplash.com/random/800x800/?{term},{p.Id}";
+                }
+                await _db.SaveChangesAsync();
+                TempData["Success"] = $"Đã tự động sửa lỗi ảnh cho {brokenProducts.Count} sản phẩm!";
+            }
+            else
+            {
+                TempData["Info"] = "Không tìm thấy sản phẩm nào bị lỗi ảnh hệ thống cục bộ.";
+            }
+
             return RedirectToAction("Index");
         }
 
