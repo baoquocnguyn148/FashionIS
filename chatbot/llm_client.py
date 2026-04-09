@@ -22,14 +22,21 @@ async def search_products_tool(
     max_price: Optional[float] = None
 ):
     """
-    Tool to search for products in the store or to get the full list of products.
+    MANDATORY: Call this tool EVERY TIME the user asks about products, colors, prices, or availability.
+    DO NOT answer 'we don't have X' without calling this tool first.
     
     Parameters:
-    - query: Specific search terms IN ENGLISH ONLY (e.g., 'white shirt', 'polo'). Leave None to list all.
-    - category: The product category ('tops', 'pants', 'outerwear', 'accessories').
+    - query: Search keyword IN ENGLISH. Vietnamese→English translation guide:
+        Màu trắng/white → "white" | Màu đen/black → "black" | Màu xám/gray → "gray"
+        Màu xanh/blue → "blue" | Màu đỏ/red → "red" | Màu nâu/brown → "brown"
+        Áo thun/t-shirt → "blank" or "shirt" | Áo khoác/jacket → "bomber" or "hoodie"
+        Áo sweater → "sweater" | Quần/pants → "pants" or "trank" or "sweatpant"
+        Túi/bag → "bag" or "cowhide" | Mũ/hat/cap → "cap"
+        If unsure, try BOTH Vietnamese and English keywords in separate calls.
+    - category: 'tops', 'pants', 'outerwear', 'accessories'. Leave None if unsure.
     - sort: 'popular', 'newest', 'price_low', 'price_high'.
-    - min_price: Integer minimum price.
-    - max_price: Integer maximum price.
+    - min_price: Minimum price as integer (e.g. 0).
+    - max_price: Maximum price as integer (e.g. 500000).
     """
     return await api_tools.search_products(q=query, category=category, sort=sort, min_price=min_price, max_price=max_price)
 
@@ -75,7 +82,7 @@ def get_chatbot_agent():
     llm = ChatGroq(
         api_key=GROQ_API_KEY,
         model=GROQ_MODEL,
-        temperature=0.0,
+        temperature=0.1,  # Slightly above 0 ensures robust tool-calling decisions
     )
     
     tools_list = [
