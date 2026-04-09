@@ -108,8 +108,10 @@ namespace FashionStoreIS.Data
                 ));
                 // Force purge if legacy categories still exist (Giày dép, Váy đầm)
                 bool hasLegacyCategories = await db.Categories.AnyAsync(c => c.Slug == "giay-dep" || c.Slug == "vay-dam" || c.Name == "Giày dép" || c.Name == "Váy đầm");
+                // FORCE_RESEED env var: set to "true" on Render dashboard to force a full wipe+reseed
+                bool forceReseed = Environment.GetEnvironmentVariable("FORCE_RESEED") == "true";
 
-                if (hasBrokenBanners || hasBrokenProducts || hasLegacyCategories || !await db.Banners.AnyAsync() || !await db.Products.AnyAsync())
+                if (hasBrokenBanners || hasBrokenProducts || hasLegacyCategories || forceReseed || !await db.Banners.AnyAsync() || !await db.Products.AnyAsync())
                 {
                     Console.WriteLine("[DB_INIT] Found broken local paths or empty DB. Purging for fresh seed...");
                     
