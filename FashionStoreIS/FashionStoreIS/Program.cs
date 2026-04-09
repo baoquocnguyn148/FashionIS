@@ -11,6 +11,19 @@ AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ─── Disable FileSystemWatcher in Production (Render inotify limit fix) ─────
+// Render's shared Linux host has a 1024 inotify instance limit.
+// ASP.NET Core's default reloadOnChange:true exhausts this limit on startup.
+// In Production we don't need hot-reload config; disable it to prevent crash.
+if (builder.Environment.IsProduction())
+{
+    builder.Configuration.Sources.Clear();
+    builder.Configuration
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false)
+        .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: false)
+        .AddEnvironmentVariables();
+}
+
 // Ensure the app listens on the PORT provided by Render
 var port = Environment.GetEnvironmentVariable("PORT");
 if (!string.IsNullOrEmpty(port))
