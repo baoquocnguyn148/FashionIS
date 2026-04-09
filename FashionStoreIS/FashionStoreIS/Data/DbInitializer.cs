@@ -155,7 +155,7 @@ namespace FashionStoreIS.Data
                     await db.SaveChangesAsync();
 
                     // 4. Products with GitHub CDN images (persists across Render deploys)
-                    const string CDN = "https://raw.githubusercontent.com/baoquocnguyn148/FashionIS/main/FashionStoreIS/FashionStoreIS/FashionStoreIS/wwwroot/images/products/";
+                    const string CDN = "https://raw.githubusercontent.com/baoquocnguyn148/FashionIS/main/FashionStoreIS/FashionStoreIS/wwwroot/images/products/";
                     var products = new List<Product>
                     {
                         new Product { Name = "Áo Thun BN Blank Black",    Slug = "ao-thun-blank-black",  CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 350000,  Description = "Premium cotton blank black shirt",                  ImageUrl = CDN + "BLANKSHIRTBLACK_main.png",                   CreatedAt = DateTime.UtcNow, IsActive = true },
