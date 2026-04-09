@@ -42,6 +42,29 @@ namespace FashionStoreIS.Controllers
             return View();
         }
 
+        [HttpGet("/Home/ForceReseed")]
+        public async Task<IActionResult> ForceReseed()
+        {
+            try
+            {
+                var isPostgres = _db.Database.ProviderName?.Contains("Npgsql", StringComparison.OrdinalIgnoreCase) == true;
+                if (isPostgres)
+                {
+                    await _db.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"PRODUCTS\", \"CATEGORIES\", \"BANNERS\" CASCADE;");
+                }
+                else
+                {
+                    await _db.Database.ExecuteSqlRawAsync("DELETE FROM PRODUCTS; DELETE FROM CATEGORIES; DELETE FROM BANNERS;");
+                }
+
+                return Content("Database TRUNCATED cleanly (soft deletes bypassed). PLEASE RESTART THE RENDER SERVER (Manual Deploy) to re-seed data from scratch.", "text/plain");
+            }
+            catch (Exception ex)
+            {
+                return Content("Error: " + ex.Message + "\n" + ex.InnerException?.Message);
+            }
+        }
+
         public IActionResult Privacy()
         {
             return View();

@@ -98,8 +98,9 @@ namespace FashionStoreIS.Data
                 }
 
                 // 4. Seeding Products & Banners (Baseline) - Aggressive Auto-Purge for Broken Assets
-                bool hasBrokenBanners = await db.Banners.AnyAsync(b => b.ImageUrl.Contains("/uploads/") || b.ImageUrl.Contains("placehold.co") || b.ImageUrl.Contains("unsplash.com"));
-                bool hasBrokenProducts = await db.Products.AnyAsync(p => p.ImageUrl != null && (
+                // Use IgnoreQueryFilters() to detect if we have "trash" hidden by soft-deletes
+                bool hasBrokenBanners = await db.Banners.IgnoreQueryFilters().AnyAsync(b => b.ImageUrl.Contains("/uploads/") || b.ImageUrl.Contains("placehold.co") || b.ImageUrl.Contains("unsplash.com"));
+                bool hasBrokenProducts = await db.Products.IgnoreQueryFilters().AnyAsync(p => p.ImageUrl != null && (
                     p.ImageUrl.StartsWith("/images/") ||        // local path
                     p.ImageUrl.Contains("/uploads/") ||
                     p.ImageUrl.Contains("placehold.co") ||
@@ -107,34 +108,42 @@ namespace FashionStoreIS.Data
                     p.ImageUrl.Contains("/FashionStoreIS/FashionStoreIS/FashionStoreIS/") // The previous CDN typo
                 ));
                 // Force purge if legacy categories still exist (Giày dép, Váy đầm)
-                bool hasLegacyCategories = await db.Categories.AnyAsync(c => c.Slug == "giay-dep" || c.Slug == "vay-dam" || c.Name == "Giày dép" || c.Name == "Váy đầm");
+                bool hasLegacyCategories = await db.Categories.IgnoreQueryFilters().AnyAsync(c => c.Slug == "giay-dep" || c.Slug == "vay-dam" || c.Name == "Giày dép" || c.Name == "Váy đầm");
                 // FORCE_RESEED env var: set to "true" on Render dashboard to force a full wipe+reseed
                 bool forceReseed = Environment.GetEnvironmentVariable("FORCE_RESEED") == "true";
 
-                if (hasBrokenBanners || hasBrokenProducts || hasLegacyCategories || forceReseed || !await db.Banners.AnyAsync() || !await db.Products.AnyAsync())
+                bool hasAnyProducts = await db.Products.IgnoreQueryFilters().AnyAsync();
+                bool hasAnyBanners = await db.Banners.IgnoreQueryFilters().AnyAsync();
+
+                Console.WriteLine($"[DB_INIT] Diagnostics: BrokenBanners={hasBrokenBanners}, BrokenProducts={hasBrokenProducts}, LegacyCats={hasLegacyCategories}, Force={forceReseed}, AnyProd={hasAnyProducts}, AnyBanner={hasAnyBanners}");
+
+                if (hasBrokenBanners || hasBrokenProducts || hasLegacyCategories || forceReseed || !hasAnyBanners || !hasAnyProducts)
                 {
-                    Console.WriteLine("[DB_INIT] Found broken local paths or empty DB. Purging for fresh seed...");
+                    Console.WriteLine("[DB_INIT] Triggering PURGE & RE-SEED...");
                     
-                    // Purge Banners
-                    var allBanners = await db.Banners.ToListAsync();
-                    db.Banners.RemoveRange(allBanners);
-
-                    // Purge Products & Related
-                    var allSkus = await db.ProductSkus.ToListAsync();
-                    db.ProductSkus.RemoveRange(allSkus);
-                    
-                    var allImages = await db.ProductImages.ToListAsync();
-                    db.ProductImages.RemoveRange(allImages);
-
-                    var allProducts = await db.Products.ToListAsync();
-                    db.Products.RemoveRange(allProducts);
-
-                    // Purge Categories to avoid slug conflicts
-                    var allCats = await db.Categories.ToListAsync();
-                    db.Categories.RemoveRange(allCats);
+                    if (isPostgres)
+                    {
+                        // HARD PURGE using Raw SQL to bypass soft-delete logic
+                        Console.WriteLine("[DB_INIT] Executing Hard Purge (Raw SQL TRUNCATE)...");
+                        await db.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"PRODUCTIMAGES\", \"PRODUCTSKUS\", \"PRODUCTS\", \"CATEGORIES\", \"BANNERS\" CASCADE;");
+                    }
+                    else
+                    {
+                        // Fallback for Sqlite or if TRUNCATE fails
+                        var allBanners = await db.Banners.IgnoreQueryFilters().ToListAsync();
+                        db.Banners.RemoveRange(allBanners);
+                        var allSkus = await db.ProductSkus.IgnoreQueryFilters().ToListAsync();
+                        db.ProductSkus.RemoveRange(allSkus);
+                        var allImages = await db.ProductImages.IgnoreQueryFilters().ToListAsync();
+                        db.ProductImages.RemoveRange(allImages);
+                        var allProducts = await db.Products.IgnoreQueryFilters().ToListAsync();
+                        db.Products.RemoveRange(allProducts);
+                        var allCats = await db.Categories.IgnoreQueryFilters().ToListAsync();
+                        db.Categories.RemoveRange(allCats);
+                    }
                     
                     await db.SaveChangesAsync();
-                    Console.WriteLine("[DB_INIT] Old data purged completely.");
+                    Console.WriteLine("[DB_INIT] Purge completed successfully.");
 
                     // --- RE-SEED DATA ---
                     
