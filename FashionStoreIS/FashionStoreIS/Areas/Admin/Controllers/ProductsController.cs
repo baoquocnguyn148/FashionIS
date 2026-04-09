@@ -53,6 +53,63 @@ namespace FashionStoreIS.Areas.Admin.Controllers
             return RedirectToAction("Index");
         }
 
+        /// <summary>
+        /// Migrates all product ImageUrls from local /images/... paths to GitHub CDN URLs.
+        /// Called from Admin UI to fix broken images on Render (ephemeral filesystem).
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "SuperAdmin")]
+        public async Task<IActionResult> FixImages()
+        {
+            const string CDN = "https://raw.githubusercontent.com/baoquocnguyn148/FashionIS/main/FashionStoreIS/FashionStoreIS/wwwroot/images/products/";
+
+            // Map: filename -> CDN URL (handles case-sensitive filenames on Linux/Render)
+            var filenameMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["BLANKSHIRTBLACK_main.png"]                = CDN + "BLANKSHIRTBLACK_main.png",
+                ["BlankShirtWhite_main.png"]               = CDN + "BlankShirtWhite_main.png",
+                ["COACHSHIRT-GREEN_main.png"]              = CDN + "COACHSHIRT-GREEN_main.png",
+                ["FW25OSMSWEATER_GRAY_main.png"]           = CDN + "FW25OSMSWEATER_GRAY_main.png",
+                ["Coachtracksuitpant.png"]                 = CDN + "Coachtracksuitpant.png",
+                ["sportsweetpant_gray.png"]                = CDN + "sportsweetpant_gray.png",
+                ["vitaltrankpants_blue.png"]               = CDN + "vitaltrankpants_blue.png",
+                ["vitaltrankpants_red.png"]                = CDN + "vitaltrankpants_red.png",
+                ["BlackSBomber.png"]                       = CDN + "BlackSBomber.png",
+                ["W25SSMAJEANSZIPHOODIE_BLACK_main.png"]   = CDN + "W25SSMAJEANSZIPHOODIE_BLACK_main.png",
+                ["COWHIDELEATHERBAG-EMBOSSEDBLACK.png"]    = CDN + "COWHIDELEATHERBAG-EMBOSSEDBLACK.png",
+                ["COWHIDELEATHERBAG-EMBOSSEDWHITE.png"]    = CDN + "COWHIDELEATHERBAG-EMBOSSEDWHITE.png",
+                ["COWHIDELEATHERBAG-HAIRON BROWN.png"]     = CDN + "COWHIDELEATHERBAG-HAIRON BROWN.png",
+                ["Papacap_red.png"]                        = CDN + "Papacap_red.png",
+                ["igifms_cap.png"]                         = CDN + "igifms_cap.png",
+            };
+
+            var products = await _db.Products.ToListAsync();
+            int fixedCount = 0;
+
+            foreach (var p in products)
+            {
+                if (string.IsNullOrEmpty(p.ImageUrl)) continue;
+
+                // Already a CDN URL — skip
+                if (p.ImageUrl.StartsWith("https://raw.githubusercontent.com")) continue;
+
+                // Extract filename from local path e.g. "/images/products/BlankShirtWhite_main.png"
+                var filename = Path.GetFileName(p.ImageUrl);
+
+                if (filenameMap.TryGetValue(filename, out var cdnUrl))
+                {
+                    p.ImageUrl = cdnUrl;
+                    fixedCount++;
+                }
+            }
+
+            await _db.SaveChangesAsync();
+
+            TempData["Success"] = $"✅ Đã cập nhật {fixedCount} ảnh sản phẩm sang GitHub CDN. Trang web sẽ hiển thị ảnh đúng ngay bây giờ.";
+            return RedirectToAction("Index");
+        }
+
         public async Task<IActionResult> Index(string? search, int? categoryId)
         {
             var query = _db.Products.Include(p => p.Category).AsQueryable();

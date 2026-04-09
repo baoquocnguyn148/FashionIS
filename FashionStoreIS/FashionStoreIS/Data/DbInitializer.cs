@@ -100,10 +100,11 @@ namespace FashionStoreIS.Data
                 // 4. Seeding Products & Banners (Baseline) - Aggressive Auto-Purge for Broken Assets
                 bool hasBrokenBanners = await db.Banners.AnyAsync(b => b.ImageUrl.Contains("/uploads/") || b.ImageUrl.Contains("placehold.co") || b.ImageUrl.Contains("unsplash.com"));
                 bool hasBrokenProducts = await db.Products.AnyAsync(p => p.ImageUrl != null && (
-                    p.ImageUrl.StartsWith("/images/") ||        // local path - breaks on Render ephemeral FS
+                    p.ImageUrl.StartsWith("/images/") ||        // local path
                     p.ImageUrl.Contains("/uploads/") ||
                     p.ImageUrl.Contains("placehold.co") ||
-                    p.ImageUrl.Contains("unsplash.com")
+                    p.ImageUrl.Contains("unsplash.com") ||
+                    p.ImageUrl.Contains("/FashionStoreIS/FashionStoreIS/FashionStoreIS/") // The previous CDN typo
                 ));
                 // Force purge if legacy categories still exist (Giày dép, Váy đầm)
                 bool hasLegacyCategories = await db.Categories.AnyAsync(c => c.Slug == "giay-dep" || c.Slug == "vay-dam" || c.Name == "Giày dép" || c.Name == "Váy đầm");
