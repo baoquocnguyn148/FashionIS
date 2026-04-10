@@ -125,7 +125,24 @@ namespace FashionStoreIS.Data
                     {
                         // HARD PURGE using Raw SQL to bypass soft-delete logic
                         Console.WriteLine("[DB_INIT] Executing Hard Purge (Raw SQL TRUNCATE)...");
-                        await db.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"PRODUCTIMAGES\", \"PRODUCTSKUS\", \"PRODUCTS\", \"CATEGORIES\", \"BANNERS\" CASCADE;");
+                        try 
+                        {
+                            await db.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"productimages\", \"productskus\", \"products\", \"categories\", \"banners\" CASCADE;");
+                        } 
+                        catch (Exception sqlex)
+                        {
+                            Console.WriteLine($"[DB_INIT_WARN] Truncate failed, attempting fallback EF RemoveRange: {sqlex.Message}");
+                            var allBanners = await db.Banners.IgnoreQueryFilters().ToListAsync();
+                            db.Banners.RemoveRange(allBanners);
+                            var allSkus = await db.ProductSkus.IgnoreQueryFilters().ToListAsync();
+                            db.ProductSkus.RemoveRange(allSkus);
+                            var allImages = await db.ProductImages.IgnoreQueryFilters().ToListAsync();
+                            db.ProductImages.RemoveRange(allImages);
+                            var allProducts = await db.Products.IgnoreQueryFilters().ToListAsync();
+                            db.Products.RemoveRange(allProducts);
+                            var allCats = await db.Categories.IgnoreQueryFilters().ToListAsync();
+                            db.Categories.RemoveRange(allCats);
+                        }
                     }
                     else
                     {
@@ -149,8 +166,10 @@ namespace FashionStoreIS.Data
                     
                     // 1. Banners
                     db.Banners.AddRange(
-                        new Banner { Title = "NEW COLLECTION 2026", SubTitle = "FOR DREAMERS ONLY", ImageUrl = "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1400&q=80", Position = "Hero", LinkUrl = "/Product/List", IsActive = true, DisplayOrder = 1, CreatedAt = DateTime.UtcNow },
-                        new Banner { Title = "PREMIUM TOPS", SubTitle = "ESSENTIALS", ImageUrl = "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1400&q=80", Position = "Category1", LinkUrl = "/Product/List?cat=tops", IsActive = true, DisplayOrder = 2, CreatedAt = DateTime.UtcNow }
+                        new Banner { Title = "NEW COLLECTION 2026", SubTitle = "FOR DREAMERS ONLY", ImageUrl = "/uploads/banners/Banner chính.png", Position = "Hero", LinkUrl = "/Product/List", IsActive = true, DisplayOrder = 1, CreatedAt = DateTime.UtcNow },
+                        new Banner { Title = "PREMIUM TOPS", SubTitle = "ESSENTIALS", ImageUrl = "/uploads/banners/tops.png", Position = "Category1", LinkUrl = "/Product/List?cat=tops", IsActive = true, DisplayOrder = 2, CreatedAt = DateTime.UtcNow },
+                        new Banner { Title = "BOTTOMS", SubTitle = "ALL DAY COMFORT", ImageUrl = "/uploads/banners/bottoms.png", Position = "Category2", LinkUrl = "/Product/List?cat=pants", IsActive = true, DisplayOrder = 3, CreatedAt = DateTime.UtcNow },
+                        new Banner { Title = "ACCESSORIES", SubTitle = "COMPLETE YOUR LOOK", ImageUrl = "/uploads/banners/Accessories.png", Position = "Category3", LinkUrl = "/Product/List?cat=accessories", IsActive = true, DisplayOrder = 4, CreatedAt = DateTime.UtcNow }
                     );
 
                     // 2. Categories
@@ -166,29 +185,28 @@ namespace FashionStoreIS.Data
                     
                     await db.SaveChangesAsync();
 
-                    // 4. Products with GitHub CDN images (persists across Render deploys)
-                    const string CDN = "https://raw.githubusercontent.com/baoquocnguyn148/FashionIS/main/FashionStoreIS/FashionStoreIS/wwwroot/images/products/";
+                    // 4. Products with Local Images from the "Product Images" folder
+                    const string LOCAL_IMG_PATH = "/uploads/products/";
                     var products = new List<Product>
                     {
-                        new Product { Name = "Áo Thun BN Blank Black",    Slug = "ao-thun-blank-black",  CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 350000,  Description = "Premium cotton blank black shirt",                  ImageUrl = CDN + "BLANKSHIRTBLACK_main.png",                   CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Áo Thun BN Blank White",    Slug = "ao-thun-blank-white",  CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 350000,  Description = "Premium cotton blank white shirt",                  ImageUrl = CDN + "BlankShirtWhite_main.png",                   CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Áo Coach Shirt Green",      Slug = "coach-shirt-green",    CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 450000,  Description = "Modern coach shirt in vibrant green",              ImageUrl = CDN + "COACHSHIRT-GREEN_main.png",                  CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Áo Sweater Gray FW25",      Slug = "sweater-gray-fw25",    CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 590000,  Description = "Winter 2025 Oversize Sweater",                     ImageUrl = CDN + "FW25OSMSWEATER_GRAY_main.png",               CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "FW25 Blank Shirt Black",    Slug = "fw25-blank-shirt-black",CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 490000,  Description = "FW25 collection blank black shirt",               ImageUrl = CDN + "BLANKSHIRTBLACK_main.png",                   CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Áo Thun BN Blank Black",    Slug = "ao-thun-blank-black",  CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 350000,  Description = "Premium cotton blank black shirt",                  ImageUrl = LOCAL_IMG_PATH + "BLANKSHIRTBLACK_main.png",                   CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Áo Thun BN Blank White",    Slug = "ao-thun-blank-white",  CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 350000,  Description = "Premium cotton blank white shirt",                  ImageUrl = LOCAL_IMG_PATH + "BlankShirtWhite_main.png",                   CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Áo Coach Shirt Green",      Slug = "coach-shirt-green",    CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 450000,  Description = "Modern coach shirt in vibrant green",               ImageUrl = LOCAL_IMG_PATH + "COACHSHIRT-GREEN_main.png",                  CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Áo Sweater Gray FW25",      Slug = "sweater-gray-fw25",    CategoryId = catTops.Id,  SupplierId = supplier.Id, Price = 590000,  Description = "Winter 2025 Oversize Sweater",                      ImageUrl = LOCAL_IMG_PATH + "FW25OSMSWEATER_GRAY_main.png",               CreatedAt = DateTime.UtcNow, IsActive = true },
                         
-                        new Product { Name = "Quần Tracksuit Coach",      Slug = "tracksuit-pant-coach", CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 550000,  Description = "Comfortable tracksuit pants",                     ImageUrl = CDN + "Coachtracksuitpant.png",                     CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Quần Sport Sweatpant Gray", Slug = "sport-sweatpant-gray", CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 420000,  Description = "Sporty gray sweatpants",                          ImageUrl = CDN + "sportsweetpant_gray.png",                    CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Quần Vital Trank Blue",     Slug = "vital-trank-blue",     CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 480000,  Description = "Vital edition blue trank pants",                  ImageUrl = CDN + "vitaltrankpants_blue.png",                   CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Quần Vital Trank Red",      Slug = "vital-trank-red",      CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 480000,  Description = "Vital edition red trank pants",                   ImageUrl = CDN + "vitaltrankpants_red.png",                    CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Quần Tracksuit Coach",      Slug = "tracksuit-pant-coach", CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 550000,  Description = "Comfortable tracksuit pants",                       ImageUrl = LOCAL_IMG_PATH + "Coachtracksuitpant.png",                     CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Quần Sport Sweatpant Gray", Slug = "sport-sweatpant-gray", CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 420000,  Description = "Sporty gray sweatpants",                            ImageUrl = LOCAL_IMG_PATH + "sportsweetpant_gray.png",                    CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Quần Vital Trank Blue",     Slug = "vital-trank-blue",     CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 480000,  Description = "Vital edition blue trank pants",                    ImageUrl = LOCAL_IMG_PATH + "vitaltrankpants_blue.png",                   CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Quần Vital Trank Red",      Slug = "vital-trank-red",      CategoryId = catPants.Id, SupplierId = supplier.Id, Price = 480000,  Description = "Vital edition red trank pants",                     ImageUrl = LOCAL_IMG_PATH + "vitaltrankpants_red.png",                    CreatedAt = DateTime.UtcNow, IsActive = true },
                         
-                        new Product { Name = "Áo Bomber BN S-Black",      Slug = "bomber-s-black",       CategoryId = catOuter.Id, SupplierId = supplier.Id, Price = 890000,  Description = "S-Class Black Bomber Jacket",                     ImageUrl = CDN + "BlackSBomber.png",                           CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Áo Hoodie Jeans Zip Black", Slug = "hoodie-jeans-zip",     CategoryId = catOuter.Id, SupplierId = supplier.Id, Price = 750000,  Description = "Black Zip Hoodie Jeans Style",                    ImageUrl = CDN + "W25SSMAJEANSZIPHOODIE_BLACK_main.png",       CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Áo Bomber BN S-Black",      Slug = "bomber-s-black",       CategoryId = catOuter.Id, SupplierId = supplier.Id, Price = 890000,  Description = "S-Class Black Bomber Jacket",                       ImageUrl = LOCAL_IMG_PATH + "BlackSBomber.png",                           CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Áo Hoodie Jeans Zip Black", Slug = "hoodie-jeans-zip",     CategoryId = catOuter.Id, SupplierId = supplier.Id, Price = 750000,  Description = "Black Zip Hoodie Jeans Style",                      ImageUrl = LOCAL_IMG_PATH + "W25SSMAJEANSZIPHOODIE_BLACK_main.png",       CreatedAt = DateTime.UtcNow, IsActive = true },
                         
-                        new Product { Name = "Túi Da Cowhide Black",       Slug = "cowhide-bag-black",   CategoryId = catAccess.Id, SupplierId = supplier.Id, Price = 1200000, Description = "Premium embossed black cowhide leather bag",     ImageUrl = CDN + "COWHIDELEATHERBAG-EMBOSSEDBLACK.png",        CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Túi Da Cowhide White",       Slug = "cowhide-bag-white",   CategoryId = catAccess.Id, SupplierId = supplier.Id, Price = 1200000, Description = "Premium embossed white cowhide leather bag",     ImageUrl = CDN + "COWHIDELEATHERBAG-EMBOSSEDWHITE.png",        CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Túi Da Cowhide Brown",       Slug = "cowhide-bag-brown",   CategoryId = catAccess.Id, SupplierId = supplier.Id, Price = 1350000, Description = "Hairon brown cowhide leather bag",               ImageUrl = CDN + "COWHIDELEATHERBAG-HAIRON BROWN.png",         CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Mũ Papa Cap Red",            Slug = "papa-cap-red",        CategoryId = catAccess.Id, SupplierId = supplier.Id, Price = 250000,  Description = "Classic red papa cap",                           ImageUrl = CDN + "Papacap_red.png",                            CreatedAt = DateTime.UtcNow, IsActive = true },
-                        new Product { Name = "Mũ IGIFMS Cap",              Slug = "igifms-cap",          CategoryId = catAccess.Id, SupplierId = supplier.Id, Price = 290000,  Description = "Limited edition IGIFMS cap",                     ImageUrl = CDN + "igifms_cap.png",                             CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Túi Da Cowhide Black",       Slug = "cowhide-bag-black",   CategoryId = catAccess.Id, SupplierId = supplier.Id, Price = 1200000, Description = "Premium embossed black cowhide leather bag",       ImageUrl = LOCAL_IMG_PATH + "COWHIDELEATHERBAG-EMBOSSEDBLACK.png",        CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Túi Da Cowhide White",       Slug = "cowhide-bag-white",   CategoryId = catAccess.Id, SupplierId = supplier.Id, Price = 1200000, Description = "Premium embossed white cowhide leather bag",       ImageUrl = LOCAL_IMG_PATH + "COWHIDELEATHERBAG-EMBOSSEDWHITE.png",        CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Túi Da Cowhide Brown",       Slug = "cowhide-bag-brown",   CategoryId = catAccess.Id, SupplierId = supplier.Id, Price = 1350000, Description = "Hairon brown cowhide leather bag",                 ImageUrl = LOCAL_IMG_PATH + "COWHIDELEATHERBAG-HAIRON BROWN.png",         CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Mũ Papa Cap Red",            Slug = "papa-cap-red",        CategoryId = catAccess.Id, SupplierId = supplier.Id, Price = 250000,  Description = "Classic red papa cap",                             ImageUrl = LOCAL_IMG_PATH + "Papacap_red.png",                            CreatedAt = DateTime.UtcNow, IsActive = true },
+                        new Product { Name = "Mũ IGIFMS Cap",              Slug = "igifms-cap",          CategoryId = catAccess.Id, SupplierId = supplier.Id, Price = 290000,  Description = "Limited edition IGIFMS cap",                       ImageUrl = LOCAL_IMG_PATH + "igifms_cap.png",                             CreatedAt = DateTime.UtcNow, IsActive = true },
                     };
                     db.Products.AddRange(products);
                     await db.SaveChangesAsync();
