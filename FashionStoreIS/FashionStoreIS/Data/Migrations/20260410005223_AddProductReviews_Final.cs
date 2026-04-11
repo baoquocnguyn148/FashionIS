@@ -15,16 +15,17 @@ namespace FashionStoreIS.Data.Migrations
                 name: "PRODUCTREVIEWS",
                 columns: table => new
                 {
-                    ID = table.Column<int>(type: "INTEGER", nullable: false)
+                    ID = table.Column<int>(nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn)
                         .Annotation("Sqlite:Autoincrement", true),
-                    PRODUCTID = table.Column<int>(type: "INTEGER", nullable: false),
-                    USERID = table.Column<string>(type: "TEXT", nullable: false),
-                    RATING = table.Column<int>(type: "INTEGER", nullable: false),
-                    COMMENT = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true),
-                    ISAPPROVED = table.Column<bool>(type: "INTEGER", nullable: false),
-                    CREATEDAT = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UPDATEDAT = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    ISDELETED = table.Column<bool>(type: "INTEGER", nullable: false)
+                    PRODUCTID = table.Column<int>(nullable: false),
+                    USERID = table.Column<string>(nullable: false),
+                    RATING = table.Column<int>(nullable: false),
+                    COMMENT = table.Column<string>(maxLength: 1000, nullable: true),
+                    ISAPPROVED = table.Column<bool>(nullable: false),
+                    CREATEDAT = table.Column<DateTime>(nullable: false),
+                    UPDATEDAT = table.Column<DateTime>(nullable: true),
+                    ISDELETED = table.Column<bool>(nullable: false)
                 },
                 constraints: table =>
                 {

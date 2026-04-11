@@ -11,7 +11,7 @@ services:
     healthCheckPath: /
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
-        value: Production
+        value: Development
       - key: POSTGRES_CONNECTION_STRING
         fromDatabase:
           name: fashion-db

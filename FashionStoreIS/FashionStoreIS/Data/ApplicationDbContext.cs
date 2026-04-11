@@ -493,6 +493,18 @@ namespace FashionStoreIS.Data
                 b.HasOne(x => x.Employee).WithMany().HasForeignKey(x => x.EmployeeId).HasConstraintName("FK_KPI_EMP");
                 b.HasOne(x => x.Reviewer).WithMany().HasForeignKey(x => x.ReviewerId).HasConstraintName("FK_KPI_REV");
             });
+
+            builder.Entity<ProductReview>(b => {
+                b.ToTable(isPostgres ? "productreviews" : "PRODUCTREVIEWS");
+                b.Property(x => x.ProductId).HasColumnName(isPostgres ? "productid" : "PRODUCTID");
+                b.Property(x => x.UserId).HasColumnName(isPostgres ? "userid" : "USERID");
+                b.Property(x => x.Rating).HasColumnName(isPostgres ? "rating" : "RATING");
+                b.Property(x => x.Comment).HasColumnName(isPostgres ? "comment" : "COMMENT");
+                b.Property(x => x.IsApproved).HasColumnName(isPostgres ? "isapproved" : "ISAPPROVED");
+                
+                b.HasOne(x => x.Product).WithMany(p => p.Reviews).HasForeignKey(x => x.ProductId).HasConstraintName("FK_REV_PROD");
+                b.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).HasConstraintName("FK_REV_USER");
+            });
         }
     }
 }

@@ -103,8 +103,8 @@ namespace FashionStoreIS.Data
                 try 
                 {
                     string createTableSql = isPostgres 
-                        ? "CREATE TABLE IF NOT EXISTS \"productreviews\" (\"id\" SERIAL PRIMARY KEY, \"productid\" INTEGER NOT NULL, \"userid\" TEXT NOT NULL, \"rating\" INTEGER NOT NULL, \"comment\" TEXT, \"isapproved\" BOOLEAN NOT NULL DEFAULT FALSE, \"createdat\" TIMESTAMP NOT NULL, \"updatedat\" TIMESTAMP, \"isdeleted\" BOOLEAN NOT NULL DEFAULT FALSE);"
-                        : "CREATE TABLE IF NOT EXISTS \"PRODUCTREVIEWS\" (\"ID\" INTEGER PRIMARY KEY AUTOINCREMENT, \"PRODUCTID\" INTEGER NOT NULL, \"USERID\" TEXT NOT NULL, \"RATING\" INTEGER NOT NULL, \"COMMENT\" TEXT, \"ISAPPROVED\" INTEGER NOT NULL DEFAULT 0, \"CREATEDAT\" TEXT NOT NULL, \"UPDATEDAT\" TEXT, \"ISDELETED\" INTEGER NOT NULL DEFAULT 0);";
+                        ? "CREATE TABLE IF NOT EXISTS productreviews (id SERIAL PRIMARY KEY, productid INTEGER NOT NULL, userid TEXT NOT NULL, rating INTEGER NOT NULL, comment TEXT, isapproved BOOLEAN NOT NULL DEFAULT TRUE, createdat TIMESTAMP NOT NULL, updatedat TIMESTAMP, isdeleted BOOLEAN NOT NULL DEFAULT FALSE);"
+                        : "CREATE TABLE IF NOT EXISTS PRODUCTREVIEWS (ID INTEGER PRIMARY KEY AUTOINCREMENT, PRODUCTID INTEGER NOT NULL, USERID TEXT NOT NULL, RATING INTEGER NOT NULL, COMMENT TEXT, ISAPPROVED INTEGER NOT NULL DEFAULT 1, CREATEDAT TEXT NOT NULL, UPDATEDAT TEXT, ISDELETED INTEGER NOT NULL DEFAULT 0);";
                     
                     await db.Database.ExecuteSqlRawAsync(createTableSql);
                     Console.WriteLine("[DB_INIT] ProductReviews table check completed.");
