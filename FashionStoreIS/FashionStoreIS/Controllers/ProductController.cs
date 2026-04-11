@@ -140,24 +140,17 @@ namespace FashionStoreIS.Controllers
 
         public async Task<IActionResult> Detail(int id)
         {
-            try
-            {
-                var product = await _db.Products
-                    .Include(p => p.Category)
-                    .Include(p => p.Images)
-                    .Include(p => p.Skus)
-                    .Include(p => p.Reviews.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedAt))
-                        .ThenInclude(r => r.User)
-                    .FirstOrDefaultAsync(p => p.Id == id);
+            var product = await _db.Products
+                .Include(p => p.Category)
+                .Include(p => p.Images)
+                .Include(p => p.Skus)
+                .Include(p => p.Reviews.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedAt))
+                    .ThenInclude(r => r.User)
+                .FirstOrDefaultAsync(p => p.Id == id);
 
-                if (product == null || !product.IsActive) return NotFound();
+            if (product == null || !product.IsActive) return NotFound();
 
-                return View(product);
-            }
-            catch
-            {
-                return NotFound();
-            }
+            return View(product);
         }
 
         private void GetChildCategoryIds(int parentId, List<Category> allCategories, List<int> ids)
