@@ -30,6 +30,7 @@ namespace FashionStoreIS.Data
         public DbSet<Notification> Notifications { get; set; }
         public DbSet<Campaign> Campaigns { get; set; }
         public DbSet<WishlistItem> WishlistItems { get; set; }
+        public DbSet<ProductReview> ProductReviews { get; set; }
 
         // HRM & Payroll
         public DbSet<Department> Departments { get; set; }

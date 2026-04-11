@@ -8,7 +8,7 @@ import tools as api_tools
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 # Force a stable, high-limit model for free tier
 # Use a more capable model for reliable tool calling
-GROQ_MODEL = "llama-3.3-70b-versatile" 
+GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-8b-instant") 
 
 from typing import Optional
 

@@ -97,6 +97,25 @@ namespace FashionStoreIS.Data
                     if (res.Succeeded) await userManager.AddToRoleAsync(admin, "SuperAdmin");
                 }
 
+                // ─── LATEST FEATURE: PRODUCT REVIEWS TABLE HACK ───
+                // We use raw SQL because EF migrations are currently blocked by a naming convention mismatch locally.
+                // This ensures the table exists for localhost testing without affecting production migrations.
+                try 
+                {
+                    string createTableSql = isPostgres 
+                        ? "CREATE TABLE IF NOT EXISTS \"productreviews\" (\"id\" SERIAL PRIMARY KEY, \"productid\" INTEGER NOT NULL, \"userid\" TEXT NOT NULL, \"rating\" INTEGER NOT NULL, \"comment\" TEXT, \"isapproved\" BOOLEAN NOT NULL DEFAULT FALSE, \"createdat\" TIMESTAMP NOT NULL, \"updatedat\" TIMESTAMP, \"isdeleted\" BOOLEAN NOT NULL DEFAULT FALSE);"
+                        : "CREATE TABLE IF NOT EXISTS \"PRODUCTREVIEWS\" (\"ID\" INTEGER PRIMARY KEY AUTOINCREMENT, \"PRODUCTID\" INTEGER NOT NULL, \"USERID\" TEXT NOT NULL, \"RATING\" INTEGER NOT NULL, \"COMMENT\" TEXT, \"ISAPPROVED\" INTEGER NOT NULL DEFAULT 0, \"CREATEDAT\" TEXT NOT NULL, \"UPDATEDAT\" TEXT, \"ISDELETED\" INTEGER NOT NULL DEFAULT 0);";
+                    
+                    await db.Database.ExecuteSqlRawAsync(createTableSql);
+                    Console.WriteLine("[DB_INIT] ProductReviews table check completed.");
+                }
+                catch (Exception ex) { Console.WriteLine($"[DB_INIT_WARN] ProductReviews hack failed: {ex.Message}"); }
+                // ───────────────────────────────────────────────────
+
+                // Seed Product Reviews early to ensure it runs regardless of later purge/seed failures
+                try { await SeedProductReviews(db, userManager); }
+                catch (Exception ex) { Console.WriteLine($"[DB_INIT_WARN] SeedProductReviews failed: {ex.Message}"); }
+
                 // 4. Seeding Products & Banners (Baseline) - Aggressive Auto-Purge for Broken Assets
                 // Use IgnoreQueryFilters() to detect if we have "trash" hidden by soft-deletes
                 bool hasBrokenBanners = await db.Banners.IgnoreQueryFilters().AnyAsync(b => b.ImageUrl.Contains("/uploads/") || b.ImageUrl.Contains("placehold.co") || b.ImageUrl.Contains("unsplash.com"));
@@ -159,8 +178,15 @@ namespace FashionStoreIS.Data
                         db.Categories.RemoveRange(allCats);
                     }
                     
-                    await db.SaveChangesAsync();
-                    Console.WriteLine("[DB_INIT] Purge completed successfully.");
+                    try 
+                    {
+                        await db.SaveChangesAsync();
+                        Console.WriteLine("[DB_INIT] Purge completed successfully.");
+                    }
+                    catch (Exception pex) 
+                    { 
+                        Console.WriteLine($"[DB_INIT_WARN] Purge SaveChanges failed (FK constraints?): {pex.Message}"); 
+                    }
 
                     // --- RE-SEED DATA ---
                     
@@ -801,6 +827,53 @@ namespace FashionStoreIS.Data
             }
 
             Console.WriteLine("[DB_INIT] HRM & Payroll professional seeding complete.");
+
+            Console.WriteLine("[DB_INIT] Initialization successful!");
+        }
+
+        private static async Task SeedProductReviews(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
+        {
+            if (await db.ProductReviews.AnyAsync()) return;
+
+            var products = await db.Products.ToListAsync();
+            var users = await userManager.Users.Take(5).ToListAsync();
+            if (!users.Any() || !products.Any()) return;
+
+            var random = new Random();
+            var comments = new[]
+            {
+                "Sản phẩm rất tuyệt vời, chất lượng vượt mong đợi!",
+                "Giao hàng nhanh, đóng gói cẩn thận. Rất hài lòng.",
+                "Chất vải mềm mịn, mặc rất thoải mái. Sẽ ủng hộ shop dài dài.",
+                "Form dáng chuẩn, màu sắc y hệt hình mẫu.",
+                "Đáng đồng tiền bát gạo, shop tư vấn rất nhiệt tình.",
+                "Chất lượng tốt, nhưng giao hàng hơi chậm một chút.",
+                "Sản phẩm đẹp, đường may chắc chắn.",
+                "Rất ưng ý với thiết kế này, mang phong cách hiện đại.",
+                "Mua lần thứ 2 rồi, vẫn rất hài lòng với BN Store.",
+                "Vải hơi mỏng so với mình nghĩ nhưng nhìn chung vẫn ổn."
+            };
+
+            foreach (var product in products)
+            {
+                int reviewCount = random.Next(3, 8);
+                for (int i = 0; i < reviewCount; i++)
+                {
+                    var user = users[random.Next(users.Count)];
+                    db.ProductReviews.Add(new ProductReview
+                    {
+                        ProductId = product.Id,
+                        UserId = user.Id,
+                        Rating = random.Next(4, 6), // 4 or 5 stars
+                        Comment = comments[random.Next(comments.Length)],
+                        IsApproved = true,
+                        CreatedAt = DateTime.UtcNow.AddDays(-random.Next(1, 30))
+                    });
+                }
+            }
+
+            await db.SaveChangesAsync();
+            Console.WriteLine($"[DB_INIT] Seeded {products.Count} products with random reviews.");
         }
     }
 }

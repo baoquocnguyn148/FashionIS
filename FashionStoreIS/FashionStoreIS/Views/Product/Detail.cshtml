@@ -113,6 +113,42 @@
     .voucher-expiry { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 0.05em; }
     .btn-copy-voucher { background: #111; color: #fff; border: none; padding: 6px 12px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; }
     .btn-copy-voucher:hover { opacity: 0.8; }
+
+    /* --- Review Section Styles --- */
+    .pdp-reviews-section { border-top: 1px solid #eee; padding-top: 60px; margin-top: 40px; }
+    .review-summary { display: flex; align-items: center; gap: 40px; margin-bottom: 40px; }
+    .rating-big { text-align: center; }
+    .rating-big-num { font-size: 48px; font-weight: 700; color: #111; line-height: 1; }
+    .stars-wrap { color: #f1c40f; font-size: 18px; margin: 8px 0; }
+    .stars-wrap.empty { color: #ddd; }
+    .rating-count { font-size: 13px; color: #888; }
+    
+    .review-list { display: flex; flex-direction: column; gap: 32px; }
+    .review-card { padding-bottom: 32px; border-bottom: 1px solid #f5f5f5; }
+    .review-header { display: flex; justify-content: space-between; margin-bottom: 12px; }
+    .review-author { display: flex; align-items: center; gap: 12px; }
+    .author-avatar { width: 32px; height: 32px; background: #eee; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #888; text-transform: uppercase; }
+    .author-name { font-size: 14px; font-weight: 600; color: #111; }
+    .review-date { font-size: 12px; color: #aaa; }
+    .review-rating { color: #f1c40f; font-size: 12px; margin-bottom: 8px; }
+    .review-comment { font-size: 14px; color: #555; line-height: 1.6; }
+
+    .review-form-box { background: #fafafa; padding: 32px; border-radius: 8px; margin-bottom: 50px; }
+    .review-form-title { font-size: 18px; font-weight: 700; margin-bottom: 24px; text-align: center; }
+    .star-rating-picker { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
+    .star-rating-picker svg { width: 32px; height: 32px; cursor: pointer; fill: #ddd; transition: fill 0.2s; }
+    .star-rating-picker svg.active { fill: #f1c40f; }
+    .review-form textarea { width: 100%; border: 1.5px solid #ddd; border-radius: 4px; padding: 12px; font-size: 14px; min-height: 120px; margin-bottom: 16px; outline: none; }
+    .review-form textarea:focus { border-color: #111; }
+    .btn-submit-review { width: 100%; background: #111; color: #fff; border: none; height: 44px; border-radius: 4px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+    .btn-submit-review:hover { opacity: 0.9; }
+
+    /* --- Top Rating Summary --- */
+    .pdp-rating-summary { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; cursor: pointer; transition: opacity 0.2s; }
+    .pdp-rating-summary:hover { opacity: 0.7; }
+    .pdp-rating-summary .stars { color: #f1c40f; font-size: 14px; letter-spacing: -1px; }
+    .pdp-rating-summary .score { font-size: 13px; font-weight: 700; color: #111; margin-left: 2px; }
+    .pdp-rating-summary .count { font-size: 13px; color: #888; }
 </style>
 
 <div class="pdp-wrap">
@@ -156,6 +192,24 @@
         <div class="pdp-info">
             <div class="pdp-brand">BN Store Premium</div>
             <h1 class="pdp-name">@Model.Name</h1>
+            
+            <div class="pdp-rating-summary" onclick="scrollToReviews()">
+                <div class="stars">
+                    @{
+                        var topReviews = Model.Reviews?.ToList() ?? new List<ProductReview>();
+                        var topAvg = topReviews.Any() ? topReviews.Average(r => r.Rating) : 0;
+                        var topCount = topReviews.Count;
+                    }
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        if (i <= Math.Round(topAvg)) { <text>★</text> }
+                        else { <text>☆</text> }
+                    }
+                </div>
+                <span class="score">@topAvg.ToString("F1")</span>
+                <span class="count">(@topCount đánh giá)</span>
+            </div>
+
             <div class="pdp-price" id="display-price">@Model.Price.ToString("N0") ₫</div>
 
             <!-- Voucher -->
@@ -260,6 +314,98 @@
                     <div class="acc-body">Đổi hàng trong vòng 7 ngày nếu sản phẩm lỗi từ nhà sản xuất. Liên hệ hotline để được hỗ trợ.</div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- ── Reviews Section ─────────────────────────── -->
+    <div class="pdp-reviews-section">
+        @{
+            var reviews = Model.Reviews?.OrderByDescending(r => r.CreatedAt).ToList() ?? new List<ProductReview>();
+            var avgRating = reviews.Any() ? reviews.Average(r => r.Rating) : 0;
+            var ratingCount = reviews.Count;
+        }
+
+        <div class="review-summary">
+            <div class="rating-big">
+                <div class="rating-big-num">@avgRating.ToString("F1")</div>
+                <div class="stars-wrap @(avgRating == 0 ? "empty" : "")">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        if (i <= Math.Round(avgRating)) { <text>★</text> }
+                        else { <text>☆</text> }
+                    }
+                </div>
+                <div class="rating-count">@ratingCount đánh giá</div>
+            </div>
+            <div style="flex:1;">
+                <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Đánh giá từ khách hàng</h3>
+                <p style="font-size: 13px; color: #666;">Tất cả đánh giá đều đến từ những khách hàng đã mua sản phẩm này.</p>
+            </div>
+        </div>
+
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="review-form-box">
+                <div class="review-form-title">Để lại đánh giá của bạn</div>
+                <form asp-action="AddReview" asp-controller="Product" method="post" class="review-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="productId" value="@Model.Id" />
+                    <input type="hidden" name="rating" id="selected-rating" value="5" />
+                    
+                    <div class="star-rating-picker" id="star-picker">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <svg data-value="@i" viewBox="0 0 24 24" class="active">
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                            </svg>
+                        }
+                    </div>
+
+                    <textarea name="comment" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..." required></textarea>
+                    
+                    <button type="submit" class="btn-submit-review">Gửi đánh giá</button>
+                </form>
+            </div>
+        }
+        else
+        {
+            <div style="background:#f9f9f9; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 40px; font-size: 13px; color: #666;">
+                Bạn cần <a href="/Identity/Account/Login?returnUrl=@Context.Request.Path" style="color:#111; font-weight:700;">Đăng nhập</a> để gửi đánh giá.
+            </div>
+        }
+
+        <div class="review-list">
+            @if (reviews.Any())
+            {
+                foreach (var r in reviews)
+                {
+                    <div class="review-card">
+                        <div class="review-header">
+                            <div class="review-author">
+                                <div class="author-avatar">@(r.User?.FullName?.Substring(0, 1) ?? "U")</div>
+                                <div>
+                                    <div class="author-name">@(r.User?.FullName ?? "Khách hàng")</div>
+                                    <div class="review-date">@r.CreatedAt.ToString("dd/MM/yyyy HH:mm")</div>
+                                </div>
+                            </div>
+                            <div class="review-rating">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    if (i <= r.Rating) { <text>★</text> }
+                                    else { <text>☆</text> }
+                                }
+                            </div>
+                        </div>
+                        <div class="review-comment">@r.Comment</div>
+                    </div>
+                }
+            }
+            else
+            {
+                <div style="text-align: center; padding: 40px 0; color: #bbb;">
+                    Chưa có đánh giá nào cho sản phẩm này.
+                </div>
+            }
         </div>
     </div>
 </div>
@@ -595,6 +741,29 @@ function copyVoucherCode(code, btn) {
             btn.style.background = '#111';
         }, 2000);
     });
+}
+
+// ─── Star Picker Logic ──────────────────────────────
+document.querySelectorAll('#star-picker svg').forEach(star => {
+    star.addEventListener('click', function() {
+        const val = this.dataset.value;
+        document.getElementById('selected-rating').value = val;
+        
+        document.querySelectorAll('#star-picker svg').forEach(s => {
+            if (s.dataset.value <= val) s.classList.add('active');
+            else s.classList.remove('active');
+        });
+    });
+});
+
+function scrollToReviews() {
+    const el = document.querySelector('.pdp-reviews-section');
+    if (el) {
+        window.scrollTo({
+            top: el.offsetTop - 100,
+            behavior: 'smooth'
+        });
+    }
 }
 </script>
 }

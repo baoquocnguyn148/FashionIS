@@ -2,6 +2,8 @@ using FashionStoreIS.Data;
 using FashionStoreIS.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace FashionStoreIS.Controllers
 {
@@ -144,6 +146,8 @@ namespace FashionStoreIS.Controllers
                     .Include(p => p.Category)
                     .Include(p => p.Images)
                     .Include(p => p.Skus)
+                    .Include(p => p.Reviews.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedAt))
+                        .ThenInclude(r => r.User)
                     .FirstOrDefaultAsync(p => p.Id == id);
 
                 if (product == null || !product.IsActive) return NotFound();
@@ -182,6 +186,39 @@ namespace FashionStoreIS.Controllers
                 .ToListAsync();
 
             return Json(new { success = true, vouchers = vouchers });
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddReview(int productId, int rating, string comment)
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userId)) return Unauthorized();
+
+                var review = new ProductReview
+                {
+                    ProductId = productId,
+                    UserId = userId,
+                    Rating = rating,
+                    Comment = comment,
+                    CreatedAt = DateTime.UtcNow,
+                    IsApproved = true // In a real scenario, this might be false for moderation
+                };
+
+                _db.ProductReviews.Add(review);
+                await _db.SaveChangesAsync();
+
+                TempData["Success"] = "Cảm ơn bạn đã để lại đánh giá!";
+                return RedirectToAction("Detail", new { id = productId });
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Có lỗi xảy ra khi gửi đánh giá: " + ex.Message;
+                return RedirectToAction("Detail", new { id = productId });
+            }
         }
     }
 }

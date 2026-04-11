@@ -52,7 +52,7 @@ services:
         fromService:
           name: fashion-store-web
           type: web
-          property: hostport
+          property: url
 
 databases:
   # Defining the DB in blueprint makes it easy for Render to link

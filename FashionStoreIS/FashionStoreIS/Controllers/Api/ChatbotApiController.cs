@@ -23,9 +23,13 @@ namespace FashionStoreIS.Controllers.Api
 
             if (!string.IsNullOrEmpty(q))
             {
-                var lowerQ = q.ToLower();
+                var lowerQ = q.ToLower().Trim();
+                var keywords = lowerQ.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                // Initial broad search: Match everything that contains the WHOLE query or ALL keywords
                 query = query.Where(p => p.Name.ToLower().Contains(lowerQ) 
                                       || p.Description!.ToLower().Contains(lowerQ)
+                                      || (keywords.Length > 1 && keywords.All(k => p.Name.ToLower().Contains(k) || p.Description!.ToLower().Contains(k)))
                                       || p.Skus.Any(s => s.Color.ToLower().Contains(lowerQ) || s.Size.ToLower().Contains(lowerQ)));
             }
             

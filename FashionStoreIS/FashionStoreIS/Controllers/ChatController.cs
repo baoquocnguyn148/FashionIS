@@ -15,24 +15,20 @@ namespace FashionStoreIS.Controllers
             _httpClientFactory = httpClientFactory;
             _logger = logger;
 
-            // Render injects CHATBOT_URL as a full URL when using `property: url`
+            // Render injects CHATBOT_URL as host:port when using 'property: hostport'
+            // Local fallback uses appsettings.json
             var url = Environment.GetEnvironmentVariable("CHATBOT_URL")
                       ?? configuration["CHATBOT_URL"]
-                      ?? "https://fashion-store-chatbot.onrender.com";
+                      ?? "fashion-store-chatbot:10000"; // Internal name
 
-            // WORKAROUND: Force protocol if Render property: hostport is used
-            if (!string.IsNullOrEmpty(url) && !url.StartsWith("http"))
+            // Ensure protocol is present
+            if (!string.IsNullOrEmpty(url) && !url.StartsWith("http", StringComparison.OrdinalIgnoreCase))
             {
                 url = "http://" + url;
             }
 
-            if (url.Contains(":10000") || url.Contains("localhost")) 
-            {
-                url = "https://fashion-store-chatbot.onrender.com";
-            }
-
             _chatbotUrl = url.TrimEnd('/');
-            _logger.LogInformation("[ChatController] Chatbot URL configured as: {Url}", _chatbotUrl);
+            _logger.LogInformation("[ChatController] Target Chatbot URL: {Url}", _chatbotUrl);
         }
 
         [HttpPost]
@@ -57,6 +53,12 @@ namespace FashionStoreIS.Controllers
                     return Content(responseBody, "application/json");
                 }
 
+                if (response.StatusCode == System.Net.HttpStatusCode.TooManyRequests)
+                {
+                    _logger.LogWarning("[ChatController] Rate limit exceeded (429).");
+                    return StatusCode(429, new { error = "Hệ thống AI đang bận xử lý nhiều yêu cầu. Vui lòng đợi khoảng 30 giây rồi thử lại nhé! ✨" });
+                }
+
                 _logger.LogWarning("[ChatController] Chatbot returned error: {Body}", responseBody);
                 return StatusCode((int)response.StatusCode, new { error = $"AI service error: {responseBody}" });
             }
@@ -67,8 +69,8 @@ namespace FashionStoreIS.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[ChatController] Failed to connect to chatbot at {Url}", requestUrl);
-                return StatusCode(503, new { error = $"Cannot reach AI service: {ex.Message}" });
+                _logger.LogError(ex, "[ChatController] CONNECTION FAILURE to {Url}. Details: {Message}", requestUrl, ex.Message);
+                return StatusCode(503, new { error = $"Cannot reach AI service at {requestUrl}. Ensure the chatbot service is running. Error: {ex.Message}" });
             }
         }
     }

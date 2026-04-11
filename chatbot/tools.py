@@ -5,15 +5,21 @@ from typing import Optional, List, Dict, Any
 
 logger = logging.getLogger(__name__)
 
-# C# Backend Base URL
-BASE_URL = os.getenv("BACKEND_API_URL", "https://fashion-store-web.onrender.com/api/chatbot")
-if BASE_URL and not BASE_URL.startswith("http"):
-    BASE_URL = "http://" + BASE_URL
+# C# Backend Base URL — prioritize environment variable
+BASE_URL_RAW = os.getenv("BACKEND_API_URL", "https://fashion-store-web.onrender.com")
 
-if not BASE_URL.endswith("/api/chatbot") and not BASE_URL.endswith("/api/chatbot/"):
-    BASE_URL = BASE_URL.rstrip("/") + "/api/chatbot"
+def construct_base_url(url_raw: str) -> str:
+    url = url_raw.strip().rstrip("/")
+    if not url.startswith("http"):
+        url = "http://" + url
+    
+    # Ensure it ends with /api/chatbot for the tools to work
+    if "/api/chatbot" not in url:
+        url += "/api/chatbot"
+    return url
 
-logger.info(f"[Tools] Backend API URL: {BASE_URL}")
+BASE_URL = construct_base_url(BASE_URL_RAW)
+logger.info(f"[Tools] Final Backend API URL: {BASE_URL}")
 
 # Shared HTTP client config — 15s timeout prevents hanging requests
 _HTTP_TIMEOUT = httpx.Timeout(15.0, connect=10.0)

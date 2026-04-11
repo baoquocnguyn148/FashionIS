@@ -22,5 +22,6 @@ namespace FashionStoreIS.Models
         public virtual ICollection<UserAddress> Addresses { get; set; } = new List<UserAddress>();
         public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
         public virtual ICollection<ExecutiveAlert> ExecutiveAlerts { get; set; } = new List<ExecutiveAlert>();
+        public virtual ICollection<ProductReview> ProductReviews { get; set; } = new List<ProductReview>();
     }
 }

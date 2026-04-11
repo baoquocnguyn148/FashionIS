@@ -21,6 +21,6 @@ namespace FashionStoreIS.Models
 
         public virtual ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
         public virtual ICollection<ProductSku> Skus { get; set; } = new List<ProductSku>();
-
+        public virtual ICollection<ProductReview> Reviews { get; set; } = new List<ProductReview>();
     }
 }
