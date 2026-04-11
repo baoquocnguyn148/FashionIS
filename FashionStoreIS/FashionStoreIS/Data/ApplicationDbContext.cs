@@ -446,13 +446,13 @@ namespace FashionStoreIS.Data
                 else
                     b.Property(e => e.Id).HasColumnName("ID");
 
-                b.Property(x => x.UserId).HasColumnName("USERID").HasMaxLength(450).IsRequired();
-                b.Property(x => x.ProductId).HasColumnName("PRODUCTID").IsRequired();
+                b.Property(x => x.UserId).HasColumnName(isPostgres ? "userid" : "USERID").HasMaxLength(450).IsRequired();
+                b.Property(x => x.ProductId).HasColumnName(isPostgres ? "productid" : "PRODUCTID").IsRequired();
 
                 // Unique constraint: mỗi user chỉ yêu thích 1 lần mỗi sản phẩm
                 b.HasIndex(x => new { x.UserId, x.ProductId })
                  .IsUnique()
-                 .HasDatabaseName("UQ_WL_USER_PROD");
+                 .HasDatabaseName(isPostgres ? "uq_wl_user_prod" : "UQ_WL_USER_PROD");
 
                 b.HasOne(x => x.User)
                  .WithMany()
@@ -469,23 +469,23 @@ namespace FashionStoreIS.Data
 
             // ─── HRM Scheduling & KPI (Oracle Config) ──────────────────────────
             builder.Entity<Shift>(b => {
-                b.ToTable("SHIFTS");
+                b.ToTable(isPostgres ? "shifts" : "SHIFTS");
                 b.HasOne(x => x.Store).WithMany().HasForeignKey(x => x.StoreId).HasConstraintName("FK_SHIFT_STORE");
             });
 
             builder.Entity<Schedule>(b => {
-                b.ToTable("SCHEDULES");
+                b.ToTable(isPostgres ? "schedules" : "SCHEDULES");
                 b.HasOne(x => x.Employee).WithMany().HasForeignKey(x => x.EmployeeId).HasConstraintName("FK_SCHED_EMP");
                 b.HasOne(x => x.Shift).WithMany().HasForeignKey(x => x.ShiftId).HasConstraintName("FK_SCHED_SHIFT");
             });
 
             builder.Entity<LeaveBalance>(b => {
-                b.ToTable("LEAVEBALANCES");
+                b.ToTable(isPostgres ? "leavebalances" : "LEAVEBALANCES");
                 b.HasOne(x => x.Employee).WithMany().HasForeignKey(x => x.EmployeeId).HasConstraintName("FK_LB_EMP");
             });
 
             builder.Entity<KpiReview>(b => {
-                b.ToTable("KPIREVIEWS");
+                b.ToTable(isPostgres ? "kpireviews" : "KPIREVIEWS");
                 b.Property(x => x.SalesScore).HasColumnType("decimal(10,2)");
                 b.Property(x => x.AttitudeScore).HasColumnType("decimal(10,2)");
                 b.Property(x => x.TeamworkScore).HasColumnType("decimal(10,2)");

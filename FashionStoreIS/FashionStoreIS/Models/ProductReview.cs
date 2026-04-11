@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FashionStoreIS.Models
 {
@@ -9,6 +10,8 @@ namespace FashionStoreIS.Models
         public virtual Product Product { get; set; } = null!;
 
         public string UserId { get; set; } = null!;
+        
+        [ForeignKey("UserId")]
         public virtual ApplicationUser User { get; set; } = null!;
 
         [Required]

@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace FashionStoreIS.Models
 {
     /// <summary>
@@ -13,6 +15,7 @@ namespace FashionStoreIS.Models
         public int ProductId { get; set; }
 
         // ─── Navigation Properties ──────────────────────────────────────────
+        [ForeignKey("UserId")]
         public virtual ApplicationUser User { get; set; } = null!;
         public virtual Product Product { get; set; } = null!;
     }
