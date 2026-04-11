@@ -140,17 +140,25 @@ namespace FashionStoreIS.Controllers
 
         public async Task<IActionResult> Detail(int id)
         {
-            var product = await _db.Products
-                .Include(p => p.Category)
-                .Include(p => p.Images)
-                .Include(p => p.Skus)
-                .Include(p => p.Reviews.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedAt))
-                    .ThenInclude(r => r.User)
-                .FirstOrDefaultAsync(p => p.Id == id);
+            try
+            {
+                var product = await _db.Products
+                    .Include(p => p.Category)
+                    .Include(p => p.Images)
+                    .Include(p => p.Skus)
+                    .Include(p => p.Reviews.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedAt))
+                        .ThenInclude(r => r.User)
+                    .FirstOrDefaultAsync(p => p.Id == id);
 
-            if (product == null || !product.IsActive) return NotFound();
+                if (product == null || !product.IsActive) return NotFound();
 
-            return View(product);
+                return View(product);
+            }
+            catch (Exception ex)
+            {
+                // Force display the error details directly on the page for debugging on Render
+                return Content($"DEBUG ERROR: {ex.Message}\n\nSTACK TRACE: {ex.StackTrace}\n\nINNER EXCEPTION: {ex.InnerException?.Message}");
+            }
         }
 
         private void GetChildCategoryIds(int parentId, List<Category> allCategories, List<int> ids)
