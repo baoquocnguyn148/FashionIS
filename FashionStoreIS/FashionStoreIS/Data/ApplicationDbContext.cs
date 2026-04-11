@@ -455,7 +455,7 @@ namespace FashionStoreIS.Data
                  .HasDatabaseName(isPostgres ? "uq_wl_user_prod" : "UQ_WL_USER_PROD");
 
                 b.HasOne(x => x.User)
-                 .WithMany()
+                 .WithMany(u => u.WishlistItems)
                  .HasForeignKey(x => x.UserId)
                  .OnDelete(DeleteBehavior.Cascade)
                  .HasConstraintName("FK_WL_USER");
@@ -503,7 +503,7 @@ namespace FashionStoreIS.Data
                 b.Property(x => x.IsApproved).HasColumnName(isPostgres ? "isapproved" : "ISAPPROVED");
                 
                 b.HasOne(x => x.Product).WithMany(p => p.Reviews).HasForeignKey(x => x.ProductId).HasConstraintName("FK_REV_PROD");
-                b.HasOne(x => x.User).WithMany().HasForeignKey(x => x.UserId).HasConstraintName("FK_REV_USER");
+                b.HasOne(x => x.User).WithMany(u => u.ProductReviews).HasForeignKey(x => x.UserId).HasConstraintName("FK_REV_USER");
             });
         }
     }
