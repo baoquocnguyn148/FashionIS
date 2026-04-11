@@ -118,9 +118,9 @@ namespace FashionStoreIS.Data
                     else
                         b.Property("Id").HasColumnName("ID").ValueGeneratedOnAdd();
                     
-                    b.Property("CreatedAt").HasColumnName(isPostgres ? "created_at" : "CREATEDAT");
-                    b.Property("UpdatedAt").HasColumnName(isPostgres ? "updated_at" : "UPDATEDAT");
-                    b.Property("IsDeleted").HasColumnName(isPostgres ? "is_deleted" : "ISDELETED");
+                    b.Property("CreatedAt").HasColumnName(isPostgres ? "createdat" : "CREATEDAT");
+                    b.Property("UpdatedAt").HasColumnName(isPostgres ? "updatedat" : "UPDATEDAT");
+                    b.Property("IsDeleted").HasColumnName(isPostgres ? "isdeleted" : "ISDELETED");
 
                     // Global Query Filter for IsDeleted
                     var parameter = System.Linq.Expressions.Expression.Parameter(entity.ClrType, "e");
